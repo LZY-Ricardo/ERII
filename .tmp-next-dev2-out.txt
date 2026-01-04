@@ -1,0 +1,20 @@
+
+> hoshino-blog@0.1.0 dev F:\项目文件夹\erii-blog
+> next dev
+
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://26.41.1.123:3000
+
+✓ Starting...
+✓ Ready in 1832ms
+ GET / 200 in 2.2s (compile: 1862ms, render: 312ms)
+ GET /blog 200 in 331ms (compile: 260ms, render: 70ms)
+ GET /about 200 in 330ms (compile: 266ms, render: 64ms)
+ GET /blog/tokyo-tower 200 in 3.8s (compile: 2.5s, render: 1271ms)
+ GET /write 200 in 652ms (compile: 486ms, render: 166ms)
+ GET / 200 in 92ms (compile: 11ms, render: 81ms)
+ GET /write 200 in 36ms (compile: 8ms, render: 27ms)
+ GET / 200 in 30ms (compile: 5ms, render: 25ms)
+ GET / 200 in 31ms (compile: 7ms, render: 24ms)
+ GET / 200 in 32ms (compile: 6ms, render: 26ms)

@@ -7,15 +7,20 @@ export default function AboutPage() {
       <div className="mx-auto max-w-3xl px-6 pb-20">
         <Header />
 
-        <section className="mt-10 rounded-3xl border border-erii-red/10 bg-white/80 p-8 shadow-sm">
-          <h1 className="font-hand text-4xl text-erii-ink">关于</h1>
-          <p className="mt-3 text-base text-erii-ink/70">
+        <section className="mt-10 rounded-3xl border border-wafu-sumi/10 bg-wafu-paper/75 p-8 shadow-sm backdrop-blur">
+          <h1 className="font-serif text-4xl text-wafu-sumi">
+            关于{" "}
+            <span className="ml-2 align-middle font-sans text-xs tracking-[0.35em] text-wafu-sumi/55">
+              私
+            </span>
+          </h1>
+          <p className="mt-3 text-base text-wafu-sumi/70">
             写给那些过于安静的日子。
           </p>
 
-          <div className="my-6 border-t border-dashed border-erii-red/30" />
+          <div className="my-6 border-t border-dashed border-wafu-sumi/15" />
 
-          <div className="prose max-w-none prose-slate prose-headings:font-hand prose-headings:text-erii-ink prose-a:text-erii-red prose-strong:text-erii-ink">
+          <div className="prose max-w-none prose-slate prose-headings:font-serif prose-headings:text-wafu-sumi prose-a:text-wafu-shu prose-strong:text-wafu-sumi">
             <p>
               ERII 是一个以 <em>手写页</em> 为灵感的个人博客，也藏着《龙族》里那种温柔而无法回避的情绪。
             </p>
