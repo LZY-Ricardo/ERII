@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SakuraIcon } from "./icons";
 
 const navItems = [
   { label: "首页", href: "/" },
@@ -11,12 +12,10 @@ export default function Header() {
     <header className="flex items-center justify-between gap-4 border-b border-dashed border-wafu-sumi/15 py-6">
       <Link
         href="/"
-        className="group inline-flex flex-col leading-tight"
+        className="group inline-flex items-center gap-2 leading-tight"
       >
+        <SakuraIcon className="h-6 w-6 drop-shadow-sm" />
         <span className="font-serif text-2xl text-wafu-sumi transition-colors group-hover:text-wafu-shu">
-          绘梨衣的写字板
-        </span>
-        <span className="mt-1 font-sans text-[11px] tracking-[0.35em] text-wafu-sumi/55">
           絵梨衣の日記
         </span>
       </Link>
