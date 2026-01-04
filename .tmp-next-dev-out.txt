@@ -1,0 +1,12 @@
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://127.0.0.1:3015
+- Network:       http://127.0.0.1:3015
+
+✓ Starting...
+✓ Ready in 1748ms
+ GET / 200 in 1514ms (compile: 1266ms, render: 248ms)
+ GET / 200 in 57ms (compile: 7ms, render: 50ms)
+ GET /blog 200 in 698ms (compile: 651ms, render: 47ms)
+ GET /about 200 in 316ms (compile: 266ms, render: 49ms)
+ GET /blog/tokyo-tower 200 in 3.9s (compile: 2.7s, render: 1209ms)
+[?25h
