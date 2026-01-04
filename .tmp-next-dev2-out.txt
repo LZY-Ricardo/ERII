@@ -51,3 +51,4 @@
  GET /about 200 in 284ms (compile: 144ms, render: 140ms)
  GET /blog/tokyo-tower 200 in 399ms (compile: 180ms, render: 220ms)
  GET /write 200 in 385ms (compile: 154ms, render: 231ms)
+ GET / 200 in 372ms (compile: 184ms, render: 188ms)
