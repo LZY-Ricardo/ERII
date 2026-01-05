@@ -31,6 +31,12 @@ module.exports = {
         "washi-texture":
           'url("https://www.transparenttextures.com/patterns/natural-paper.png")',
       },
+      writingMode: {
+        'vertical-rl': 'vertical-rl',
+      },
+      textOrientation: {
+        'upright': 'upright',
+      },
     },
   },
   plugins: [require("@tailwindcss/typography")],

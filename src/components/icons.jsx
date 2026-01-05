@@ -102,3 +102,15 @@ export function SakuraIcon({ className }) {
     </svg>
   );
 }
+
+export function HomeIcon({ className }) {
+  return <img src="/icons/home.png" className={className} alt="首页" />;
+}
+
+export function BlogIcon({ className }) {
+  return <img src="/icons/blog.png" className={className} alt="文章" />;
+}
+
+export function AboutIcon({ className }) {
+  return <img src="/icons/about.png" className={className} alt="关于" />;
+}

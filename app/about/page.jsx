@@ -15,7 +15,7 @@ export default function AboutPage() {
             </span>
           </h1>
           <p className="mt-3 text-base text-wafu-sumi/70">
-            写给那些过于安静的日子。
+            写给那些一起阅读龙族的时光。
           </p>
 
           <div className="my-6 border-t border-dashed border-wafu-sumi/15" />
@@ -28,7 +28,7 @@ export default function AboutPage() {
               在这里，文字像纪念品一样被珍藏：一张塞进拍立得边框的照片，一道虚线的撕页痕，一只小黄鸭，以及一根怎么也解不开的红丝带。
             </p>
             <p>
-              如果你找到了暗号，就让樱花落一次。然后合上写字板，继续往前走。
+              如果你找到了暗号，就让樱花落一次。然后合上日记，继续往前走。
             </p>
           </div>
         </section>
