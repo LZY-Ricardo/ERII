@@ -72,22 +72,22 @@ export default function SecretTrigger() {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="group grid h-14 w-14 place-items-center rounded-full border border-wafu-sumi/10 bg-wafu-paper/95 shadow-lg backdrop-blur-sm transition-transform hover:scale-110 active:scale-95"
+          className="group relative grid h-14 w-14 place-items-center overflow-hidden rounded-full border border-wafu-sumi/10 bg-wafu-paper/95 shadow-lg backdrop-blur-sm transition-transform hover:scale-110 active:scale-95"
           aria-label="打开彩蛋"
         >
           {gifLoaded ? (
             <Image
               src={triggerGifSrc}
               alt=""
-              width={40}
-              height={40}
+              fill
+              sizes="56px"
               unoptimized
-              className="h-10 w-10 select-none rounded-full object-cover"
+              className="select-none object-cover"
               draggable={false}
               onError={() => setGifLoaded(false)}
             />
           ) : (
-            <Gamepad2 size={24} className="text-erii-red" />
+            <Gamepad2 size={24} className="relative z-10 text-erii-red" />
           )}
         </button>
       )}
