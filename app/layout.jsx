@@ -48,6 +48,10 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata = {
   title: "ERII | 絵梨衣の日記",
   description: "世界はやさしい——絵梨衣の日記。",
+  icons: {
+    icon: "/sakura.png",
+    apple: "/sakura.png",
+  },
 };
 
 export default function RootLayout({ children }) {
