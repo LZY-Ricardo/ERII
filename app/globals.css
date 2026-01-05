@@ -224,6 +224,27 @@ body {
   text-orientation: mixed;
 }
 
+.zen-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(225, 29, 72, 0.45) transparent;
+}
+
+.zen-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.zen-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(225, 29, 72, 0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.zen-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .shoji-overlay {
   position: fixed;
   inset: 0;

@@ -5,15 +5,16 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
-  ArrowLeft,
   Bold,
   Code,
   Copy,
+  Home,
   Italic,
   Link2,
   List,
   Mountain,
-  Save,
+  Settings,
+  X,
 } from "lucide-react";
 
 function escapeYamlString(value) {
@@ -41,7 +42,7 @@ function ToolButton({ icon, onClick, tooltip }) {
       type="button"
       onClick={onClick}
       title={tooltip}
-      className="rounded-lg p-2 text-wafu-sumi/45 transition-colors hover:bg-white/60 hover:text-wafu-shu"
+      className="rounded-md p-2 text-wafu-sumi/45 transition-colors hover:text-erii-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-erii-red/25"
     >
       {icon}
     </button>
@@ -49,21 +50,33 @@ function ToolButton({ icon, onClick, tooltip }) {
 }
 
 export default function WritePage() {
-  const [title, setTitle] = useState("04.24 東京タワー");
+  const [title, setTitle] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
-  const [description, setDescription] = useState("世界はやさしい。写在城市灯火的上方。");
-  const [tags, setTags] = useState("日記,東京");
-  const [content, setContent] = useState("世界はやさしい。\n\n在此处开始书写你的故事……");
+  const [description, setDescription] = useState("");
+  const [tags, setTags] = useState("");
+  const [cover, setCover] = useState("");
+  const [content, setContent] = useState("");
   const [toast, setToast] = useState("");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const textareaRef = useRef(null);
   const toastTimerRef = useRef(null);
 
   useEffect(() => {
+    textareaRef.current?.focus();
     return () => {
       if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isSettingsOpen) return;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setIsSettingsOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isSettingsOpen]);
 
   const showToast = (message) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -73,10 +86,13 @@ export default function WritePage() {
 
   const frontmatter = useMemo(() => {
     const tagsValue = toYamlTags(tags);
+    const coverLine = cover?.trim()
+      ? `cover: "${escapeYamlString(cover)}"\n`
+      : "";
     return `---\ntitle: "${escapeYamlString(title)}"\ndate: "${date}"\ndescription: "${escapeYamlString(
       description
-    )}"\ntags: [${tagsValue}]\n---\n\n`;
-  }, [title, date, description, tags]);
+    )}"\ntags: [${tagsValue}]\n${coverLine}---\n\n`;
+  }, [title, date, description, tags, cover]);
 
   const fullMdx = useMemo(() => frontmatter + content, [frontmatter, content]);
 
@@ -123,201 +139,167 @@ export default function WritePage() {
     }
   };
 
-  const tagList = useMemo(() => {
-    return String(tags ?? "")
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
-  }, [tags]);
-
-  const markdownComponents = useMemo(() => {
-    return {
-      h1: ({ node, ...props }) => (
-        <h1
-          className="font-serif text-3xl font-bold text-wafu-shu"
-          {...props}
-        />
-      ),
-      h2: ({ node, ...props }) => (
-        <h2
-          className="font-serif text-2xl font-bold text-wafu-sumi"
-          {...props}
-        />
-      ),
-      h3: ({ node, ...props }) => (
-        <h3 className="font-serif text-xl font-bold text-wafu-sumi" {...props} />
-      ),
-      p: ({ node, ...props }) => (
-        <p
-          className="font-sans leading-relaxed tracking-wide text-wafu-sumi/85"
-          {...props}
-        />
-      ),
-      a: ({ node, ...props }) => (
-        <a
-          className="text-wafu-shu underline decoration-wafu-shu/30 underline-offset-4"
-          {...props}
-        />
-      ),
-      blockquote: ({ node, ...props }) => (
-        <blockquote
-          className="border-l-4 border-wafu-indigo/30 bg-white/35 pl-4 italic text-wafu-sumi/70"
-          {...props}
-        />
-      ),
-      code: ({ node, inline, className, children, ...props }) => {
-        if (inline) {
-          return (
-            <code
-              className="rounded bg-white/55 px-1 py-0.5 font-mono text-[0.9em] text-wafu-sumi"
-              {...props}
-            >
-              {children}
-            </code>
-          );
-        }
-        return (
-          <code
-            className={`${className ?? ""} font-mono text-sm text-wafu-sumi`}
-            {...props}
-          >
-            {children}
-          </code>
-        );
-      },
-      pre: ({ node, ...props }) => (
-        <pre
-          className="overflow-x-auto rounded-xl border border-wafu-sumi/10 bg-white/45 p-4"
-          {...props}
-        />
-      ),
-      img: ({ node, ...props }) => (
-        <img className="rounded-xl border border-wafu-sumi/10" {...props} />
-      ),
-    };
-  }, []);
-
   return (
     <div className="min-h-screen flex flex-col text-wafu-sumi">
-      <header className="sticky top-0 z-50 h-16 border-b border-wafu-sumi/10 bg-wafu-paper/85 px-4 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 h-14 border-b border-wafu-sumi/10 bg-wafu-paper/60 px-4 backdrop-blur-md">
         <div className="mx-auto flex h-full max-w-6xl items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-sans text-wafu-sumi/70 transition-colors hover:bg-white/60 hover:text-wafu-shu"
+              aria-label="回到首页"
+              title="回到首页"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-wafu-sumi/55 transition-colors hover:bg-white/60 hover:text-erii-red"
             >
-              <ArrowLeft size={18} />
-              <span className="hidden sm:inline">回到首页</span>
+              <Home size={18} />
             </Link>
 
-            <div className="hidden writing-vertical font-serif text-[11px] tracking-[0.45em] text-wafu-sumi/60 sm:block">
-              无题の稿
+            <div className="select-none font-serif text-[11px] tracking-[0.28em] text-wafu-sumi/50">
+              DRAFTING...
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleCopy}
-              className="hidden items-center gap-2 rounded-full border border-wafu-sumi/15 bg-white/60 px-4 py-2 text-sm font-sans text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-wafu-shu md:inline-flex"
+              onClick={() => setIsSettingsOpen((open) => !open)}
+              aria-label="设置"
+              title="设置"
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/60 hover:text-erii-red ${
+                isSettingsOpen ? "text-erii-red" : "text-wafu-sumi/55"
+              }`}
             >
-              <Copy size={18} />
-              <span>复制</span>
+              <Settings size={18} />
             </button>
             <button
               type="button"
               onClick={handleDownload}
-              className="inline-flex items-center gap-2 rounded-md border border-wafu-sumi/15 bg-gradient-to-b from-white/70 to-wafu-sakura/40 px-5 py-2 text-sm font-serif text-wafu-sumi shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
+              aria-label="奉纳（下载 MDX）"
+              title="奉纳（下载 MDX）"
+              className="grid h-10 w-10 place-items-center rounded-md bg-wafu-sumi text-wafu-paper shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
             >
-              <Save size={18} />
-              <span>奉纳</span>
+              <span
+                className="font-serif text-[11px] leading-none tracking-[0.28em]"
+                style={{ writingMode: "vertical-rl", textOrientation: "upright" }}
+              >
+                奉纳
+              </span>
             </button>
           </div>
         </div>
       </header>
 
       {toast ? (
-        <div className="fixed right-6 top-20 z-50 rounded-full border border-wafu-sumi/10 bg-wafu-paper/90 px-4 py-2 text-xs text-wafu-sumi shadow-lg">
+        <div className="fixed right-6 top-16 z-50 rounded-full border border-wafu-sumi/10 bg-wafu-paper/90 px-4 py-2 text-xs text-wafu-sumi shadow-lg">
           {toast}
         </div>
       ) : null}
 
-      <main className="flex-1 overflow-hidden">
-        <div className="grid h-full grid-rows-[1fr_1fr] md:grid-rows-1 md:grid-cols-[1fr_18px_1fr]">
-          <section className="min-h-0 flex flex-col bg-white/10">
-            <div className="border-b border-dashed border-wafu-sumi/15 bg-white/30 p-6">
-              <div className="grid gap-3 md:grid-cols-2">
-                <input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-1 text-sm font-serif text-wafu-sumi outline-none placeholder:text-wafu-sumi/40 focus:border-wafu-shu caret-wafu-shu"
-                  placeholder="标题"
-                />
+      <div
+        className={`fixed inset-0 z-[60] transition ${
+          isSettingsOpen ? "pointer-events-auto" : "pointer-events-none"
+        }`}
+      >
+        <div
+          className={`absolute inset-0 bg-wafu-sumi/10 backdrop-blur-sm transition-opacity ${
+            isSettingsOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={() => setIsSettingsOpen(false)}
+        />
+        <div className="absolute left-0 right-0 top-0">
+          <div
+            role="dialog"
+            aria-modal={isSettingsOpen}
+            aria-label="设置"
+            className={`mx-auto max-w-4xl origin-top rounded-b-3xl border border-wafu-sumi/10 bg-wafu-paper/80 p-6 shadow-lg backdrop-blur transition-transform duration-300 ${
+              isSettingsOpen ? "translate-y-0" : "-translate-y-full"
+            }`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="select-none font-serif text-xs tracking-[0.32em] text-wafu-sumi/60">
+                SETTINGS
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(false)}
+                aria-label="关闭设置"
+                title="关闭"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-wafu-sumi/55 transition-colors hover:bg-white/60 hover:text-erii-red"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <label className="grid gap-2">
+                <span className="text-xs text-wafu-sumi/60">日期</span>
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-1 text-sm font-mono text-wafu-sumi outline-none focus:border-wafu-shu caret-wafu-shu"
+                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-2 text-sm font-mono text-wafu-sumi outline-none focus:border-erii-red caret-erii-red"
                 />
-              </div>
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
+              </label>
+              <label className="grid gap-2">
+                <span className="text-xs text-wafu-sumi/60">封面</span>
+                <input
+                  value={cover}
+                  onChange={(e) => setCover(e.target.value)}
+                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-2 text-sm text-wafu-sumi/80 outline-none placeholder:text-wafu-sumi/30 focus:border-erii-red caret-erii-red"
+                  placeholder="/images/cover.png（可选）"
+                />
+              </label>
+              <label className="grid gap-2 md:col-span-2">
+                <span className="text-xs text-wafu-sumi/60">摘要</span>
                 <input
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-1 text-sm text-wafu-sumi/80 outline-none placeholder:text-wafu-sumi/35 focus:border-wafu-shu caret-wafu-shu"
+                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-2 text-sm text-wafu-sumi/80 outline-none placeholder:text-wafu-sumi/30 focus:border-erii-red caret-erii-red"
                   placeholder="一句描述（可选）"
                 />
+              </label>
+              <label className="grid gap-2 md:col-span-2">
+                <span className="text-xs text-wafu-sumi/60">标签</span>
                 <input
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
-                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-1 text-sm text-wafu-sumi/80 outline-none placeholder:text-wafu-sumi/35 focus:border-wafu-shu caret-wafu-shu"
+                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-2 text-sm text-wafu-sumi/80 outline-none placeholder:text-wafu-sumi/30 focus:border-erii-red caret-erii-red"
                   placeholder="标签（逗号分隔）"
                 />
-              </div>
-              <p className="mt-3 text-xs text-wafu-sumi/55">
+              </label>
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+              <p className="text-xs text-wafu-sumi/55">
                 图片放进{" "}
                 <code className="rounded bg-white/60 px-1 py-0.5 font-mono">
                   public/images
                 </code>
                 ，再用工具栏插入。
               </p>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="inline-flex items-center gap-2 rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red"
+              >
+                <Copy size={16} />
+                <span>复制 MDX</span>
+              </button>
             </div>
+          </div>
+        </div>
+      </div>
 
-            <div className="flex items-center gap-1 border-b border-dashed border-wafu-sumi/15 bg-wafu-paper/70 px-3 py-2">
-              <ToolButton
-                icon={<Bold size={18} />}
-                onClick={() => insertText("**", "**")}
-                tooltip="太字"
-              />
-              <ToolButton
-                icon={<Italic size={18} />}
-                onClick={() => insertText("*", "*")}
-                tooltip="斜体"
-              />
-              <ToolButton
-                icon={<span className="px-0.5 font-serif text-[16px] leading-none">「」</span>}
-                onClick={() => insertText("> ")}
-                tooltip="引用"
-              />
-              <ToolButton
-                icon={<List size={18} />}
-                onClick={() => insertText("- ")}
-                tooltip="列表"
-              />
-              <ToolButton
-                icon={<Code size={18} />}
-                onClick={() => insertText("`", "`")}
-                tooltip="代码"
-              />
-              <ToolButton
-                icon={<Link2 size={18} />}
-                onClick={() => insertText("[", "](https://)")}
-                tooltip="结缘"
-              />
-              <ToolButton
-                icon={<Mountain size={18} />}
-                onClick={() => insertText("![描述](/images/", ")")}
-                tooltip="山水"
+      <main className="flex-1 overflow-hidden">
+        <div className="grid h-full grid-rows-[1fr_1fr] divide-y divide-wafu-sumi/10 md:grid-rows-1 md:grid-cols-2 md:divide-x md:divide-y-0 md:divide-wafu-sumi/10">
+          <section className="min-h-0 flex flex-col bg-erii-paper/35">
+            <div className="px-8 pb-6 pt-10">
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full bg-transparent p-0 font-serif text-4xl font-bold tracking-wide text-wafu-sumi outline-none placeholder:text-wafu-sumi/20 caret-erii-red"
+                placeholder="无题..."
+                spellCheck={false}
               />
             </div>
 
@@ -325,53 +307,80 @@ export default function WritePage() {
               ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-0 flex-1 resize-none bg-transparent p-8 font-mono text-sm leading-loose text-wafu-sumi/85 outline-none caret-wafu-shu selection:bg-wafu-sakura/70 selection:text-wafu-sumi"
+              className="zen-scrollbar min-h-0 flex-1 resize-none bg-transparent px-8 pb-24 font-mono text-[15px] leading-loose text-wafu-sumi/85 outline-none placeholder:text-wafu-sumi/20 caret-erii-red selection:bg-erii-red/15 selection:text-wafu-sumi"
               placeholder="在此处开始书写你的故事..."
               spellCheck={false}
             />
+
+            <div className="border-t border-wafu-sumi/10 bg-wafu-paper/40 px-6 py-2 backdrop-blur-sm">
+              <div className="flex items-center gap-1">
+                <ToolButton
+                  icon={<Bold size={18} />}
+                  onClick={() => insertText("**", "**")}
+                  tooltip="太字"
+                />
+                <ToolButton
+                  icon={<Italic size={18} />}
+                  onClick={() => insertText("*", "*")}
+                  tooltip="斜体"
+                />
+                <ToolButton
+                  icon={
+                    <span className="px-0.5 font-serif text-[16px] leading-none">
+                      「」
+                    </span>
+                  }
+                  onClick={() => insertText("> ")}
+                  tooltip="引用"
+                />
+                <ToolButton
+                  icon={<List size={18} />}
+                  onClick={() => insertText("- ")}
+                  tooltip="列表"
+                />
+                <ToolButton
+                  icon={<Code size={18} />}
+                  onClick={() => insertText("`", "`")}
+                  tooltip="代码"
+                />
+                <ToolButton
+                  icon={<Link2 size={18} />}
+                  onClick={() => insertText("[", "](https://)")}
+                  tooltip="结缘"
+                />
+                <ToolButton
+                  icon={<Mountain size={18} />}
+                  onClick={() => insertText("![描述](/images/", ")")}
+                  tooltip="山水"
+                />
+              </div>
+            </div>
           </section>
 
-          <div className="hidden bg-wafu-paper/30 md:block">
-            <div className="mx-auto h-full w-[12px] border-x border-wafu-sumi/10 bg-gradient-to-b from-transparent via-wafu-sumi/5 to-transparent" />
-          </div>
-
-          <section className="min-h-0 overflow-y-auto bg-wafu-paper/50 p-8 md:p-10">
-            <div className="mb-8 flex items-start gap-6 border-b border-dashed border-wafu-sumi/15 pb-6">
-              <div className="writing-vertical font-serif text-3xl font-bold text-wafu-shu">
-                {title?.trim() ? title : "（無題）"}
-              </div>
-              <div className="pt-1">
-                <div className="text-xs font-sans text-wafu-sumi/60">
+          <section className="zen-scrollbar min-h-0 overflow-y-auto bg-wafu-paper/40 bg-washi-texture p-8 md:p-10">
+            <article className="mx-auto max-w-3xl rounded-3xl border border-wafu-sumi/10 bg-wafu-paper/80 p-8 shadow-sm backdrop-blur">
+              <header>
+                <h1 className="font-serif text-4xl text-wafu-sumi">
+                  {title?.trim() ? title : "无题"}
+                </h1>
+                <p className="mt-2 font-sans text-sm text-wafu-shu/70">
                   {date} · 预览
-                </div>
+                </p>
                 {description?.trim() ? (
-                  <p className="mt-3 text-sm text-wafu-sumi/70">
+                  <p className="mt-3 text-base text-wafu-sumi/70">
                     {description}
                   </p>
                 ) : null}
-                {tagList.length ? (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {tagList.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full bg-wafu-sakura/60 px-3 py-1 text-[11px] font-sans text-wafu-sumi/80"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </div>
+              </header>
 
-            <div className="prose max-w-none prose-slate prose-headings:tracking-wide prose-strong:text-wafu-sumi prose-a:text-wafu-shu">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={markdownComponents}
-              >
-                {content}
-              </ReactMarkdown>
-            </div>
+              <div className="my-6 border-t border-dashed border-wafu-sumi/15" />
+
+              <div className="prose max-w-none prose-slate prose-headings:font-serif prose-headings:text-wafu-sumi prose-a:text-wafu-shu prose-strong:text-wafu-sumi">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {content}
+                </ReactMarkdown>
+              </div>
+            </article>
           </section>
         </div>
       </main>
