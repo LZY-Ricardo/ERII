@@ -57,6 +57,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="zh-CN">
+      <head>
+        <link rel="icon" href="/sakura.png" />
+        <link rel="apple-touch-icon" href="/sakura.png" />
+      </head>
       <body
         className={`${patrickHand.variable} ${zcool.variable} ${serifJP.variable} ${serifSC.variable} ${zenMaru.variable} ${jetbrainsMono.variable} erii-paper font-sans bg-wafu-paper bg-washi-texture bg-repeat bg-fixed text-wafu-sumi antialiased selection:bg-wafu-sakura selection:text-wafu-shu`}
       >
