@@ -13,12 +13,32 @@ export default function HomePage() {
 
         <section className="mt-10">
           <div className="erii-diary-card relative flex min-h-[220px] flex-col gap-8 rounded-[2.5rem] border border-erii-red/10 bg-white/70 p-6 shadow-sm backdrop-blur sm:flex-row sm:gap-10 sm:p-10">
-            <h1
-              className="erii-scribble-vertical shrink-0 font-serif text-xl text-erii-ink sm:text-3xl"
-              style={{ writingMode: "vertical-rl", textOrientation: "upright" }}
-            >
-              我很喜欢这样的世界，但世界不喜欢我
-            </h1>
+            <div className="relative overflow-hidden select-none sm:h-full sm:min-w-[120px] sm:w-[120px]">
+              <p className="font-serif text-base tracking-[0.12em] text-wafu-sumi sm:hidden">
+                我很喜欢这样的世界，但世界不喜欢我
+              </p>
+
+              <div className="relative hidden h-full min-h-[340px] w-full py-3 sm:block">
+                <div className="absolute bottom-4 left-6 top-3 w-[7px] bg-gradient-to-b from-transparent via-erii-red/10 to-transparent blur-md" />
+                <div className="absolute bottom-4 left-6 top-3 w-[1px] bg-gradient-to-b from-transparent via-erii-red/75 to-transparent" />
+
+                <p className="writing-mode-vertical absolute left-6 top-3 whitespace-nowrap font-serif text-xl font-black leading-[1.06] tracking-[0.28em] text-wafu-sumi opacity-95 md:text-2xl">
+                  我很喜欢这样的世界
+                </p>
+
+                <p className="writing-mode-vertical absolute left-[5.5rem] top-20 whitespace-nowrap font-serif text-lg font-medium leading-[1.1] tracking-[0.22em] text-erii-red opacity-85 md:text-xl">
+                  ..但世界不喜欢我
+                </p>
+
+                <div className="absolute bottom-4 left-20 rotate-3 opacity-55 mix-blend-multiply">
+                  <div className="writing-mode-vertical rounded-sm border-2 border-erii-red/80 bg-erii-red/10 px-1 py-2 font-serif text-[10px] font-bold tracking-[0.18em] text-erii-red shadow-none">
+                    上杉家主
+                  </div>
+                </div>
+
+                <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-erii-red/5 blur-3xl" />
+              </div>
+            </div>
 
             <div className="relative flex-1">
               <div className="flex gap-6">

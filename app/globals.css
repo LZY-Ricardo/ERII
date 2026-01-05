@@ -219,6 +219,11 @@ body {
   text-orientation: mixed;
 }
 
+.writing-mode-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
 .shoji-overlay {
   position: fixed;
   inset: 0;
