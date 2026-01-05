@@ -11,35 +11,34 @@ export default function HomePage() {
       <div className="mx-auto max-w-5xl px-6 pb-20">
         <Header />
 
-        <section className="mt-10">
-          <div className="erii-diary-card relative flex min-h-[220px] flex-col gap-8 rounded-[2.5rem] border border-erii-red/10 bg-white/70 p-6 shadow-sm backdrop-blur sm:flex-row sm:gap-10 sm:p-10">
-            <div className="relative overflow-hidden select-none sm:h-full sm:min-w-[120px] sm:w-[120px]">
-              <p className="font-serif text-base tracking-[0.12em] text-wafu-sumi sm:hidden">
-                我很喜欢这样的世界，但世界不喜欢我
+        <section className="mt-10 relative">
+          <div className="absolute left-6 top-0 hidden h-[340px] w-32 select-none sm:block">
+            <div className="relative h-full w-full">
+              <div className="absolute bottom-4 left-0 top-3 w-[7px] bg-gradient-to-b from-transparent via-erii-red/10 to-transparent blur-md" />
+              <div className="absolute bottom-4 left-0 top-3 w-[1px] bg-gradient-to-b from-transparent via-erii-red/75 to-transparent" />
+
+              <p className="writing-mode-vertical absolute left-0 top-3 whitespace-nowrap font-serif text-xl font-black leading-[1.06] tracking-[0.28em] text-wafu-sumi opacity-95 md:text-2xl">
+                我很喜欢这样的世界
               </p>
 
-              <div className="relative hidden h-full min-h-[340px] w-full py-3 sm:block">
-                <div className="absolute bottom-4 left-6 top-3 w-[7px] bg-gradient-to-b from-transparent via-erii-red/10 to-transparent blur-md" />
-                <div className="absolute bottom-4 left-6 top-3 w-[1px] bg-gradient-to-b from-transparent via-erii-red/75 to-transparent" />
+              <p className="writing-mode-vertical absolute left-[4rem] top-20 whitespace-nowrap font-serif text-lg font-medium leading-[1.1] tracking-[0.22em] text-erii-red opacity-85 md:text-xl">
+                ..但世界不喜欢我
+              </p>
 
-                <p className="writing-mode-vertical absolute left-6 top-3 whitespace-nowrap font-serif text-xl font-black leading-[1.06] tracking-[0.28em] text-wafu-sumi opacity-95 md:text-2xl">
-                  我很喜欢这样的世界
-                </p>
-
-                <p className="writing-mode-vertical absolute left-[5.5rem] top-20 whitespace-nowrap font-serif text-lg font-medium leading-[1.1] tracking-[0.22em] text-erii-red opacity-85 md:text-xl">
-                  ..但世界不喜欢我
-                </p>
-
-                <div className="absolute bottom-4 left-20 rotate-3 opacity-55 mix-blend-multiply">
-                  <div className="writing-mode-vertical rounded-sm border-2 border-erii-red/80 bg-erii-red/10 px-1 py-2 font-serif text-[10px] font-bold tracking-[0.18em] text-erii-red shadow-none">
-                    上杉家主
-                  </div>
+              <div className="absolute -bottom-6 left-18 rotate-3 opacity-55 mix-blend-multiply">
+                <div className="writing-mode-vertical rounded-sm border-2 border-erii-red/80 bg-erii-red/10 px-1 py-2 font-serif text-[10px] font-bold tracking-[0.18em] text-erii-red shadow-none">
+                  上杉家主
                 </div>
-
-                <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-erii-red/5 blur-3xl" />
               </div>
-            </div>
 
+              <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-erii-red/5 blur-3xl" />
+            </div>
+          </div>
+
+          <div className="erii-diary-card relative flex min-h-[220px] flex-col gap-8 rounded-[2.5rem] border border-erii-red/10 bg-white/70 p-6 shadow-sm backdrop-blur sm:ml-36 sm:p-10">
+            <p className="font-serif text-base tracking-[0.12em] text-wafu-sumi sm:hidden">
+              我很喜欢这样的世界，但世界不喜欢我
+            </p>
             <div className="relative flex-1">
               <div className="flex gap-6">
                 <div className="flex-1 space-y-4 font-hand text-erii-ink">
@@ -147,7 +146,7 @@ export default function HomePage() {
                 aria-hidden="true"
               />
               <div
-                className="erii-stamp absolute bottom-4 right-6"
+                className="erii-stamp absolute -bottom-8 right-6"
                 aria-hidden="true"
               >
                 绘梨衣
@@ -156,18 +155,16 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="mt-12">
-          <div className="flex items-start justify-between">
-            <h2 className="font-serif text-xl tracking-widest text-erii-ink sm:text-2xl">
-              见闻录
-            </h2>
-            <span
-              className="writing-vertical font-serif text-[10px] leading-none tracking-widest text-erii-ink/60 sm:text-[11px]"
-              style={{ textOrientation: "upright" }}
-            >
-              迎着阳光盛大逃亡的时光里
-            </span>
-          </div>
+        <section className="relative mt-12">
+          <h2 className="font-serif text-xl tracking-widest text-erii-ink sm:text-2xl">
+            见闻录
+          </h2>
+          <span
+            className="absolute right-0 top-0 writing-vertical font-serif text-[10px] leading-none tracking-widest text-erii-ink/60 sm:text-[11px]"
+            style={{ textOrientation: "upright" }}
+          >
+            迎着阳光盛大逃亡的时光里
+          </span>
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {posts.map((post) => (
               <PostCard key={post.slug} post={post} />
