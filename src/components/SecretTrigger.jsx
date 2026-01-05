@@ -3,10 +3,14 @@
 import { useState } from "react";
 import confetti from "canvas-confetti";
 import { Gamepad2 } from "lucide-react";
+import Image from "next/image";
 
 export default function SecretTrigger() {
   const [isOpen, setIsOpen] = useState(false);
   const [code, setCode] = useState("");
+  const [gifLoaded, setGifLoaded] = useState(true);
+
+  const triggerGifSrc = "/images/secret-trigger.gif";
 
   const triggerSakura = () => {
     const duration = 3000;
@@ -68,10 +72,23 @@ export default function SecretTrigger() {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="rounded-full bg-erii-red p-3 text-white shadow-lg transition-transform hover:scale-110"
+          className="group grid h-14 w-14 place-items-center rounded-full border border-wafu-sumi/10 bg-wafu-paper/95 shadow-lg backdrop-blur-sm transition-transform hover:scale-110 active:scale-95"
           aria-label="打开彩蛋"
         >
-          <Gamepad2 size={24} />
+          {gifLoaded ? (
+            <Image
+              src={triggerGifSrc}
+              alt=""
+              width={40}
+              height={40}
+              unoptimized
+              className="h-10 w-10 select-none rounded-full object-cover"
+              draggable={false}
+              onError={() => setGifLoaded(false)}
+            />
+          ) : (
+            <Gamepad2 size={24} className="text-erii-red" />
+          )}
         </button>
       )}
     </div>
