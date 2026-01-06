@@ -1,6 +1,8 @@
 # ERII Blog：/write 直接发布到 Vercel 的待定方案
 
-> 目标：把 `/write` 的编辑内容“直接发布并展示到线上站点”，但当前**暂不实现**，先沉淀可选方案与决策点。
+> 目标：把 `/write` 的编辑内容“直接发布并展示到线上站点”。
+>
+> 状态：**MVP 已落地**（Postgres + Blob + 草稿/发布 + 口令会话鉴权 + 公开读链路迁移）。本文件保留方案沉淀，同时补充“当前实现与使用步骤”。
 
 ---
 
@@ -16,13 +18,40 @@
 
 ---
 
+## 0.5 当前实现（已落地）
+
+### 关键文件
+- 数据库 schema：`db/schema.sql`
+- DB 连接：`src/lib/db.js`
+- 写入鉴权：`src/lib/writeAuth.js`、`src/lib/writeGuard.js`
+- 健康检查：`app/api/health/route.js`
+- 写接口：
+  - `app/api/write/session/route.js`（登录/登出/会话）
+  - `app/api/write/posts/route.js`（草稿 upsert + 草稿列表）
+  - `app/api/write/posts/publish/route.js`（发布 upsert）
+  - `app/api/write/posts/[slug]/route.js`（读取草稿/已发布，用于编辑器载入）
+  - `app/api/write/assets/route.js`（上传到 Blob 并回填 URL）
+- 公开读链路：`src/lib/posts.js`（DB 优先 + `content/*.mdx` fallback）
+- 编辑器：`src/components/WritePage.jsx`（登录/草稿/发布/上传/导出）
+
+### 初始化步骤（第一次需要你手工做的）
+1) **建表**：Vercel Dashboard → Storage → Postgres → Query，执行 `db/schema.sql`
+2) **配置环境变量（Vercel + 本地）**
+   - Postgres：`DATABASE_URL`
+   - Blob：`BLOB_READ_WRITE_TOKEN`
+   - 写入鉴权：`ERII_WRITE_PASSWORD`、`ERII_WRITE_SESSION_SECRET`
+3) **验证连通性**：本地启动后访问 `GET /api/health`（`db.ok=true` 且 `blob.ok=true`）
+4) **登录与发布**：打开 `/write` → 设置面板输入口令登录 → 草稿/奉纳/上传即可用
+
+---
+
 ## 1. 现状与约束
 
 ### 现状（代码层）
-- 文章源：`content/*.mdx`
-- 读取逻辑：`src/lib/posts.js` 使用 `fs` + `gray-matter` 读取 `content/`
+- 文章源：**DB（published）优先**，并保留 `content/*.mdx` fallback
+- 读取逻辑：`src/lib/posts.js`（DB + `fs` + `gray-matter`）
 - 展示页：`app/blog/[slug]/page.jsx`（服务端读取 `getPostData(slug)`）
-- 编辑器：`src/components/WritePage.jsx`（客户端生成 frontmatter + content；当前“奉纳”= 下载 MDX）
+- 编辑器：`src/components/WritePage.jsx`（口令会话登录；草稿/发布写 DB；图片上传到 Blob；仍支持下载/复制 MDX）
 
 ### 关键约束（Vercel）
 - Vercel/Serverless 运行时的文件系统**不可持久化写入**。
@@ -69,7 +98,7 @@
 - 服务端环境变量（仅 server 端可见）：
   - `GITHUB_TOKEN`（PAT 或 GitHub App token）
   - `GITHUB_OWNER` / `GITHUB_REPO` / `GITHUB_BRANCH`
-  - `WRITE_PASSWORD`（或 `WRITE_TOKEN`，用于保护发布接口）
+  - `ERII_WRITE_PASSWORD`（或另设 `WRITE_TOKEN`，用于保护发布接口）
 - slug 策略（建议可预测且稳定）：
   - 由标题/日期生成（并在发布时回传最终 slug）
   - 需要处理重复 slug（后缀 `-2` 等）
@@ -145,23 +174,22 @@
 - 可用于存小体量内容或草稿缓存
 - 大内容（长文）不一定适合长期当主存（取决于策略与成本）
 
-### B 的接口草案（不实现，仅用于对齐边界）
+### B 的接口草案（MVP 已实现，以下为当前路径）
 
 鉴权（仅本人）：
-- `POST /api/auth/login`：提交 `WRITE_PASSWORD`，成功后下发**签名的** HttpOnly Cookie（会话）
-- `POST /api/auth/logout`：清除 Cookie
-  - 建议：会话包含过期时间（例如 7 天），签名密钥用 `AUTH_SECRET`（环境变量）
+- `POST /api/write/session`：提交 `ERII_WRITE_PASSWORD`（`{ password }`），成功后下发**签名的** HttpOnly Cookie（会话）
+- `DELETE /api/write/session`：清除 Cookie
+- `GET /api/write/session`：查询会话状态
 
 媒体上传（Blob）：
-- `POST /api/assets`：上传文件 -> 写入 Blob -> 返回 `{ url, pathname, contentType, bytes }`
+- `POST /api/write/assets`：上传文件 -> 写入 Blob -> 返回 `{ url, blob }`
   - 约束：MIME 白名单（`image/*`、可选 `video/*`）、大小上限、鉴权必需
 
 文章写入（Postgres）：
-- `GET /api/posts?status=draft`：草稿列表（仅会话）
-- `POST /api/posts`：创建草稿（返回 `id/slug`，用于继续编辑）
-- `GET /api/posts/:id`：读取草稿（仅会话）
-- `PATCH /api/posts/:id`：更新草稿（标题/摘要/tags/cover_url/content_md，建议 debounce 自动保存）
-- `DELETE /api/posts/:id`：删除草稿（仅会话，谨慎）
+- `GET /api/write/posts?status=draft|all`：草稿列表（仅会话）
+- `POST /api/write/posts`：草稿 upsert（返回 `slug`，用于继续编辑）
+- `POST /api/write/posts/publish`：发布 upsert（返回 `slug`；并触发 `revalidateTag/revalidatePath`）
+- `GET /api/write/posts/:slug`：读取草稿/已发布（仅会话，用于继续编辑）
 - `POST /api/posts/:id/publish`：置为 `published` + `published_at` + `revalidateTag`
 
 草稿工作流（MVP 建议）：
@@ -205,10 +233,10 @@
 ## 6. 安全与风险清单（无论选哪条都建议考虑）
 
 1) **写能力鉴权（仅本人）**：保护 `/write` 与所有写接口（发布/保存草稿/上传 Blob）。
-   - 最轻量推荐：`WRITE_PASSWORD`（环境变量）+ 登录换取 HttpOnly Cookie（`SameSite=Strict`、`Secure`）
+   - 最轻量推荐：`ERII_WRITE_PASSWORD`（环境变量）+ 登录换取 HttpOnly Cookie（`SameSite=Strict`、`Secure`）
    - Cookie 建议：
      - 名称用 `__Host-` 前缀（例如 `__Host-erii_session`），并固定 `Path=/`
-     - 内容为**可验证签名**的会话（包含过期时间），签名密钥使用 `AUTH_SECRET`
+     - 内容为**可验证签名**的会话（包含过期时间），签名密钥使用 `ERII_WRITE_SESSION_SECRET`
      - 口令比较使用 constant-time（避免侧信道），并给登录接口加限流/延迟
    - Middleware 在 Edge 侧拦截 `/write` 与 `/api/*(写)`：无会话直接 401/重定向
    - API 额外校验 `Origin`（避免 CSRF）+ 基础限流（防爆破）

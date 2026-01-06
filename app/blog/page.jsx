@@ -3,8 +3,8 @@ import PostCard from "@/src/components/PostCard";
 import SecretTrigger from "@/src/components/SecretTrigger";
 import { getSortedPostsData } from "@/src/lib/posts";
 
-export default function BlogIndexPage() {
-  const posts = getSortedPostsData();
+export default async function BlogIndexPage() {
+  const posts = await getSortedPostsData();
 
   return (
     <div className="min-h-screen">

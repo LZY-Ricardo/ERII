@@ -1,11 +1,13 @@
 import { MDXRemote } from "next-mdx-remote/rsc";
+import { notFound } from "next/navigation";
 import Header from "@/src/components/Header";
 import SecretTrigger from "@/src/components/SecretTrigger";
 import { getPostData } from "@/src/lib/posts";
 
 export default async function BlogPostPage({ params }) {
   const { slug } = await params;
-  const post = getPostData(slug);
+  const post = await getPostData(slug);
+  if (!post) notFound();
 
   return (
     <div className="min-h-screen">

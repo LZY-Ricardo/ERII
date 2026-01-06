@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -50,6 +51,11 @@ function ToolButton({ icon, onClick, tooltip }) {
 }
 
 export default function WritePage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlSlug = searchParams.get("slug") || "";
+
+  const [slug, setSlug] = useState("");
   const [title, setTitle] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [description, setDescription] = useState("");
@@ -58,8 +64,14 @@ export default function WritePage() {
   const [content, setContent] = useState("");
   const [toast, setToast] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [isAuthed, setIsAuthed] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isBusy, setIsBusy] = useState(false);
+  const [isDraftLoading, setIsDraftLoading] = useState(false);
 
   const textareaRef = useRef(null);
+  const uploadInputRef = useRef(null);
   const toastTimerRef = useRef(null);
 
   useEffect(() => {
@@ -78,11 +90,133 @@ export default function WritePage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isSettingsOpen]);
 
+  useEffect(() => {
+    if (urlSlug && urlSlug !== slug) {
+      setSlug(urlSlug);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlSlug]);
+
   const showToast = (message) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(message);
     toastTimerRef.current = setTimeout(() => setToast(""), 1400);
   };
+
+  const refreshSession = async () => {
+    setIsAuthLoading(true);
+    try {
+      const res = await fetch("/api/write/session", { cache: "no-store" });
+      const data = await res.json().catch(() => null);
+      setIsAuthed(Boolean(data?.authenticated));
+    } catch {
+      setIsAuthed(false);
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const requireAuthOrOpenSettings = () => {
+    if (isAuthLoading) {
+      showToast("正在检查会话…");
+      return false;
+    }
+    if (isAuthed) return true;
+    setIsSettingsOpen(true);
+    showToast("需要先登录");
+    return false;
+  };
+
+  const handleLogin = async () => {
+    if (!password.trim()) {
+      showToast("请输入口令");
+      return;
+    }
+
+    setIsBusy(true);
+    try {
+      const res = await fetch("/api/write/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        showToast(data?.error || "登录失败");
+        return;
+      }
+
+      setPassword("");
+      await refreshSession();
+      showToast("已登录");
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    setIsBusy(true);
+    try {
+      await fetch("/api/write/session", { method: "DELETE" });
+      await refreshSession();
+      showToast("已退出");
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const loadDraft = async (targetSlug) => {
+    if (!requireAuthOrOpenSettings()) return;
+    if (!targetSlug) {
+      showToast("需要 slug");
+      return;
+    }
+
+    setIsDraftLoading(true);
+    try {
+      const res = await fetch(`/api/write/posts/${encodeURIComponent(targetSlug)}`, {
+        cache: "no-store",
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        if (res.status === 401) {
+          await refreshSession();
+          setIsSettingsOpen(true);
+        }
+        showToast(data?.error || "载入失败");
+        return;
+      }
+
+      const post = data.post;
+      setSlug(post.slug);
+      setTitle(post.title || "");
+      setDate(String(post.date || "").slice(0, 10));
+      setDescription(post.description || "");
+      setCover(post.cover || "");
+      setTags(Array.isArray(post.tags) ? post.tags.join(", ") : "");
+      setContent(post.content || "");
+      router.replace(`/write?slug=${encodeURIComponent(post.slug)}`);
+      showToast("已载入草稿");
+    } finally {
+      setIsDraftLoading(false);
+    }
+  };
+
+  const loadedUrlSlugRef = useRef("");
+  useEffect(() => {
+    if (!isAuthed) return;
+    if (!urlSlug) return;
+    if (loadedUrlSlugRef.current === urlSlug) return;
+    loadedUrlSlugRef.current = urlSlug;
+    loadDraft(urlSlug);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthed, urlSlug]);
 
   const frontmatter = useMemo(() => {
     const tagsValue = toYamlTags(tags);
@@ -95,6 +229,26 @@ export default function WritePage() {
   }, [title, date, description, tags, cover]);
 
   const fullMdx = useMemo(() => frontmatter + content, [frontmatter, content]);
+
+  const insertAtSelection = (buildSnippet) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    const text = textarea.value ?? "";
+    const selectedText = text.substring(start, end);
+    const snippet = buildSnippet(selectedText);
+
+    const nextText = text.substring(0, start) + snippet + text.substring(end);
+    setContent(nextText);
+
+    setTimeout(() => {
+      textarea.focus();
+      const cursor = start + snippet.length;
+      textarea.setSelectionRange(cursor, cursor);
+    }, 0);
+  };
 
   const insertText = (before, after = "") => {
     const textarea = textareaRef.current;
@@ -139,8 +293,132 @@ export default function WritePage() {
     }
   };
 
+  const writePayload = () => ({
+    slug: slug || undefined,
+    title,
+    date,
+    description,
+    tags,
+    cover,
+    content,
+  });
+
+  const handleSaveDraft = async () => {
+    if (!requireAuthOrOpenSettings()) return;
+
+    setIsBusy(true);
+    try {
+      const res = await fetch("/api/write/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(writePayload()),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        if (res.status === 401) {
+          await refreshSession();
+          setIsSettingsOpen(true);
+        }
+        showToast(data?.error || "保存失败");
+        return;
+      }
+
+      setSlug(data.slug);
+      router.replace(`/write?slug=${encodeURIComponent(data.slug)}`);
+      showToast("草稿已保存");
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!requireAuthOrOpenSettings()) return;
+
+    setIsBusy(true);
+    try {
+      const res = await fetch("/api/write/posts/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(writePayload()),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        if (res.status === 401) {
+          await refreshSession();
+          setIsSettingsOpen(true);
+        }
+        showToast(data?.error || "发布失败");
+        return;
+      }
+
+      setSlug(data.slug);
+      router.replace(`/write?slug=${encodeURIComponent(data.slug)}`);
+      showToast("已发布");
+      router.push(`/blog/${encodeURIComponent(data.slug)}`);
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const handlePickImage = () => {
+    if (!requireAuthOrOpenSettings()) return;
+    uploadInputRef.current?.click();
+  };
+
+  const handleUploadChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!requireAuthOrOpenSettings()) return;
+
+    setIsBusy(true);
+    try {
+      const form = new FormData();
+      form.set("file", file);
+      form.set("prefix", "images");
+
+      const res = await fetch("/api/write/assets", { method: "POST", body: form });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        if (res.status === 401) {
+          await refreshSession();
+          setIsSettingsOpen(true);
+        }
+        showToast(data?.error || "上传失败");
+        return;
+      }
+
+      const url = data.url;
+      const fallbackAlt = file.name.replace(/\.[a-z0-9]+$/i, "");
+      insertAtSelection((selected) => `![${selected || fallbackAlt}](${url})`);
+      showToast("图片已插入");
+    } finally {
+      setIsBusy(false);
+      event.target.value = "";
+    }
+  };
+
+  const resetDraft = () => {
+    setSlug("");
+    setTitle("");
+    setDate(new Date().toISOString().split("T")[0]);
+    setDescription("");
+    setTags("");
+    setCover("");
+    setContent("");
+    router.replace("/write");
+    showToast("已新建空白稿");
+  };
+
   return (
     <div className="min-h-screen flex flex-col text-wafu-sumi">
+      <input
+        ref={uploadInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleUploadChange}
+      />
       <header className="sticky top-0 z-50 h-14 border-b border-wafu-sumi/10 bg-wafu-paper/60 px-4 backdrop-blur-md">
         <div className="mx-auto flex h-full max-w-6xl items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -172,10 +450,21 @@ export default function WritePage() {
             </button>
             <button
               type="button"
-              onClick={handleDownload}
-              aria-label="奉纳（下载 MDX）"
-              title="奉纳（下载 MDX）"
-              className="grid h-10 w-10 place-items-center rounded-md bg-wafu-sumi text-wafu-paper shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
+              onClick={handleSaveDraft}
+              disabled={isBusy}
+              aria-label="保存草稿"
+              title="保存草稿"
+              className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-[11px] font-serif tracking-[0.18em] text-wafu-sumi/70 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              草稿
+            </button>
+            <button
+              type="button"
+              onClick={handlePublish}
+              disabled={isBusy}
+              aria-label="奉纳（发布）"
+              title="奉纳（发布）"
+              className="grid h-10 w-10 place-items-center rounded-md bg-wafu-sumi text-wafu-paper shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-70"
             >
               <span
                 className="font-serif text-[11px] leading-none tracking-[0.28em]"
@@ -241,6 +530,15 @@ export default function WritePage() {
                 />
               </label>
               <label className="grid gap-2">
+                <span className="text-xs text-wafu-sumi/60">slug</span>
+                <input
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-2 text-sm font-mono text-wafu-sumi outline-none placeholder:text-wafu-sumi/30 focus:border-erii-red caret-erii-red"
+                  placeholder="auto"
+                />
+              </label>
+              <label className="grid gap-2">
                 <span className="text-xs text-wafu-sumi/60">封面</span>
                 <input
                   value={cover}
@@ -269,22 +567,79 @@ export default function WritePage() {
               </label>
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-              <p className="text-xs text-wafu-sumi/55">
-                图片放进{" "}
-                <code className="rounded bg-white/60 px-1 py-0.5 font-mono">
-                  public/images
-                </code>
-                ，再用工具栏插入。
-              </p>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="inline-flex items-center gap-2 rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red"
-              >
-                <Copy size={16} />
-                <span>复制 MDX</span>
-              </button>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <p className="text-xs text-wafu-sumi/55">
+                  {isAuthed
+                    ? "会话：已登录（发布/草稿/上传可用）"
+                    : "会话：未登录（仅下载/复制）"}
+                </p>
+                {!isAuthed ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="flex-1 border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-2 text-sm font-mono text-wafu-sumi outline-none placeholder:text-wafu-sumi/30 focus:border-erii-red caret-erii-red"
+                      placeholder="口令…"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleLogin}
+                      disabled={isBusy}
+                      className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      登录
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => loadDraft(slug)}
+                      disabled={isBusy || isDraftLoading}
+                      className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      载入草稿
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetDraft}
+                      disabled={isBusy}
+                      className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      新稿
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      disabled={isBusy}
+                      className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      退出
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-end gap-2 md:justify-end">
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  className="inline-flex items-center gap-2 rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red"
+                >
+                  <Code size={16} />
+                  <span>下载 MDX</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="inline-flex items-center gap-2 rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red"
+                >
+                  <Copy size={16} />
+                  <span>复制 MDX</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -350,8 +705,8 @@ export default function WritePage() {
                 />
                 <ToolButton
                   icon={<Mountain size={18} />}
-                  onClick={() => insertText("![描述](/images/", ")")}
-                  tooltip="山水"
+                  onClick={handlePickImage}
+                  tooltip={isAuthed ? "上传图片" : "上传图片（需登录）"}
                 />
               </div>
             </div>
