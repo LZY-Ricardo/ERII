@@ -28,7 +28,7 @@ function unauthorized() {
 }
 
 export async function GET(request) {
-  if (!isWriteAuthed()) return unauthorized();
+  if (!(await isWriteAuthed())) return unauthorized();
 
   const url = new URL(request.url);
   const status = url.searchParams.get("status") ?? "draft";
@@ -61,7 +61,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!isWriteAuthed()) return unauthorized();
+  if (!(await isWriteAuthed())) return unauthorized();
 
   let body;
   try {
@@ -81,7 +81,15 @@ export async function POST(request) {
   const tags = parseTags(body?.tags);
 
   const providedSlug = String(body?.slug ?? "").trim();
-  const slugBase = providedSlug || slugify(title) || generateFallbackSlug();
+  const normalizedProvidedSlug = providedSlug ? slugify(providedSlug) : "";
+  if (providedSlug && !normalizedProvidedSlug) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid slug." },
+      { status: 400 }
+    );
+  }
+
+  const slugBase = normalizedProvidedSlug || slugify(title) || generateFallbackSlug();
   const slug = slugBase;
 
   const db = requireDb();
@@ -106,4 +114,3 @@ export async function POST(request) {
 
   return NextResponse.json({ ok: true, slug, status: "draft" });
 }
-

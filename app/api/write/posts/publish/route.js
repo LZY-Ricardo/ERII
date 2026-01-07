@@ -28,7 +28,7 @@ function unauthorized() {
 }
 
 export async function POST(request) {
-  if (!isWriteAuthed()) return unauthorized();
+  if (!(await isWriteAuthed())) return unauthorized();
 
   let body;
   try {
@@ -48,7 +48,16 @@ export async function POST(request) {
   const tags = parseTags(body?.tags);
 
   const providedSlug = String(body?.slug ?? "").trim();
-  const slugBase = providedSlug || slugify(title) || generateFallbackSlug("post");
+  const normalizedProvidedSlug = providedSlug ? slugify(providedSlug) : "";
+  if (providedSlug && !normalizedProvidedSlug) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid slug." },
+      { status: 400 }
+    );
+  }
+
+  const slugBase =
+    normalizedProvidedSlug || slugify(title) || generateFallbackSlug("post");
   const slug = slugBase;
 
   const db = requireDb();
@@ -72,7 +81,8 @@ export async function POST(request) {
   revalidateTag(`post:${slug}`);
   revalidatePath("/");
   revalidatePath("/blog");
-  revalidatePath(`/blog/${slug}`);
+  revalidatePath("/blog/[slug]");
+  revalidatePath(`/blog/${encodeURIComponent(slug)}`);
 
   return NextResponse.json({ ok: true, slug, status: "published" });
 }

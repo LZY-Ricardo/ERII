@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireDb } from "@/src/lib/db";
 import { isWriteAuthed } from "@/src/lib/writeGuard";
+import { normalizeSlugParam } from "@/src/lib/slugParam";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,9 +11,16 @@ function unauthorized() {
 }
 
 export async function GET(_request, { params }) {
-  if (!isWriteAuthed()) return unauthorized();
+  if (!(await isWriteAuthed())) return unauthorized();
 
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = normalizeSlugParam(rawSlug);
+  if (!slug) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid slug" },
+      { status: 400 }
+    );
+  }
   const db = requireDb();
 
   const result = await db.sql`
@@ -29,4 +37,3 @@ export async function GET(_request, { params }) {
 
   return NextResponse.json({ ok: true, post });
 }
-

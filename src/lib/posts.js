@@ -3,6 +3,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import { unstable_cache } from "next/cache";
 import { db } from "@/src/lib/db";
+import { normalizeSlugParam } from "@/src/lib/slugParam";
 
 const postsDirectory = path.join(process.cwd(), "content");
 
@@ -129,11 +130,14 @@ export async function getSortedPostsData() {
 }
 
 export async function getPostData(slug) {
-  const dbPost = await getPublishedPostFromDb(slug);
+  const normalizedSlug = normalizeSlugParam(slug);
+  if (!normalizedSlug) return null;
+
+  const dbPost = await getPublishedPostFromDb(normalizedSlug);
   if (dbPost) return dbPost;
 
   try {
-    return getPostDataFs(slug);
+    return getPostDataFs(normalizedSlug);
   } catch {
     return null;
   }

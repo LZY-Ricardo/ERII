@@ -13,7 +13,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const cookieValue = cookies().get(WRITE_SESSION_COOKIE)?.value;
+  const cookieStore = await cookies();
+  const cookieValue = cookieStore.get(WRITE_SESSION_COOKIE)?.value;
   const authenticated = isWriteSessionValid(cookieValue);
   return NextResponse.json({ ok: true, authenticated });
 }
@@ -58,4 +59,3 @@ export async function DELETE() {
   });
   return response;
 }
-

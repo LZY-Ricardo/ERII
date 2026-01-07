@@ -18,7 +18,7 @@ function sanitizePathSegment(value) {
 }
 
 export async function POST(request) {
-  if (!isWriteAuthed()) return unauthorized();
+  if (!(await isWriteAuthed())) return unauthorized();
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json(
@@ -69,4 +69,3 @@ export async function POST(request) {
 
   return NextResponse.json({ ok: true, url: blob.url, blob });
 }
-
