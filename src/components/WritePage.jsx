@@ -411,7 +411,7 @@ export default function WritePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col text-wafu-sumi">
+    <div className="h-screen w-full overflow-hidden flex flex-col text-wafu-sumi">
       <input
         ref={uploadInputRef}
         type="file"
@@ -442,9 +442,8 @@ export default function WritePage() {
               onClick={() => setIsSettingsOpen((open) => !open)}
               aria-label="设置"
               title="设置"
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/60 hover:text-erii-red ${
-                isSettingsOpen ? "text-erii-red" : "text-wafu-sumi/55"
-              }`}
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/60 hover:text-erii-red ${isSettingsOpen ? "text-erii-red" : "text-wafu-sumi/55"
+                }`}
             >
               <Settings size={18} />
             </button>
@@ -484,14 +483,12 @@ export default function WritePage() {
       ) : null}
 
       <div
-        className={`fixed inset-0 z-[60] transition ${
-          isSettingsOpen ? "pointer-events-auto" : "pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-[60] transition ${isSettingsOpen ? "pointer-events-auto" : "pointer-events-none"
+          }`}
       >
         <div
-          className={`absolute inset-0 bg-wafu-sumi/10 backdrop-blur-sm transition-opacity ${
-            isSettingsOpen ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 bg-wafu-sumi/10 backdrop-blur-sm transition-opacity ${isSettingsOpen ? "opacity-100" : "opacity-0"
+            }`}
           onClick={() => setIsSettingsOpen(false)}
         />
         <div className="absolute left-0 right-0 top-0">
@@ -499,9 +496,8 @@ export default function WritePage() {
             role="dialog"
             aria-modal={isSettingsOpen}
             aria-label="设置"
-            className={`mx-auto max-w-4xl origin-top rounded-b-3xl border border-wafu-sumi/10 bg-wafu-paper/80 p-6 shadow-lg backdrop-blur transition-transform duration-300 ${
-              isSettingsOpen ? "translate-y-0" : "-translate-y-full"
-            }`}
+            className={`mx-auto max-w-4xl origin-top rounded-b-3xl border border-wafu-sumi/10 bg-wafu-paper/80 p-6 shadow-lg backdrop-blur transition-transform duration-300 ${isSettingsOpen ? "translate-y-0" : "-translate-y-full"
+              }`}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-4">
