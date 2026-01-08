@@ -80,6 +80,8 @@ export default function WritePage() {
   const textareaRef = useRef(null);
   const uploadInputRef = useRef(null);
   const toastTimerRef = useRef(null);
+  const settingsDialogRef = useRef(null);
+  const lastActiveElementRef = useRef(null);
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -90,11 +92,59 @@ export default function WritePage() {
 
   useEffect(() => {
     if (!isSettingsOpen) return;
+    lastActiveElementRef.current = document.activeElement;
+    requestAnimationFrame(() => settingsDialogRef.current?.focus());
     const handleKeyDown = (event) => {
-      if (event.key === "Escape") setIsSettingsOpen(false);
+      if (event.key === "Escape") {
+        setIsSettingsOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const dialog = settingsDialogRef.current;
+      if (!dialog) return;
+
+      const focusables = Array.from(
+        dialog.querySelectorAll(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
+
+      if (!focusables.length) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+
+      if (!dialog.contains(active)) {
+        event.preventDefault();
+        first.focus();
+        return;
+      }
+
+      if (event.shiftKey) {
+        if (active === first || active === dialog) {
+          event.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (active === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      lastActiveElementRef.current?.focus?.();
+    };
   }, [isSettingsOpen]);
 
   useEffect(() => {
@@ -517,7 +567,11 @@ export default function WritePage() {
         className="hidden"
         onChange={handleUploadChange}
       />
-      <header className="sticky top-0 z-50 h-14 border-b border-wafu-sumi/10 bg-wafu-paper/60 px-4 backdrop-blur-md">
+      <header
+        aria-hidden={isSettingsOpen ? true : undefined}
+        inert={isSettingsOpen}
+        className="sticky top-0 z-50 h-14 border-b border-wafu-sumi/10 bg-wafu-paper/60 px-4 backdrop-blur-md"
+      >
         <div className="flex h-full items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link
@@ -542,7 +596,7 @@ export default function WritePage() {
               onClick={() => setIsSettingsOpen((open) => !open)}
               aria-label="设置"
               title="设置"
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/60 hover:text-erii-red ${isSettingsOpen ? "text-erii-red" : "text-wafu-sumi/55"
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-white/60 hover:text-erii-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-erii-red/25 ${isSettingsOpen ? "text-erii-red" : "text-wafu-sumi/55"
                 }`}
             >
               <Settings size={18} />
@@ -587,20 +641,24 @@ export default function WritePage() {
           }`}
       >
         <div
-          className={`absolute inset-0 bg-wafu-sumi/10 backdrop-blur-sm transition-opacity ${isSettingsOpen ? "opacity-100" : "opacity-0"
+          className={`absolute inset-0 bg-wafu-sumi/70 backdrop-blur-md backdrop-brightness-75 transition-opacity ${isSettingsOpen ? "opacity-100" : "opacity-0"
             }`}
           onClick={() => setIsSettingsOpen(false)}
         />
-        <div className="absolute left-0 right-0 top-0">
+        <div className="absolute inset-0">
           <div
+            ref={settingsDialogRef}
             role="dialog"
-            aria-modal={isSettingsOpen}
+            aria-modal="true"
+            aria-hidden={!isSettingsOpen}
             aria-label="设置"
-            className={`mx-auto max-w-4xl origin-top rounded-b-3xl border border-wafu-sumi/10 bg-wafu-paper/80 p-6 shadow-lg backdrop-blur transition-transform duration-300 ${isSettingsOpen ? "translate-y-0" : "-translate-y-full"
+            inert={!isSettingsOpen}
+            tabIndex={-1}
+            className={`absolute inset-y-0 right-0 w-full max-w-md overflow-y-auto border border-wafu-sumi/25 bg-gradient-to-b from-white to-wafu-paper p-6 shadow-[0_32px_110px_rgba(26,26,26,0.35)] transition-transform duration-300 md:inset-y-6 md:right-6 md:rounded-2xl ${isSettingsOpen ? "translate-x-0" : "translate-x-full"
               }`}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-4 border-b border-wafu-sumi/10 pb-4">
               <div className="select-none font-serif text-xs tracking-[0.32em] text-wafu-sumi/60">
                 SETTINGS
               </div>
@@ -609,55 +667,55 @@ export default function WritePage() {
                 onClick={() => setIsSettingsOpen(false)}
                 aria-label="关闭设置"
                 title="关闭"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-wafu-sumi/55 transition-colors hover:bg-white/60 hover:text-erii-red"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-wafu-sumi/55 transition-colors hover:bg-white/60 hover:text-erii-red focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-erii-red/25"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="mt-6 grid gap-6 md:grid-cols-2">
               <label className="grid gap-2">
-                <span className="text-xs text-wafu-sumi/60">日期</span>
+                <span className="text-xs font-medium text-wafu-sumi/80">日期</span>
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-2 text-sm font-mono text-wafu-sumi outline-none focus:border-erii-red caret-erii-red"
+                      className="w-full rounded-md border border-wafu-sumi/20 bg-white/90 px-3 py-2.5 text-sm font-mono text-wafu-sumi outline-none transition-all focus:bg-white focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
                 />
               </label>
               <label className="grid gap-2">
-                <span className="text-xs text-wafu-sumi/60">slug</span>
+                <span className="text-xs font-medium text-wafu-sumi/80">slug</span>
                 <input
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
-                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-2 text-sm font-mono text-wafu-sumi outline-none placeholder:text-wafu-sumi/30 focus:border-erii-red caret-erii-red"
+                  className="w-full rounded-md border border-wafu-sumi/20 bg-white/90 px-3 py-2.5 text-sm font-mono text-wafu-sumi outline-none transition-all placeholder:text-wafu-sumi/30 focus:bg-white focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
                   placeholder="auto"
                 />
               </label>
               <label className="grid gap-2">
-                <span className="text-xs text-wafu-sumi/60">封面</span>
+                <span className="text-xs font-medium text-wafu-sumi/80">封面</span>
                 <input
                   value={cover}
                   onChange={(e) => setCover(e.target.value)}
-                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-2 text-sm text-wafu-sumi/80 outline-none placeholder:text-wafu-sumi/30 focus:border-erii-red caret-erii-red"
+                  className="w-full rounded-md border border-wafu-sumi/20 bg-white/90 px-3 py-2.5 text-sm text-wafu-sumi outline-none transition-all placeholder:text-wafu-sumi/30 focus:bg-white focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
                   placeholder="/images/cover.png（可选）"
                 />
               </label>
               <label className="grid gap-2 md:col-span-2">
-                <span className="text-xs text-wafu-sumi/60">摘要</span>
+                <span className="text-xs font-medium text-wafu-sumi/80">摘要</span>
                 <input
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-2 text-sm text-wafu-sumi/80 outline-none placeholder:text-wafu-sumi/30 focus:border-erii-red caret-erii-red"
+                  className="w-full rounded-md border border-wafu-sumi/20 bg-white/90 px-3 py-2.5 text-sm text-wafu-sumi outline-none transition-all placeholder:text-wafu-sumi/30 focus:bg-white focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
                   placeholder="一句描述（可选）"
                 />
               </label>
               <label className="grid gap-2 md:col-span-2">
-                <span className="text-xs text-wafu-sumi/60">标签</span>
+                <span className="text-xs font-medium text-wafu-sumi/80">标签</span>
                 <input
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
-                  className="w-full border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-2 text-sm text-wafu-sumi/80 outline-none placeholder:text-wafu-sumi/30 focus:border-erii-red caret-erii-red"
+                  className="w-full rounded-md border border-wafu-sumi/20 bg-white/90 px-3 py-2.5 text-sm text-wafu-sumi outline-none transition-all placeholder:text-wafu-sumi/30 focus:bg-white focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
                   placeholder="标签（逗号分隔）"
                 />
               </label>
@@ -676,14 +734,14 @@ export default function WritePage() {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="flex-1 border-b border-dashed border-wafu-sumi/20 bg-transparent px-1 py-2 text-sm font-mono text-wafu-sumi outline-none placeholder:text-wafu-sumi/30 focus:border-erii-red caret-erii-red"
+                      className="flex-1 rounded-md border border-wafu-sumi/20 bg-white/90 px-3 py-2 text-sm font-mono text-wafu-sumi outline-none transition-all placeholder:text-wafu-sumi/30 focus:bg-white focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
                       placeholder="口令…"
                     />
                     <button
                       type="button"
                       onClick={handleLogin}
                       disabled={isBusy}
-                      className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-full border border-wafu-sumi/15 bg-white/85 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       登录
                     </button>
@@ -694,7 +752,7 @@ export default function WritePage() {
                       type="button"
                       onClick={() => loadDraft(slug)}
                       disabled={isBusy || isDraftLoading}
-                      className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-full border border-wafu-sumi/15 bg-white/85 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       载入（slug）
                     </button>
@@ -702,7 +760,7 @@ export default function WritePage() {
                       type="button"
                       onClick={resetDraft}
                       disabled={isBusy}
-                      className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-full border border-wafu-sumi/15 bg-white/85 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       新稿
                     </button>
@@ -710,7 +768,7 @@ export default function WritePage() {
                       type="button"
                       onClick={handleLogout}
                       disabled={isBusy}
-                      className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-full border border-wafu-sumi/15 bg-white/85 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       退出
                     </button>
@@ -722,7 +780,7 @@ export default function WritePage() {
                 <button
                   type="button"
                   onClick={handleDownload}
-                  className="inline-flex items-center gap-2 rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red"
+                  className="inline-flex items-center gap-2 rounded-full border border-wafu-sumi/15 bg-white/85 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white hover:text-erii-red"
                 >
                   <Code size={16} />
                   <span>下载 MDX</span>
@@ -730,7 +788,7 @@ export default function WritePage() {
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="inline-flex items-center gap-2 rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red"
+                  className="inline-flex items-center gap-2 rounded-full border border-wafu-sumi/15 bg-white/85 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white hover:text-erii-red"
                 >
                   <Copy size={16} />
                   <span>复制 MDX</span>
@@ -739,7 +797,7 @@ export default function WritePage() {
             </div>
 
             {isAuthed ? (
-              <section className="mt-6 rounded-2xl border border-wafu-sumi/10 bg-white/40 p-4">
+              <section className="mt-6 rounded-2xl border border-wafu-sumi/15 bg-white/80 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="select-none font-serif text-xs tracking-[0.28em] text-wafu-sumi/60">
                     POSTS
@@ -748,7 +806,7 @@ export default function WritePage() {
                     type="button"
                     onClick={refreshPostIndex}
                     disabled={isPostIndexLoading}
-                    className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-full border border-wafu-sumi/15 bg-white/85 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isPostIndexLoading ? "刷新中…" : "刷新"}
                   </button>
@@ -760,7 +818,7 @@ export default function WritePage() {
                     <select
                       value={postIndexFilter}
                       onChange={(e) => setPostIndexFilter(e.target.value)}
-                      className="w-full rounded-lg border border-dashed border-wafu-sumi/15 bg-white/40 px-3 py-2 text-sm text-wafu-sumi outline-none focus:border-erii-red"
+                      className="w-full rounded-md border border-wafu-sumi/20 bg-white/90 px-3 py-2 text-sm text-wafu-sumi outline-none transition-all focus:bg-white focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
                     >
                       <option value="all">全部</option>
                       <option value="draft">草稿</option>
@@ -772,13 +830,13 @@ export default function WritePage() {
                     <input
                       value={postIndexQuery}
                       onChange={(e) => setPostIndexQuery(e.target.value)}
-                      className="w-full rounded-lg border border-dashed border-wafu-sumi/15 bg-white/40 px-3 py-2 text-sm text-wafu-sumi outline-none placeholder:text-wafu-sumi/30 focus:border-erii-red caret-erii-red"
+                      className="w-full rounded-md border border-wafu-sumi/20 bg-white/90 px-3 py-2 text-sm text-wafu-sumi outline-none transition-all placeholder:text-wafu-sumi/30 focus:bg-white focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
                       placeholder="标题或 slug"
                     />
                   </label>
                 </div>
 
-                <div className="mt-4 max-h-64 overflow-auto rounded-xl border border-wafu-sumi/10 bg-white/30">
+                <div className="mt-4 max-h-64 overflow-auto rounded-xl border border-wafu-sumi/15 bg-white/90">
                   {filteredPostIndex.length ? (
                     <ul className="divide-y divide-wafu-sumi/10">
                       {filteredPostIndex.map((post) => (
@@ -797,7 +855,7 @@ export default function WritePage() {
                                 {String(post.date ?? "").slice(0, 10)}
                               </span>
                               <span className="h-1 w-1 rounded-full bg-wafu-sumi/25" />
-                              <span className="rounded-full border border-wafu-sumi/10 bg-white/50 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider">
+                              <span className="rounded-full border border-wafu-sumi/15 bg-white/85 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider">
                                 {post.status}
                               </span>
                             </div>
@@ -806,7 +864,7 @@ export default function WritePage() {
                             type="button"
                             onClick={() => loadDraft(post.slug)}
                             disabled={isBusy || isDraftLoading}
-                            className="shrink-0 rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                            className="shrink-0 rounded-full border border-wafu-sumi/15 bg-white/85 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             载入
                           </button>
@@ -825,7 +883,11 @@ export default function WritePage() {
         </div>
       </div>
 
-      <main className="flex-1 overflow-hidden">
+      <main
+        aria-hidden={isSettingsOpen ? true : undefined}
+        inert={isSettingsOpen}
+        className="flex-1 overflow-hidden"
+      >
         <div className="grid h-full grid-rows-[1fr_1fr] divide-y divide-wafu-sumi/10 md:grid-rows-1 md:grid-cols-2 md:divide-x md:divide-y-0 md:divide-wafu-sumi/10">
           <section className="min-h-0 flex flex-col bg-erii-paper/35">
             <div className="px-8 pb-6 pt-10">
