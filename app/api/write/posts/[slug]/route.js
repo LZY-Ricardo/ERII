@@ -10,6 +10,13 @@ function unauthorized() {
   return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 }
 
+function formatDate(value) {
+  if (!value) return new Date().toISOString().slice(0, 10);
+  if (typeof value === "string") return value.slice(0, 10);
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return String(value).slice(0, 10);
+}
+
 export async function GET(_request, { params }) {
   if (!(await isWriteAuthed())) return unauthorized();
 
@@ -21,6 +28,7 @@ export async function GET(_request, { params }) {
       { status: 400 }
     );
   }
+
   const db = requireDb();
 
   const result = await db.sql`
@@ -35,5 +43,12 @@ export async function GET(_request, { params }) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ ok: true, post });
+  return NextResponse.json({
+    ok: true,
+    post: {
+      ...post,
+      date: formatDate(post.date),
+      source: "db",
+    },
+  });
 }

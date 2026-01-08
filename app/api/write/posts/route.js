@@ -27,6 +27,13 @@ function unauthorized() {
   return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 }
 
+function formatDate(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value.slice(0, 10);
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return String(value).slice(0, 10);
+}
+
 export async function GET(request) {
   if (!(await isWriteAuthed())) return unauthorized();
 
@@ -57,7 +64,12 @@ export async function GET(request) {
     `;
   }
 
-  return NextResponse.json({ ok: true, posts: result.rows });
+  const posts = result.rows.map((row) => ({
+    ...row,
+    date: formatDate(row.date),
+  }));
+
+  return NextResponse.json({ ok: true, posts });
 }
 
 export async function POST(request) {

@@ -1,3 +1,5 @@
+> ⚠️ 说明：本文档为早期基于 `content/`（文件）方案的编辑器规划；当前项目已迁移为 **Postgres/Blob（DB-only）**，并已移除 `content/`。实际用法请以 `docs/EditingPublishedPosts.md` 为准。
+
 我们需要打造一个**“绘梨衣的绘图板 (Erii's Drafting Table)”**。
 
 核心设计理念：

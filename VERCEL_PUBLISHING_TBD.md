@@ -4,6 +4,8 @@
 >
 > 状态：**MVP 已落地**（Postgres + Blob + 草稿/发布 + 口令会话鉴权 + 公开读链路迁移）。本文件保留方案沉淀，同时补充“当前实现与使用步骤”。
 
+> 更新：当前项目已将公开阅读内容源收敛为 **Postgres（`published`）单源**，并已弃用/移除 `content/*.mdx` 回退读取逻辑；下文中涉及 `content/` 的内容仅作为历史方案参考。
+
 ---
 
 ## 0. 当前已确认的选择（可作为后续实现基线）
@@ -31,7 +33,7 @@
   - `app/api/write/posts/publish/route.js`（发布 upsert）
   - `app/api/write/posts/[slug]/route.js`（读取草稿/已发布，用于编辑器载入）
   - `app/api/write/assets/route.js`（上传到 Blob 并回填 URL）
-- 公开读链路：`src/lib/posts.js`（DB 优先 + `content/*.mdx` fallback）
+- 公开读链路：`src/lib/posts.js`（仅 DB：`published`）
 - 编辑器：`src/components/WritePage.jsx`（登录/草稿/发布/上传/导出）
 
 ### 初始化步骤（第一次需要你手工做的）
@@ -48,14 +50,14 @@
 ## 1. 现状与约束
 
 ### 现状（代码层）
-- 文章源：**DB（published）优先**，并保留 `content/*.mdx` fallback
-- 读取逻辑：`src/lib/posts.js`（DB + `fs` + `gray-matter`）
+- 文章源：**DB（published）单源**
+- 读取逻辑：`src/lib/posts.js`（仅 DB + `unstable_cache`，发布后通过 `revalidateTag/revalidatePath` 刷新）
 - 展示页：`app/blog/[slug]/page.jsx`（服务端读取 `getPostData(slug)`）
 - 编辑器：`src/components/WritePage.jsx`（口令会话登录；草稿/发布写 DB；图片上传到 Blob；仍支持下载/复制 MDX）
 
 ### 关键约束（Vercel）
 - Vercel/Serverless 运行时的文件系统**不可持久化写入**。
-- 因此：不能在生产环境里通过 API 把文件写进 `content/` 并期待它永久存在。
+- 因此：生产环境不能依赖“写入本地文件”作为发布/存储方案。
 
 结论：要实现“线上发布并展示”，必须选择**可持久化的发布通道**：
 1) 写入 Git 仓库（触发重新部署后可见）

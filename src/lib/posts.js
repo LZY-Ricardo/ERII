@@ -1,53 +1,6 @@
-import fs from "node:fs";
-import path from "node:path";
-import matter from "gray-matter";
 import { unstable_cache } from "next/cache";
 import { db } from "@/src/lib/db";
 import { normalizeSlugParam } from "@/src/lib/slugParam";
-
-const postsDirectory = path.join(process.cwd(), "content");
-
-function safeReadFsPosts() {
-  try {
-    return fs.readdirSync(postsDirectory).filter((name) => name.endsWith(".mdx"));
-  } catch {
-    return [];
-  }
-}
-
-function getSortedPostsDataFs() {
-  const fileNames = safeReadFsPosts();
-
-  const allPostsData = fileNames.map((fileName) => {
-    const slug = fileName.replace(/\.mdx$/, "");
-    const fullPath = path.join(postsDirectory, fileName);
-    const fileContents = fs.readFileSync(fullPath, "utf8");
-    const { data } = matter(fileContents);
-
-    return {
-      slug,
-      frontmatter: data,
-    };
-  });
-
-  return allPostsData.sort((a, b) => {
-    if (a.frontmatter.date < b.frontmatter.date) return 1;
-    if (a.frontmatter.date > b.frontmatter.date) return -1;
-    return 0;
-  });
-}
-
-function getPostDataFs(slug) {
-  const fullPath = path.join(postsDirectory, `${slug}.mdx`);
-  const fileContents = fs.readFileSync(fullPath, "utf8");
-  const { data, content } = matter(fileContents);
-
-  return {
-    slug,
-    frontmatter: data,
-    content,
-  };
-}
 
 function formatDate(value) {
   if (!value) return "";
@@ -115,30 +68,13 @@ function getPublishedPostFromDb(slug) {
 }
 
 export async function getSortedPostsData() {
-  const fsPosts = getSortedPostsDataFs();
   const dbPosts = await getPublishedPostsFromDb();
-
-  const bySlug = new Map();
-  for (const post of fsPosts) bySlug.set(post.slug, post);
-  for (const post of dbPosts) bySlug.set(post.slug, post);
-
-  return Array.from(bySlug.values()).sort((a, b) => {
-    if (a.frontmatter.date < b.frontmatter.date) return 1;
-    if (a.frontmatter.date > b.frontmatter.date) return -1;
-    return 0;
-  });
+  return dbPosts;
 }
 
 export async function getPostData(slug) {
   const normalizedSlug = normalizeSlugParam(slug);
   if (!normalizedSlug) return null;
 
-  const dbPost = await getPublishedPostFromDb(normalizedSlug);
-  if (dbPost) return dbPost;
-
-  try {
-    return getPostDataFs(normalizedSlug);
-  } catch {
-    return null;
-  }
+  return getPublishedPostFromDb(normalizedSlug);
 }

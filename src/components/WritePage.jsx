@@ -71,6 +71,11 @@ export default function WritePage() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isBusy, setIsBusy] = useState(false);
   const [isDraftLoading, setIsDraftLoading] = useState(false);
+  const [loadedStatus, setLoadedStatus] = useState("");
+  const [postIndex, setPostIndex] = useState([]);
+  const [postIndexQuery, setPostIndexQuery] = useState("");
+  const [postIndexFilter, setPostIndexFilter] = useState("all");
+  const [isPostIndexLoading, setIsPostIndexLoading] = useState(false);
 
   const textareaRef = useRef(null);
   const uploadInputRef = useRef(null);
@@ -99,13 +104,13 @@ export default function WritePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlSlug]);
 
-  const showToast = (message) => {
+  const showToast = useCallback((message) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(message);
     toastTimerRef.current = setTimeout(() => setToast(""), 1400);
-  };
+  }, []);
 
-  const refreshSession = async () => {
+  const refreshSession = useCallback(async () => {
     setIsAuthLoading(true);
     try {
       const res = await fetch("/api/write/session", { cache: "no-store" });
@@ -116,12 +121,11 @@ export default function WritePage() {
     } finally {
       setIsAuthLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     refreshSession();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refreshSession]);
 
   const requireAuthOrOpenSettings = () => {
     if (isAuthLoading) {
@@ -173,6 +177,35 @@ export default function WritePage() {
     }
   };
 
+  const refreshPostIndex = useCallback(async () => {
+    if (!isAuthed) return;
+    setIsPostIndexLoading(true);
+    try {
+      const res = await fetch("/api/write/posts?status=all&limit=200", {
+        cache: "no-store",
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        if (res.status === 401) {
+          await refreshSession();
+        }
+        showToast(data?.error || "加载文章列表失败");
+        return;
+      }
+      setPostIndex(Array.isArray(data.posts) ? data.posts : []);
+    } catch {
+      showToast("加载文章列表失败");
+    } finally {
+      setIsPostIndexLoading(false);
+    }
+  }, [isAuthed, refreshSession, showToast]);
+
+  useEffect(() => {
+    if (!isAuthed) return;
+    if (!isSettingsOpen) return;
+    refreshPostIndex();
+  }, [isAuthed, isSettingsOpen, refreshPostIndex]);
+
   const loadDraft = async (targetSlug) => {
     if (!requireAuthOrOpenSettings()) return;
     if (!targetSlug) {
@@ -203,8 +236,14 @@ export default function WritePage() {
       setCover(post.cover || "");
       setTags(Array.isArray(post.tags) ? post.tags.join(", ") : "");
       setContent(post.content || "");
+      setLoadedStatus(post.status || "");
       router.replace(`/write?slug=${encodeURIComponent(post.slug)}`);
-      showToast("已载入草稿");
+      setIsSettingsOpen(false);
+      if (post.status === "published") {
+        showToast("已载入已发布文章");
+      } else {
+        showToast("已载入草稿");
+      }
     } finally {
       setIsDraftLoading(false);
     }
@@ -231,6 +270,21 @@ export default function WritePage() {
   }, [title, date, description, tags, cover]);
 
   const fullMdx = useMemo(() => frontmatter + content, [frontmatter, content]);
+
+  const filteredPostIndex = useMemo(() => {
+    const query = postIndexQuery.trim().toLowerCase();
+    const filter = postIndexFilter;
+
+    return postIndex.filter((post) => {
+      if (filter === "draft") return post.status === "draft";
+      if (filter === "published") return post.status === "published";
+      return true;
+    }).filter((post) => {
+      if (!query) return true;
+      const haystack = `${post.title ?? ""} ${post.slug ?? ""}`.toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [postIndex, postIndexFilter, postIndexQuery]);
 
   const insertAtSelection = (buildSnippet) => {
     const textarea = textareaRef.current;
@@ -308,6 +362,14 @@ export default function WritePage() {
   const handleSaveDraft = async () => {
     if (!requireAuthOrOpenSettings()) return;
 
+    const willUnpublish = loadedStatus === "published";
+    if (willUnpublish) {
+      const confirmed = window.confirm(
+        "当前文章为已发布状态，保存为草稿会使其从站点下线。是否继续？"
+      );
+      if (!confirmed) return;
+    }
+
     setIsBusy(true);
     try {
       const res = await fetch("/api/write/posts", {
@@ -326,8 +388,9 @@ export default function WritePage() {
       }
 
       setSlug(data.slug);
+      setLoadedStatus("draft");
       router.replace(`/write?slug=${encodeURIComponent(data.slug)}`);
-      showToast("草稿已保存");
+      showToast(willUnpublish ? "草稿已保存（已下线）" : "草稿已保存");
     } finally {
       setIsBusy(false);
     }
@@ -354,6 +417,7 @@ export default function WritePage() {
       }
 
       setSlug(data.slug);
+      setLoadedStatus("published");
       router.replace(`/write?slug=${encodeURIComponent(data.slug)}`);
       showToast("已发布");
       router.push(`/blog/${encodeURIComponent(data.slug)}`);
@@ -439,6 +503,7 @@ export default function WritePage() {
     setTags("");
     setCover("");
     setContent("");
+    setLoadedStatus("");
     router.replace("/write");
     showToast("已新建空白稿");
   };
@@ -465,7 +530,9 @@ export default function WritePage() {
             </Link>
 
             <div className="select-none font-serif text-[11px] tracking-[0.28em] text-wafu-sumi/50">
-              DRAFTING...
+              {slug
+                ? `${slug} · ${loadedStatus ? String(loadedStatus).toUpperCase() : "NEW"}`
+                : "DRAFTING..."}
             </div>
           </div>
 
@@ -629,7 +696,7 @@ export default function WritePage() {
                       disabled={isBusy || isDraftLoading}
                       className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      载入草稿
+                      载入（slug）
                     </button>
                     <button
                       type="button"
@@ -670,6 +737,90 @@ export default function WritePage() {
                 </button>
               </div>
             </div>
+
+            {isAuthed ? (
+              <section className="mt-6 rounded-2xl border border-wafu-sumi/10 bg-white/40 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="select-none font-serif text-xs tracking-[0.28em] text-wafu-sumi/60">
+                    POSTS
+                  </div>
+                  <button
+                    type="button"
+                    onClick={refreshPostIndex}
+                    disabled={isPostIndexLoading}
+                    className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isPostIndexLoading ? "刷新中…" : "刷新"}
+                  </button>
+                </div>
+
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                  <label className="grid gap-1">
+                    <span className="text-[11px] text-wafu-sumi/55">筛选</span>
+                    <select
+                      value={postIndexFilter}
+                      onChange={(e) => setPostIndexFilter(e.target.value)}
+                      className="w-full rounded-lg border border-dashed border-wafu-sumi/15 bg-white/40 px-3 py-2 text-sm text-wafu-sumi outline-none focus:border-erii-red"
+                    >
+                      <option value="all">全部</option>
+                      <option value="draft">草稿</option>
+                      <option value="published">已发布</option>
+                    </select>
+                  </label>
+                  <label className="grid gap-1 md:col-span-2">
+                    <span className="text-[11px] text-wafu-sumi/55">搜索</span>
+                    <input
+                      value={postIndexQuery}
+                      onChange={(e) => setPostIndexQuery(e.target.value)}
+                      className="w-full rounded-lg border border-dashed border-wafu-sumi/15 bg-white/40 px-3 py-2 text-sm text-wafu-sumi outline-none placeholder:text-wafu-sumi/30 focus:border-erii-red caret-erii-red"
+                      placeholder="标题或 slug"
+                    />
+                  </label>
+                </div>
+
+                <div className="mt-4 max-h-64 overflow-auto rounded-xl border border-wafu-sumi/10 bg-white/30">
+                  {filteredPostIndex.length ? (
+                    <ul className="divide-y divide-wafu-sumi/10">
+                      {filteredPostIndex.map((post) => (
+                        <li
+                          key={post.slug}
+                          className="flex items-center justify-between gap-4 px-4 py-3"
+                        >
+                          <div className="min-w-0">
+                            <div className="truncate text-sm text-wafu-sumi">
+                              {post.title || post.slug}
+                            </div>
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-wafu-sumi/55">
+                              <span className="font-mono">{post.slug}</span>
+                              <span className="h-1 w-1 rounded-full bg-wafu-sumi/25" />
+                              <span className="font-mono">
+                                {String(post.date ?? "").slice(0, 10)}
+                              </span>
+                              <span className="h-1 w-1 rounded-full bg-wafu-sumi/25" />
+                              <span className="rounded-full border border-wafu-sumi/10 bg-white/50 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider">
+                                {post.status}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => loadDraft(post.slug)}
+                            disabled={isBusy || isDraftLoading}
+                            className="shrink-0 rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/80 transition-colors hover:bg-white/80 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            载入
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="px-4 py-6 text-center text-xs text-wafu-sumi/55">
+                      {isPostIndexLoading ? "加载中…" : "暂无文章"}
+                    </div>
+                  )}
+                </div>
+              </section>
+            ) : null}
           </div>
         </div>
       </div>

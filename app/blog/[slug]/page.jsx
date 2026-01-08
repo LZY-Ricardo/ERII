@@ -1,6 +1,7 @@
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { notFound } from "next/navigation";
 import Header from "@/src/components/Header";
+import PostEditLink from "@/src/components/PostEditLink";
 import SecretTrigger from "@/src/components/SecretTrigger";
 import { getPostData } from "@/src/lib/posts";
 
@@ -19,9 +20,12 @@ export default async function BlogPostPage({ params }) {
             <h1 className="font-serif text-4xl text-wafu-sumi">
               {post.frontmatter.title}
             </h1>
-            <p className="mt-2 font-sans text-sm text-wafu-shu/70">
-              {post.frontmatter.date}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+              <p className="font-sans text-sm text-wafu-shu/70">
+                {post.frontmatter.date}
+              </p>
+              <PostEditLink slug={post.slug} />
+            </div>
             {post.frontmatter.description ? (
               <p className="mt-3 text-base text-wafu-sumi/70">
                 {post.frontmatter.description}
