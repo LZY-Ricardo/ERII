@@ -42,3 +42,7 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# python cache (e.g. local tools under .shared)
+__pycache__/
+*.pyc
