@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import ResizableImage from "./ResizableImage";
 import {
   Bold,
   Code,
@@ -365,10 +367,8 @@ export default function WritePage() {
     uploadInputRef.current?.click();
   };
 
-  const handleUploadChange = async (event) => {
-    const file = event.target.files?.[0];
+  const uploadFile = async (file) => {
     if (!file) return;
-
     if (!requireAuthOrOpenSettings()) return;
 
     setIsBusy(true);
@@ -390,13 +390,46 @@ export default function WritePage() {
 
       const url = data.url;
       const fallbackAlt = file.name.replace(/\.[a-z0-9]+$/i, "");
-      insertAtSelection((selected) => `![${selected || fallbackAlt}](${url})`);
+      insertAtSelection((selected) => `<img src="${url}" alt="${selected || fallbackAlt}" width="500" />`);
       showToast("图片已插入");
     } finally {
       setIsBusy(false);
-      event.target.value = "";
     }
   };
+
+  const handleUploadChange = async (event) => {
+    const file = event.target.files?.[0];
+    await uploadFile(file);
+    event.target.value = "";
+  };
+
+  const handlePaste = async (event) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        event.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          await uploadFile(file);
+        }
+        return;
+      }
+    }
+  };
+
+  const handleImageResize = useCallback((src, newWidth) => {
+    setContent((prev) => {
+      // Match <img ... src="THE_SRC" ... width="XXX" ... />
+      const escapedSrc = src.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(
+        `(<img[^>]*src=["']${escapedSrc}["'][^>]*width=["'])\\d+(["'][^>]*\\/?>)`,
+        "g"
+      );
+      return prev.replace(regex, `$1${Math.round(newWidth)}$2`);
+    });
+  }, []);
 
   const resetDraft = () => {
     setSlug("");
@@ -420,7 +453,7 @@ export default function WritePage() {
         onChange={handleUploadChange}
       />
       <header className="sticky top-0 z-50 h-14 border-b border-wafu-sumi/10 bg-wafu-paper/60 px-4 backdrop-blur-md">
-        <div className="mx-auto flex h-full max-w-6xl items-center justify-between gap-4">
+        <div className="flex h-full items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link
               href="/"
@@ -658,6 +691,7 @@ export default function WritePage() {
               ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              onPaste={handlePaste}
               className="zen-scrollbar min-h-0 flex-1 resize-none bg-transparent px-8 pb-24 font-mono text-[15px] leading-loose text-wafu-sumi/85 outline-none placeholder:text-wafu-sumi/20 caret-erii-red selection:bg-erii-red/15 selection:text-wafu-sumi"
               placeholder="在此处开始书写你的故事..."
               spellCheck={false}
@@ -727,7 +761,20 @@ export default function WritePage() {
               <div className="my-6 border-t border-dashed border-wafu-sumi/15" />
 
               <div className="prose max-w-none prose-slate prose-headings:font-serif prose-headings:text-wafu-sumi prose-a:text-wafu-shu prose-strong:text-wafu-sumi">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw]}
+                  components={{
+                    img: ({ src, alt, width }) => (
+                      <ResizableImage
+                        src={src}
+                        alt={alt}
+                        width={width}
+                        onResize={handleImageResize}
+                      />
+                    ),
+                  }}
+                >
                   {content}
                 </ReactMarkdown>
               </div>
