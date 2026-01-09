@@ -16,6 +16,7 @@ import {
   Link2,
   List,
   Mountain,
+  Plus,
   Settings,
   X,
 } from "lucide-react";
@@ -79,6 +80,7 @@ export default function WritePage() {
 
   const textareaRef = useRef(null);
   const uploadInputRef = useRef(null);
+  const coverUploadInputRef = useRef(null);
   const toastTimerRef = useRef(null);
   const settingsDialogRef = useRef(null);
   const lastActiveElementRef = useRef(null);
@@ -481,15 +483,15 @@ export default function WritePage() {
     uploadInputRef.current?.click();
   };
 
-  const uploadFile = async (file) => {
-    if (!file) return;
-    if (!requireAuthOrOpenSettings()) return;
+  const uploadAsset = async (file, { prefix = "images" } = {}) => {
+    if (!file) return null;
+    if (!requireAuthOrOpenSettings()) return null;
 
     setIsBusy(true);
     try {
       const form = new FormData();
       form.set("file", file);
-      form.set("prefix", "images");
+      form.set("prefix", prefix);
 
       const res = await fetch("/api/write/assets", { method: "POST", body: form });
       const data = await res.json().catch(() => null);
@@ -499,16 +501,44 @@ export default function WritePage() {
           setIsSettingsOpen(true);
         }
         showToast(data?.error || "上传失败");
-        return;
+        return null;
       }
 
-      const url = data.url;
-      const fallbackAlt = file.name.replace(/\.[a-z0-9]+$/i, "");
-      insertAtSelection((selected) => `<img src="${url}" alt="${selected || fallbackAlt}" width="500" />`);
-      showToast("图片已插入");
+      return data.url;
     } finally {
       setIsBusy(false);
     }
+  };
+
+  const uploadFile = async (file) => {
+    const url = await uploadAsset(file);
+    if (!url || !file) return;
+
+    const fallbackAlt = file.name.replace(/\.[a-z0-9]+$/i, "");
+    insertAtSelection(
+      (selected) => `<img src="${url}" alt="${selected || fallbackAlt}" width="500" />`
+    );
+    showToast("图片已插入");
+  };
+
+  const handlePickCover = () => {
+    if (!requireAuthOrOpenSettings()) return;
+    coverUploadInputRef.current?.click();
+  };
+
+  const handleCoverUploadChange = async (event) => {
+    const file = event.target.files?.[0];
+    const url = await uploadAsset(file);
+    if (url) {
+      setCover(url);
+      showToast("封面已上传");
+    }
+    event.target.value = "";
+  };
+
+  const handleRemoveCover = () => {
+    setCover("");
+    showToast("封面已清除");
   };
 
   const handleUploadChange = async (event) => {
@@ -566,6 +596,13 @@ export default function WritePage() {
         accept="image/*"
         className="hidden"
         onChange={handleUploadChange}
+      />
+      <input
+        ref={coverUploadInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleCoverUploadChange}
       />
       <header
         aria-hidden={isSettingsOpen ? true : undefined}
@@ -692,15 +729,44 @@ export default function WritePage() {
                   placeholder="auto"
                 />
               </label>
-              <label className="grid gap-2">
+              <div className="grid gap-2 md:col-span-2">
                 <span className="text-xs font-medium text-wafu-sumi/80">封面</span>
-                <input
-                  value={cover}
-                  onChange={(e) => setCover(e.target.value)}
-                  className="w-full rounded-md border border-wafu-sumi/20 bg-white/90 px-3 py-2.5 text-sm text-wafu-sumi outline-none transition-all placeholder:text-wafu-sumi/30 focus:bg-white focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
-                  placeholder="/images/cover.png（可选）"
-                />
-              </label>
+                <button
+                  type="button"
+                  onClick={handlePickCover}
+                  disabled={isBusy}
+                  aria-label={cover ? "更换封面" : "上传封面"}
+                  className="group relative aspect-square w-full overflow-hidden rounded-md border border-dashed border-wafu-sumi/25 bg-white/70 text-wafu-sumi/60 transition-colors hover:bg-white/90 hover:text-erii-red focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-erii-red/15 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {cover ? (
+                    <>
+                      <img src={cover} alt="封面预览" className="h-full w-full object-cover" />
+                      <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        <Plus size={20} />
+                        <span className="text-xs font-medium">更换封面</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+                      <Plus size={26} className="text-wafu-sumi/50 group-hover:text-erii-red" />
+                      <span className="text-xs font-medium text-wafu-sumi/70 group-hover:text-erii-red">
+                        上传封面
+                      </span>
+                    </div>
+                  )}
+                </button>
+                {cover ? (
+                  <button
+                    type="button"
+                    onClick={handleRemoveCover}
+                    disabled={isBusy}
+                    className="w-fit text-[11px] font-medium text-wafu-sumi/50 transition-colors hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    清除封面
+                  </button>
+                ) : null}
+              </div>
               <label className="grid gap-2 md:col-span-2">
                 <span className="text-xs font-medium text-wafu-sumi/80">摘要</span>
                 <input
