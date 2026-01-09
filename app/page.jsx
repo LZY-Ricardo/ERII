@@ -160,7 +160,7 @@ export default async function HomePage() {
             见闻录
           </h2>
           <span
-            className="absolute right-0 top-0 writing-vertical font-serif text-[10px] leading-none tracking-widest text-erii-ink/60 sm:text-[11px]"
+            className="absolute -right-10 top-0 writing-vertical font-serif text-[10px] leading-none tracking-widest text-erii-ink/60 sm:text-[11px]"
             style={{ textOrientation: "upright" }}
           >
             迎着阳光盛大逃亡的时光里
