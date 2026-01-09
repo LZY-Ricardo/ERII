@@ -12,7 +12,7 @@ export default async function BlogPostPage({ params }) {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-3xl px-6 pb-20">
+      <div className="mx-auto max-w-5xl px-6 pb-20">
         <Header />
 
         <article className="mt-10 rounded-3xl border border-wafu-sumi/10 bg-wafu-paper/80 p-8 shadow-sm backdrop-blur">
