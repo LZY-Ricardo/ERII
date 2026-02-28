@@ -15,21 +15,24 @@ const navItems = [
 ];
 
 export default function ArgonNavbar() {
-  const [isScrolled, setIsScrolled] = useState(() =>
-    typeof window !== "undefined" ? window.scrollY > 24 : false
-  );
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     let frame = 0;
+    const sync = () => {
+      const next = window.scrollY > 24;
+      setIsScrolled((prev) => (prev === next ? prev : next));
+    };
+
     const onScroll = () => {
       if (frame) return;
       frame = window.requestAnimationFrame(() => {
         frame = 0;
-        const next = window.scrollY > 24;
-        setIsScrolled((prev) => (prev === next ? prev : next));
+        sync();
       });
     };
 
+    sync();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);

@@ -318,6 +318,7 @@ body {
   --nh-bg-image: url("/images/longzu-bg.png");
   --nh-bg-image-pos: center top;
   --nh-bg-image-size: contain;
+  --nh-bg-image-fill-size: cover;
   --nh-bg-overlay-top: rgba(255, 255, 255, 0);
   --nh-bg-overlay-bottom: rgba(255, 255, 255, 0);
   --nh-text: #3b2f34;
@@ -359,8 +360,8 @@ body {
   pointer-events: none;
   z-index: 0;
   background-image: var(--nh-bg-image);
-  background-position: var(--nh-bg-image-pos);
-  background-size: var(--nh-bg-image-size);
+  background-position: center top;
+  background-size: var(--nh-bg-image-fill-size);
   background-repeat: no-repeat;
   background-attachment: fixed;
   filter: none;
@@ -369,11 +370,18 @@ body {
 .nh-page::after {
   content: "";
   position: fixed;
-  inset: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: min(100vh, calc(100vw * 0.4485));
   pointer-events: none;
   z-index: 0;
-  opacity: 0;
-  background-image: none;
+  opacity: 1;
+  background-image: var(--nh-bg-image);
+  background-position: var(--nh-bg-image-pos);
+  background-size: var(--nh-bg-image-size);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 .nh-page > * {
@@ -385,6 +393,12 @@ body {
   .nh-page::before {
     background-attachment: scroll;
     background-position: center top;
+  }
+
+  .nh-page::after {
+    background-attachment: scroll;
+    background-position: center top;
+    height: min(100vh, calc(100vw * 0.56));
   }
 }
 
