@@ -316,9 +316,8 @@ body {
   --nh-accent-rgb: 208, 171, 107;
   --nh-bg: #f3ece3;
   --nh-bg-image: url("/images/longzu-bg.png");
-  --nh-bg-image-pos: center center;
+  --nh-bg-image-pos: center top;
   --nh-bg-image-size: contain;
-  --nh-bg-image-fill-size: cover;
   --nh-bg-overlay-top: rgba(255, 255, 255, 0);
   --nh-bg-overlay-bottom: rgba(255, 255, 255, 0);
   --nh-text: #3b2f34;
@@ -359,15 +358,11 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-image: var(--nh-bg-image), var(--nh-bg-image);
-  background-position:
-    var(--nh-bg-image-pos),
-    center;
-  background-size:
-    var(--nh-bg-image-size),
-    var(--nh-bg-image-fill-size);
-  background-repeat: no-repeat, no-repeat;
-  background-attachment: fixed, fixed;
+  background-image: var(--nh-bg-image);
+  background-position: var(--nh-bg-image-pos);
+  background-size: var(--nh-bg-image-size);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   filter: none;
 }
 
@@ -388,10 +383,8 @@ body {
 
 @media (max-width: 900px) {
   .nh-page::before {
-    background-attachment: scroll, scroll;
-    background-position:
-      center top,
-      center;
+    background-attachment: scroll;
+    background-position: center top;
   }
 }
 
@@ -415,26 +408,55 @@ body {
 .nh-header {
   position: fixed;
   inset: 0 0 auto 0;
-  z-index: 200;
+  z-index: 420;
   pointer-events: none;
 }
 
 .nh-navbar {
   pointer-events: auto;
-  height: 90px;
-  margin: 10px;
-  border-radius: 24px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.52);
-  box-shadow: var(--nh-shadow);
+  height: 96px;
+  margin: 0;
+  border-radius: 0;
+  border: 0;
+  backdrop-filter: blur(0px);
+  background: rgba(var(--nh-theme-rgb), 0);
+  box-shadow: none;
+  transition:
+    background-color 0.28s ease,
+    backdrop-filter 0.28s ease,
+    box-shadow 0.28s ease,
+    height 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.nh-navbar.is-top {
+  background: rgba(var(--nh-theme-rgb), 0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  box-shadow: none;
+}
+
+.nh-navbar.is-scrolled {
+  height: 84px;
+  border-bottom: 0;
+  backdrop-filter: blur(15.8px);
+  -webkit-backdrop-filter: blur(15.8px);
+  background: linear-gradient(
+    90deg,
+    rgba(var(--nh-theme-rgb), 0.2) 0%,
+    rgba(var(--nh-theme-rgb), 0.58) 8%,
+    rgba(var(--nh-theme-rgb), 0.64) 50%,
+    rgba(var(--nh-theme-rgb), 0.58) 92%,
+    rgba(var(--nh-theme-rgb), 0.2) 100%
+  );
+  box-shadow: rgba(20, 14, 16, 0.14) 0 2px 14px 0;
 }
 
 .nh-navbar-inner {
-  max-width: 1360px;
+  max-width: 1560px;
   margin: 0 auto;
   height: 100%;
-  padding: 0 18px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -445,10 +467,11 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--nh-text);
+  color: rgba(255, 255, 255, 0.96);
   text-decoration: none;
   font-weight: 700;
   letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .nh-nav-list {
@@ -465,23 +488,42 @@ body {
 .nh-nav-link {
   display: inline-block;
   border-radius: 999px;
-  color: var(--nh-text);
+  color: rgba(255, 255, 255, 0.96);
   text-decoration: none;
   padding: 8px 12px;
   line-height: 1;
   font-size: 14px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .nh-nav-link:hover {
-  background: rgba(var(--nh-theme-rgb), 0.14);
-  color: var(--nh-theme-deep);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.nh-nav-search {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 8px 12px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+}
+
+.nh-nav-search:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
 }
 
 .nh-container {
   max-width: 1360px;
   margin: 0 auto;
-  padding: 120px 10px 26px;
+  padding: 96px 10px 26px;
 }
 
 .nh-layout {
@@ -690,7 +732,7 @@ body {
 .nh-fab-tabs {
   position: fixed;
   left: 12px;
-  top: 112px;
+  top: 102px;
   z-index: 320;
   display: grid;
   gap: 7px;
@@ -1237,12 +1279,8 @@ body {
 }
 
 @media (max-width: 1200px) {
-  .nh-navbar {
-    margin: 8px;
-  }
-
   .nh-container {
-    padding-top: 112px;
+    padding-top: 92px;
   }
 
   .nh-layout {
@@ -1277,6 +1315,10 @@ body {
     height: 72px;
   }
 
+  .nh-navbar.is-scrolled {
+    height: 66px;
+  }
+
   .nh-brand span {
     font-size: 14px;
   }
@@ -1286,12 +1328,17 @@ body {
     padding: 7px 9px;
   }
 
+  .nh-nav-search {
+    font-size: 13px;
+    padding: 7px 9px;
+  }
+
   .nh-container {
-    padding-top: 96px;
+    padding-top: 74px;
   }
 
   .nh-fab-tabs {
-    top: 96px;
+    top: 76px;
   }
 
   .nh-float-panel {
