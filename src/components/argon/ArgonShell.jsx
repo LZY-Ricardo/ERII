@@ -7,6 +7,7 @@ export default function ArgonShell({
   tocItems = [],
   title = "",
   subtitle = "",
+  activeCategory = "",
   children,
 }) {
   return (
@@ -15,7 +16,7 @@ export default function ArgonShell({
         跳到主内容
       </a>
 
-      <ArgonNavbar />
+      <ArgonNavbar activeCategory={activeCategory} />
 
       <div className="nh-container">
         <div className="nh-layout">

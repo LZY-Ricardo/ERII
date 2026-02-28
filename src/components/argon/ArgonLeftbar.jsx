@@ -135,6 +135,18 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
     return () => window.removeEventListener("keydown", closeOnEsc);
   }, []);
 
+  useEffect(() => {
+    const openFromNavbar = (event) => {
+      const panelId = String(event?.detail?.panelId ?? "search");
+      const exists = PANEL_ITEMS.some((item) => item.id === panelId);
+      setActivePanel(exists ? panelId : "search");
+      setPanelOpen(true);
+    };
+
+    window.addEventListener("nh:open-panel", openFromNavbar);
+    return () => window.removeEventListener("nh:open-panel", openFromNavbar);
+  }, []);
+
   const openPanel = (panelId) => {
     if (panelOpen && activePanel === panelId) {
       setPanelOpen(false);

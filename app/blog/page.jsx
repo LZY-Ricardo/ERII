@@ -23,7 +23,7 @@ export default async function BlogIndexPage({ searchParams }) {
     : "卡塞尔的风从北方来，旧日与新火在同一页纸上交汇。";
 
   return (
-    <ArgonShell posts={posts} title={title} subtitle={subtitle}>
+    <ArgonShell posts={posts} title={title} subtitle={subtitle} activeCategory={category}>
       <section className="nh-post-masonry" aria-label="文章列表">
         {filteredPosts.map((post) => (
           <PostCard key={post.slug} post={post} />
