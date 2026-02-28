@@ -1,36 +1,34 @@
-import Header from "@/src/components/Header";
+import ArgonShell from "@/src/components/argon/ArgonShell";
 import PostCard from "@/src/components/PostCard";
-import SecretTrigger from "@/src/components/SecretTrigger";
 import { getSortedPostsData } from "@/src/lib/posts";
+import { filterPostsByTaxonomy, getCategoryThemeLabel } from "@/src/lib/postTaxonomy";
 
-export default async function BlogIndexPage() {
+export default async function BlogIndexPage({ searchParams }) {
   const posts = await getSortedPostsData();
+  const resolved = (await searchParams) ?? {};
+  const category = typeof resolved.category === "string" ? resolved.category : "";
+  const tag = typeof resolved.tag === "string" ? resolved.tag : "";
+
+  const filteredPosts = filterPostsByTaxonomy(posts, { category, tag });
+  const categoryLabel = getCategoryThemeLabel(category);
+
+  const title = category
+    ? `谱系： ${categoryLabel}${category && category !== categoryLabel ? `（${category}）` : ""}`
+    : tag
+      ? `印记： ${tag}`
+      : "学院档案： 全部记录";
+
+  const subtitle = category || tag
+    ? `共检索到 ${filteredPosts.length} 份记录`
+    : "卡塞尔的风从北方来，旧日与新火在同一页纸上交汇。";
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-5xl px-6 pb-20">
-        <Header />
-
-        <section className="mt-10 rounded-3xl border border-wafu-sumi/10 bg-wafu-paper/70 p-8 shadow-sm backdrop-blur">
-          <h1 className="font-serif text-4xl text-wafu-sumi">
-            文章{" "}
-            <span className="ml-2 align-middle font-sans text-xs tracking-[0.35em] text-wafu-sumi/55">
-              記事
-            </span>
-          </h1>
-          <p className="mt-3 max-w-2xl text-base text-wafu-sumi/70">
-            短短的笔记，柔软的字句，每一页都系着一根红丝带。
-          </p>
-          <div className="my-6 border-t border-dashed border-wafu-sumi/15" />
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post) => (
-              <PostCard key={post.slug} post={post} />
-            ))}
-          </div>
-        </section>
-      </div>
-
-      <SecretTrigger />
-    </div>
+    <ArgonShell posts={posts} title={title} subtitle={subtitle}>
+      <section className="nh-post-masonry" aria-label="文章列表">
+        {filteredPosts.map((post) => (
+          <PostCard key={post.slug} post={post} />
+        ))}
+      </section>
+    </ArgonShell>
   );
 }

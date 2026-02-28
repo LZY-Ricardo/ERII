@@ -1,40 +1,26 @@
-import Header from "@/src/components/Header";
-import SecretTrigger from "@/src/components/SecretTrigger";
+import ArgonShell from "@/src/components/argon/ArgonShell";
+import { getSortedPostsData } from "@/src/lib/posts";
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const posts = await getSortedPostsData();
+
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-3xl px-6 pb-20">
-        <Header />
-
-        <section className="mt-10 rounded-3xl border border-wafu-sumi/10 bg-wafu-paper/75 p-8 shadow-sm backdrop-blur">
-          <h1 className="font-serif text-4xl text-wafu-sumi">
-            关于{" "}
-            <span className="ml-2 align-middle font-sans text-xs tracking-[0.35em] text-wafu-sumi/55">
-              私
-            </span>
-          </h1>
-          <p className="mt-3 text-base text-wafu-sumi/70">
-            写给那些一起阅读龙族的时光。
+    <ArgonShell posts={posts} title="关于档案馆" subtitle="写给每一位仍在追逐光的人。">
+      <article className="nh-article nh-card">
+        <div className="nh-article-content prose max-w-none prose-slate prose-headings:font-serif prose-strong:text-slate-800">
+          <p>
+            ERII 是一个以龙族阅读体验为灵感的个人博客。本站保持了 Argon 风格的稳定结构，
+            同时将文案语义、色彩和信息组织替换为“卡塞尔档案馆”叙事。
           </p>
-
-          <div className="my-6 border-t border-dashed border-wafu-sumi/15" />
-
-          <div className="prose max-w-none prose-slate prose-headings:font-serif prose-headings:text-wafu-sumi prose-a:text-wafu-shu prose-strong:text-wafu-sumi">
-            <p>
-              ERII 是一个以 <em>手写页</em> 为灵感的个人博客，也藏着《龙族》里那种温柔而无法回避的情绪。
-            </p>
-            <p>
-              在这里，文字像纪念品一样被珍藏：一张塞进拍立得边框的照片，一道虚线的撕页痕，一只小黄鸭，以及一根怎么也解不开的红丝带。
-            </p>
-            <p>
-              如果你找到了暗号，就让樱花落一次。然后合上日记，继续往前走。
-            </p>
-          </div>
-        </section>
-      </div>
-
-      <SecretTrigger />
-    </div>
+          <p>
+            这里会收录章节感想、角色线索、世界观标注和开发实践。你可以把它当作一座长期更新的私人资料库，
+            也是一份持续扩展的阅读地图。
+          </p>
+          <p>
+            下一步会继续完善角色关系线、章节时间轴和龙文关键词检索。
+          </p>
+        </div>
+      </article>
+    </ArgonShell>
   );
 }

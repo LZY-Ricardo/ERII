@@ -1,47 +1,62 @@
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { notFound } from "next/navigation";
-import Header from "@/src/components/Header";
+import ArgonCommentShell from "@/src/components/argon/ArgonCommentShell";
+import ArgonSharePanel from "@/src/components/argon/ArgonSharePanel";
+import ArgonShell from "@/src/components/argon/ArgonShell";
 import PostEditLink from "@/src/components/PostEditLink";
-import SecretTrigger from "@/src/components/SecretTrigger";
-import { getPostData } from "@/src/lib/posts";
+import { getPostData, getSortedPostsData } from "@/src/lib/posts";
+
+function extractTocItems(content) {
+  return String(content ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => /^#{1,3}\s+/.test(line))
+    .map((line) => line.replace(/^#{1,3}\s+/, "").trim())
+    .filter(Boolean)
+    .slice(0, 12);
+}
 
 export default async function BlogPostPage({ params }) {
   const { slug } = await params;
   const post = await getPostData(slug);
   if (!post) notFound();
 
+  const posts = await getSortedPostsData();
+  const tocItems = extractTocItems(post.content);
+
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-5xl px-6 pb-20">
-        <Header />
-
-        <article className="mt-10 rounded-3xl border border-wafu-sumi/10 bg-wafu-paper/80 p-8 shadow-sm backdrop-blur">
-          <header>
-            <h1 className="font-serif text-4xl text-wafu-sumi">
-              {post.frontmatter.title}
-            </h1>
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-              <p className="font-sans text-sm text-wafu-shu/70">
-                {post.frontmatter.date}
-              </p>
-              <PostEditLink slug={post.slug} />
-            </div>
-            {post.frontmatter.description ? (
-              <p className="mt-3 text-base text-wafu-sumi/70">
-                {post.frontmatter.description}
-              </p>
-            ) : null}
-          </header>
-
-          <div className="my-6 border-t border-dashed border-wafu-sumi/15" />
-
-          <div className="prose max-w-none prose-slate prose-headings:font-serif prose-headings:text-wafu-sumi prose-a:text-wafu-shu prose-strong:text-wafu-sumi">
-            <MDXRemote source={post.content} />
+    <ArgonShell posts={posts} tocItems={tocItems}>
+      <article className="nh-article nh-card">
+        <header className="nh-article-head">
+          <h1>{post.frontmatter.title}</h1>
+          <div className="nh-article-meta">
+            <p>{post.frontmatter.date}</p>
+            <PostEditLink slug={post.slug} />
           </div>
-        </article>
-      </div>
+          {post.frontmatter.description ? (
+            <p className="nh-article-desc">{post.frontmatter.description}</p>
+          ) : null}
+        </header>
 
-      <SecretTrigger />
-    </div>
+        <div className="nh-divider" />
+
+        <div className="nh-article-content prose max-w-none prose-slate prose-headings:font-serif prose-strong:text-slate-800">
+          <MDXRemote source={post.content} />
+        </div>
+
+        {Array.isArray(post.frontmatter.tags) && post.frontmatter.tags.length ? (
+          <footer className="nh-article-tags">
+            {post.frontmatter.tags.map((tag) => (
+              <span key={tag} className="nh-chip">
+                {tag}
+              </span>
+            ))}
+          </footer>
+        ) : null}
+      </article>
+
+      <ArgonSharePanel post={post} />
+      <ArgonCommentShell />
+    </ArgonShell>
   );
 }

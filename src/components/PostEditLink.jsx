@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -34,12 +34,8 @@ export default function PostEditLink({ slug }) {
   if (!isChecked || !isAuthed || !slug) return null;
 
   return (
-    <Link
-      href={`/write?slug=${encodeURIComponent(slug)}`}
-      className="inline-flex items-center gap-2 rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/75 transition-colors hover:bg-white/80 hover:text-erii-red"
-    >
+    <Link href={`/write?slug=${encodeURIComponent(slug)}`} className="nh-chip">
       编辑
     </Link>
   );
 }
-

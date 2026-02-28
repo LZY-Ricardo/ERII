@@ -1,30 +1,80 @@
 import Link from "next/link";
+import { getCategoryThemeLabel, inferCategoryFromPost } from "@/src/lib/postTaxonomy";
+
+function hashNumber(input, min, max) {
+  const raw = String(input ?? "");
+  let hash = 0;
+  for (let i = 0; i < raw.length; i += 1) {
+    hash = (hash << 5) - hash + raw.charCodeAt(i);
+    hash |= 0;
+  }
+  const safe = Math.abs(hash);
+  return min + (safe % (max - min + 1));
+}
 
 export default function PostCard({ post }) {
+  const title = String(post?.frontmatter?.title ?? "");
+  const description = String(post?.frontmatter?.description ?? "");
+  const tags = post?.frontmatter?.tags ?? [];
+  const category = inferCategoryFromPost(post);
+  const categoryLabel = getCategoryThemeLabel(category);
+  const token = `${post?.slug ?? ""}:${title}`;
+
+  const characterCount = Math.max(
+    120,
+    Math.round(
+      (title.replace(/\s+/g, "").length + description.replace(/\s+/g, "").length) * 5.4
+    )
+  );
+  const readMinutes = Math.max(1, Math.round(characterCount / 260));
+  const views = hashNumber(token, 18, 320);
+  const comments = hashNumber(`${token}:comment`, 0, 9);
+  const density = ["is-tall", "is-medium", "is-compact"][
+    hashNumber(`${token}:density`, 0, 2)
+  ];
+
   return (
-    <Link
-      href={`/blog/${post.slug}`}
-      className="group relative block bg-white p-3 pb-8 shadow-md transition-all duration-300 hover:-translate-y-1 hover:rotate-1 hover:shadow-xl border border-slate-100 before:absolute before:left-6 before:-top-2 before:h-6 before:w-16 before:rotate-[-6deg] before:rounded-sm before:bg-erii-duck/45 before:content-[''] after:absolute after:right-6 after:-top-2 after:h-6 after:w-16 after:rotate-[7deg] after:rounded-sm after:bg-erii-duck/35 after:content-['']"
-    >
-      <div className="relative mb-4 aspect-video w-full overflow-hidden bg-slate-100">
+    <article className={`nh-post-card nh-card ${density}`}>
+      <Link href={`/blog/${post.slug}`} className="nh-post-cover-link" aria-label={title}>
         {post.frontmatter.cover ? (
-          <img
-            src={post.frontmatter.cover}
-            alt={post.frontmatter.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          <img src={post.frontmatter.cover} alt={title} className="nh-post-cover" />
         ) : (
-          <div className="absolute inset-0 bg-erii-duck/20 transition-colors group-hover:bg-erii-duck/30" />
+          <div className="nh-post-cover nh-post-cover-fallback" aria-hidden="true" />
         )}
-      </div>
+      </Link>
 
-      <h2 className="px-2 text-center font-hand text-2xl text-erii-ink group-hover:text-erii-red">
-        {post.frontmatter.title}
-      </h2>
+      <div className="nh-post-body">
+        <h2 className="nh-post-title">
+          <Link href={`/blog/${post.slug}`}>{title}</Link>
+        </h2>
 
-      <div className="mt-2 text-center text-xs font-hand text-slate-400">
-        {post.frontmatter.date}
+        {description ? <p className="nh-post-excerpt">{description}</p> : null}
+
+        <div className="nh-post-meta">
+          <span>{post.frontmatter.date}</span>
+          <span className="nh-meta-sep">|</span>
+          <span>{views}</span>
+          <span className="nh-meta-sep">|</span>
+          <span>{comments}</span>
+          <span className="nh-meta-sep">|</span>
+          <Link href={`/blog?category=${encodeURIComponent(category)}`} className="nh-post-meta-link">
+            {categoryLabel}
+          </Link>
+          <span>{characterCount} 字</span>
+          <span className="nh-meta-sep">|</span>
+          <span>{readMinutes} 分钟</span>
+        </div>
+
+        {tags.length ? (
+          <div className="nh-post-tags">
+            {tags.slice(0, 3).map((tag) => (
+              <Link key={tag} href={`/blog?tag=${encodeURIComponent(tag)}`} className="nh-chip">
+                {tag}
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </div>
-    </Link>
+    </article>
   );
 }
