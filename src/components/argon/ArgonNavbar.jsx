@@ -6,26 +6,60 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const navItems = [
-  { label: "首页", href: "/", type: "home" },
-  { label: "执行部", href: "/blog?category=TeamSpeak", type: "category", category: "TeamSpeak" },
-  { label: "装备部", href: "/blog?category=电脑技巧", type: "category", category: "电脑技巧" },
-  { label: "夜航局", href: "/blog?category=直播", type: "category", category: "直播" },
-  { label: "实战课", href: "/blog?category=游戏", type: "category", category: "游戏" },
-  { label: "档案馆", href: "/blog", type: "blog" },
-  { label: "关于", href: "/about", type: "about" },
+  { label: "首页", href: "/", type: "home", title: "查看最新发布与推荐内容" },
+  {
+    label: "TeamSpeak",
+    href: "/blog?category=TeamSpeak",
+    type: "category",
+    category: "TeamSpeak",
+    title: "语音工具与频道相关内容",
+  },
+  {
+    label: "电脑技巧",
+    href: "/blog?category=电脑技巧",
+    type: "category",
+    category: "电脑技巧",
+    title: "软件、系统和效率技巧",
+  },
+  {
+    label: "直播动态",
+    href: "/blog?category=直播",
+    type: "category",
+    category: "直播",
+    title: "直播相关更新与实操记录",
+  },
+  {
+    label: "游戏记录",
+    href: "/blog?category=游戏",
+    type: "category",
+    category: "游戏",
+    title: "游戏体验与实战笔记",
+  },
+  {
+    label: "技术文章",
+    href: "/blog?topic=tech",
+    type: "topic",
+    topic: "tech",
+    title: "聚合前端与 AI 方向的技术文章",
+  },
+  { label: "关于本站", href: "/about", type: "about", title: "了解本站定位与更新计划" },
 ];
 
-function isItemActive(item, pathname, currentCategory) {
+function isItemActive(item, pathname, currentCategory, currentTag, currentTopic) {
   if (item.type === "home") return pathname === "/";
   if (item.type === "about") return pathname === "/about";
   if (item.type === "blog") return pathname === "/blog" && !currentCategory;
   if (item.type === "category") return pathname === "/blog" && currentCategory === item.category;
+  if (item.type === "tag") return pathname === "/blog" && currentTag === item.tag;
+  if (item.type === "topic") return pathname === "/blog" && currentTopic === item.topic;
   return false;
 }
 
-export default function ArgonNavbar({ activeCategory = "" }) {
+export default function ArgonNavbar({ activeCategory = "", activeTag = "", activeTopic = "" }) {
   const pathname = usePathname();
   const currentCategory = String(activeCategory ?? "").trim();
+  const currentTag = String(activeTag ?? "").trim();
+  const currentTopic = String(activeTopic ?? "").trim().toLowerCase();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -76,7 +110,14 @@ export default function ArgonNavbar({ activeCategory = "" }) {
               <li key={`${item.label}:${item.href}`}>
                 <Link
                   href={item.href}
-                  className={`nh-nav-link ${isItemActive(item, pathname, currentCategory) ? "is-active" : ""}`}
+                  className={`nh-nav-link ${isItemActive(
+                    item,
+                    pathname,
+                    currentCategory,
+                    currentTag,
+                    currentTopic
+                  ) ? "is-active" : ""}`}
+                  title={item.title}
                 >
                   {item.label}
                 </Link>
@@ -86,10 +127,11 @@ export default function ArgonNavbar({ activeCategory = "" }) {
               <button
                 type="button"
                 className="nh-nav-search"
-                aria-label="搜索"
+                aria-label="站内搜索"
+                title="打开站内搜索面板"
                 onClick={openSearchPanel}
               >
-                搜索
+                站内搜索
               </button>
             </li>
           </ul>

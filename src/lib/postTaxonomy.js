@@ -27,6 +27,36 @@ export function inferCategoryFromPost(post) {
   return "未分类";
 }
 
+const TECH_TOPIC_KEYWORDS = [
+  "前端",
+  "frontend",
+  "react",
+  "vue",
+  "next",
+  "css",
+  "javascript",
+  "typescript",
+  "ai",
+  "人工智能",
+  "大模型",
+  "llm",
+  "agent",
+  "prompt",
+];
+
+function isTechPost(post) {
+  if (inferCategoryFromPost(post) === "电脑技巧") return true;
+
+  const title = String(post?.frontmatter?.title ?? "").toLowerCase();
+  const description = String(post?.frontmatter?.description ?? "").toLowerCase();
+  const tags = Array.isArray(post?.frontmatter?.tags)
+    ? post.frontmatter.tags.map((item) => String(item).toLowerCase())
+    : [];
+  const text = `${title} ${description} ${tags.join(" ")}`;
+
+  return TECH_TOPIC_KEYWORDS.some((keyword) => text.includes(keyword));
+}
+
 const CATEGORY_THEME_LABELS = {
   TeamSpeak: "执行部通讯",
   影视: "影像档案",
@@ -43,11 +73,16 @@ export function getCategoryThemeLabel(category) {
   return CATEGORY_THEME_LABELS[raw] ?? raw;
 }
 
-export function filterPostsByTaxonomy(posts, { category, tag } = {}) {
+export function filterPostsByTaxonomy(posts, { category, tag, topic } = {}) {
   const categoryValue = String(category ?? "").trim();
   const tagValue = String(tag ?? "").trim();
+  const topicValue = String(topic ?? "").trim().toLowerCase();
 
   return (posts ?? []).filter((post) => {
+    if (topicValue === "tech" && !isTechPost(post)) {
+      return false;
+    }
+
     if (categoryValue && inferCategoryFromPost(post) !== categoryValue) {
       return false;
     }
