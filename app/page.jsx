@@ -7,7 +7,7 @@ export default async function HomePage() {
 
   return (
     <ArgonShell posts={posts}>
-      <section className="nh-post-masonry" aria-label="最新记录">
+      <section className="nh-post-masonry" aria-label="全部文章列表">
         {posts.map((post) => (
           <PostCard key={post.slug} post={post} />
         ))}

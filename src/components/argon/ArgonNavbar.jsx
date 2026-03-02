@@ -6,27 +6,34 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const navItems = [
-  { label: "首页", href: "/", type: "home", title: "查看最新发布与推荐内容" },
+  { label: "首页", href: "/", type: "home", title: "查看全部文章与最新更新" },
+  {
+    label: "技术文章",
+    href: "/blog?topic=tech",
+    type: "topic",
+    topic: "tech",
+    title: "前端与 AI 相关技术内容",
+  },
   {
     label: "TeamSpeak",
     href: "/blog?category=TeamSpeak",
     type: "category",
     category: "TeamSpeak",
-    title: "语音工具与频道相关内容",
+    title: "语音工具与频道使用相关内容",
   },
   {
     label: "电脑技巧",
     href: "/blog?category=电脑技巧",
     type: "category",
     category: "电脑技巧",
-    title: "软件、系统和效率技巧",
+    title: "系统、软件和效率技巧",
   },
   {
     label: "直播动态",
     href: "/blog?category=直播",
     type: "category",
     category: "直播",
-    title: "直播相关更新与实操记录",
+    title: "直播相关更新与操作记录",
   },
   {
     label: "游戏记录",
@@ -35,14 +42,7 @@ const navItems = [
     category: "游戏",
     title: "游戏体验与实战笔记",
   },
-  {
-    label: "技术文章",
-    href: "/blog?topic=tech",
-    type: "topic",
-    topic: "tech",
-    title: "聚合前端与 AI 方向的技术文章",
-  },
-  { label: "关于本站", href: "/about", type: "about", title: "了解本站定位与更新计划" },
+  { label: "关于本站", href: "/about", type: "about", title: "了解站点定位与更新计划" },
 ];
 
 function isItemActive(item, pathname, currentCategory, currentTag, currentTopic) {
@@ -102,7 +102,7 @@ export default function ArgonNavbar({ activeCategory = "", activeTag = "", activ
         <div className="nh-navbar-inner">
           <Link href="/" className="nh-brand" aria-label="回到首页">
             <Image src="/sakura.png" alt="" width={26} height={26} priority />
-            <span>ERII · 卡塞尔档案馆</span>
+            <span>ERII · 前端与 AI 博客</span>
           </Link>
 
           <ul className="nh-nav-list">

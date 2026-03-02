@@ -1,6 +1,7 @@
-﻿import ArgonFooter from "@/src/components/argon/ArgonFooter";
+import ArgonFooter from "@/src/components/argon/ArgonFooter";
 import ArgonLeftbar from "@/src/components/argon/ArgonLeftbar";
 import ArgonNavbar from "@/src/components/argon/ArgonNavbar";
+import ArgonRightbar from "@/src/components/argon/ArgonRightbar";
 
 export default function ArgonShell({
   posts = [],
@@ -40,6 +41,8 @@ export default function ArgonShell({
 
             <ArgonFooter />
           </main>
+
+          <ArgonRightbar posts={posts} tocItems={tocItems} />
         </div>
       </div>
     </div>

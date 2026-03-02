@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "ERII | 卡塞尔档案馆",
-  description: "龙族灵感主题下的个人博客档案馆。",
+  title: "ERII | 前端与 AI 博客",
+  description: "分享前端开发与 AI 实践的个人博客。",
   icons: {
     icon: "/sakura.png",
     apple: "/sakura.png",

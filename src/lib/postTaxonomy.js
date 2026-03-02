@@ -1,27 +1,21 @@
 export function inferCategoryFromPost(post) {
   const title = String(post?.frontmatter?.title ?? "");
-  const tags = Array.isArray(post?.frontmatter?.tags)
-    ? post.frontmatter.tags.join(" ")
-    : "";
+  const tags = Array.isArray(post?.frontmatter?.tags) ? post.frontmatter.tags.join(" ") : "";
   const text = `${title} ${tags}`.toLowerCase();
 
-  if (text.includes("team") || text.includes("语音") || text.includes("ts")) {
-    return "TeamSpeak";
-  }
-  if (text.includes("影视") || text.includes("movie") || text.includes("film")) {
-    return "影视";
-  }
-  if (text.includes("直播") || text.includes("stream") || text.includes("obs")) {
-    return "直播";
-  }
-  if (text.includes("音乐") || text.includes("music")) {
-    return "音乐";
-  }
-  if (text.includes("游戏") || text.includes("game")) {
-    return "游戏";
-  }
-  if (text.includes("电脑") || text.includes("tech") || text.includes("教程")) {
-    return "电脑技巧";
+  const rules = [
+    { category: "TeamSpeak", keywords: ["team", "teamspeak", "语音", "ts"] },
+    { category: "影视", keywords: ["影视", "movie", "film", "video"] },
+    { category: "直播", keywords: ["直播", "stream", "obs"] },
+    { category: "音乐", keywords: ["音乐", "music"] },
+    { category: "游戏", keywords: ["游戏", "game"] },
+    { category: "电脑技巧", keywords: ["电脑", "tech", "教程", "frontend", "javascript", "typescript"] },
+  ];
+
+  for (const rule of rules) {
+    if (rule.keywords.some((keyword) => text.includes(keyword))) {
+      return rule.category;
+    }
   }
 
   return "未分类";
@@ -57,20 +51,20 @@ function isTechPost(post) {
   return TECH_TOPIC_KEYWORDS.some((keyword) => text.includes(keyword));
 }
 
-const CATEGORY_THEME_LABELS = {
-  TeamSpeak: "执行部通讯",
-  影视: "影像档案",
-  未分类: "黑天鹅档案",
-  游戏: "实战记录",
-  电脑技巧: "装备部笔记",
-  音乐: "旧日留声",
-  直播: "城市夜航",
+const CATEGORY_DISPLAY_LABELS = {
+  TeamSpeak: "TeamSpeak",
+  影视: "影视",
+  未分类: "未分类",
+  游戏: "游戏",
+  电脑技巧: "电脑技巧",
+  音乐: "音乐",
+  直播: "直播",
 };
 
 export function getCategoryThemeLabel(category) {
   const raw = String(category ?? "").trim();
-  if (!raw) return "黑天鹅档案";
-  return CATEGORY_THEME_LABELS[raw] ?? raw;
+  if (!raw) return "未分类";
+  return CATEGORY_DISPLAY_LABELS[raw] ?? raw;
 }
 
 export function filterPostsByTaxonomy(posts, { category, tag, topic } = {}) {

@@ -3,14 +3,14 @@
 import { useMemo, useState } from "react";
 
 const FACE_ITEMS = [
-  "|´・ω・)ノ",
-  "ヾ(≧∇≦*)ゝ",
-  "(☆ω☆)",
-  "(๑•̀ㅁ•́ฅ)",
-  "(ノ°ο°)ノ",
-  "😂",
+  "(๑•̀ㅂ•́)و✧",
+  "(￣▽￣)~*",
+  "(☞ﾟヮﾟ)☞",
+  "(╯°□°）╯︵ ┻━┻",
+  "(づ｡◕‿‿◕｡)づ",
   "😀",
-  "😭",
+  "😎",
+  "😶",
   "👍",
 ];
 
@@ -21,23 +21,23 @@ export default function ArgonCommentShell() {
   const tips = useMemo(
     () =>
       mode === "markdown"
-        ? "Markdown 模式已开启（仅界面复刻，提交功能后续接入）"
-        : "纯文本模式（仅界面复刻，提交功能后续接入）",
+        ? "Markdown 模式已开启（当前为界面演示，提交功能后续接入）"
+        : "纯文本模式（当前为界面演示，提交功能后续接入）",
     [mode]
   );
 
   return (
     <section className="nh-comment-shell nh-card" aria-label="评论区">
-      <h2>发送评论 编辑评论</h2>
+      <h2>发表评论 / 编辑评论</h2>
       <p className="nh-comment-reply">
-        正在回复 <strong>学院访客</strong> 的评论：<button type="button">取消回复</button>
+        正在回复 <strong>访客</strong> 的评论：<button type="button">取消回复</button>
       </p>
 
       <textarea
         className="nh-comment-input"
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
-        placeholder="写下你的评论，或留下一句龙文..."
+        placeholder="写下你的评论..."
         rows={6}
       />
 

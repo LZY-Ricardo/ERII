@@ -16,16 +16,16 @@ export default async function BlogIndexPage({ searchParams }) {
   const title = topic === "tech"
     ? "技术文章：前端与 AI"
     : category
-      ? `谱系： ${categoryLabel}${category && category !== categoryLabel ? `（${category}）` : ""}`
+      ? `分类：${categoryLabel}${category && category !== categoryLabel ? `（${category}）` : ""}`
       : tag
-        ? `印记： ${tag}`
-        : "学院档案： 全部记录";
+        ? `标签：${tag}`
+        : "全部文章";
 
   const subtitle = topic === "tech"
-    ? `聚合前端与 AI 相关内容，共 ${filteredPosts.length} 篇`
+    ? `已筛选前端与 AI 相关内容，共 ${filteredPosts.length} 篇`
     : category || tag
-      ? `共检索到 ${filteredPosts.length} 份记录`
-      : "卡塞尔的风从北方来，旧日与新火在同一页纸上交汇。";
+      ? `共找到 ${filteredPosts.length} 篇文章`
+      : `共收录 ${filteredPosts.length} 篇文章，按分类和标签可快速筛选。`;
 
   return (
     <ArgonShell

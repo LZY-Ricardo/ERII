@@ -2,6 +2,8 @@ import { unstable_cache } from "next/cache";
 import { db } from "@/src/lib/db";
 import { normalizeSlugParam } from "@/src/lib/slugParam";
 
+let hasWarnedMissingPostsTable = false;
+
 function formatDate(value) {
   if (!value) return "";
   if (typeof value === "string") return value.slice(0, 10);
@@ -9,16 +11,37 @@ function formatDate(value) {
   return String(value).slice(0, 10);
 }
 
+function isMissingPostsTableError(error) {
+  const code = String(error?.code ?? "");
+  const message = String(error?.message ?? "").toLowerCase();
+  return code === "42P01" && message.includes('relation "posts" does not exist');
+}
+
+function warnMissingPostsTableOnce(error) {
+  if (hasWarnedMissingPostsTable) return;
+  hasWarnedMissingPostsTable = true;
+  console.warn("[posts] relation \"posts\" does not exist, fallback to empty list.", error);
+}
+
 const getPublishedPostsFromDb = unstable_cache(
   async () => {
     if (!db) return [];
 
-    const result = await db.sql`
-      SELECT slug, title, date, description, cover, tags
-      FROM posts
-      WHERE status = 'published'
-      ORDER BY date DESC
-    `;
+    let result;
+    try {
+      result = await db.sql`
+        SELECT slug, title, date, description, cover, tags
+        FROM posts
+        WHERE status = 'published'
+        ORDER BY date DESC
+      `;
+    } catch (error) {
+      if (isMissingPostsTableError(error)) {
+        warnMissingPostsTableOnce(error);
+        return [];
+      }
+      throw error;
+    }
 
     return result.rows.map((row) => ({
       slug: row.slug,
@@ -40,12 +63,21 @@ function getPublishedPostFromDb(slug) {
     async () => {
       if (!db) return null;
 
-      const result = await db.sql`
-        SELECT slug, title, date, description, cover, tags, content
-        FROM posts
-        WHERE slug = ${slug} AND status = 'published'
-        LIMIT 1
-      `;
+      let result;
+      try {
+        result = await db.sql`
+          SELECT slug, title, date, description, cover, tags, content
+          FROM posts
+          WHERE slug = ${slug} AND status = 'published'
+          LIMIT 1
+        `;
+      } catch (error) {
+        if (isMissingPostsTableError(error)) {
+          warnMissingPostsTableOnce(error);
+          return null;
+        }
+        throw error;
+      }
 
       const row = result.rows[0];
       if (!row) return null;

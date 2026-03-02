@@ -23,16 +23,12 @@ export default function PostCard({ post }) {
 
   const characterCount = Math.max(
     120,
-    Math.round(
-      (title.replace(/\s+/g, "").length + description.replace(/\s+/g, "").length) * 5.4
-    )
+    Math.round((title.replace(/\s+/g, "").length + description.replace(/\s+/g, "").length) * 5.4)
   );
   const readMinutes = Math.max(1, Math.round(characterCount / 260));
   const views = hashNumber(token, 18, 320);
   const comments = hashNumber(`${token}:comment`, 0, 9);
-  const density = ["is-tall", "is-medium", "is-compact"][
-    hashNumber(`${token}:density`, 0, 2)
-  ];
+  const density = ["is-tall", "is-medium", "is-compact"][hashNumber(`${token}:density`, 0, 2)];
 
   return (
     <article

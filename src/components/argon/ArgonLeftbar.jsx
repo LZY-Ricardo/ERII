@@ -1,16 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getCategoryThemeLabel, inferCategoryFromPost } from "@/src/lib/postTaxonomy";
 
 const PANEL_ITEMS = [
-  { id: "search", label: "索引" },
-  { id: "overview", label: "概览" },
+  { id: "search", label: "搜索" },
+  { id: "overview", label: "站点" },
   { id: "catalog", label: "目录" },
-  { id: "category", label: "谱系" },
-  { id: "tag", label: "印记" },
-  { id: "tool", label: "调律" },
+  { id: "category", label: "分类" },
+  { id: "tag", label: "标签" },
+  { id: "tool", label: "设置" },
 ];
 
 function collectCategories(posts) {
@@ -56,25 +57,6 @@ function hexToRgb(hex) {
   return `${r},${g},${b}`;
 }
 
-function Tabs({ value, onChange, items }) {
-  return (
-    <div className="nh-tabs nh-tabs-switch" role="tablist" aria-label="切换选项">
-      {items.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          className={`nh-tab-btn ${value === item.id ? "is-active" : ""}`}
-          onClick={() => onChange(item.id)}
-          role="tab"
-          aria-selected={value === item.id}
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function WidgetFrame({ title, children }) {
   return (
     <section className="nh-widget nh-card">
@@ -88,6 +70,11 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
   const categories = useMemo(() => collectCategories(posts), [posts]);
   const tags = useMemo(() => collectTags(posts), [posts]);
   const recentPosts = useMemo(() => posts.slice(0, 5), [posts]);
+  const activeCategoryCount = useMemo(
+    () => categories.filter((item) => item.count > 0).length,
+    [categories]
+  );
+  const [avatarSrc, setAvatarSrc] = useState("/images/avatar-ricardo.jpg");
 
   const [darkMode, setDarkMode] = useState(false);
   const [serifMode, setSerifMode] = useState(true);
@@ -98,9 +85,6 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
 
   const [panelOpen, setPanelOpen] = useState(false);
   const [activePanel, setActivePanel] = useState("overview");
-  const [switcherTab, setSwitcherTab] = useState(tocItems.length ? "catalog" : "overview");
-  const activeSwitcherTab =
-    switcherTab === "catalog" && !tocItems.length ? "overview" : switcherTab;
 
   useEffect(() => {
     const root = document.documentElement;
@@ -121,11 +105,36 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
     body.dataset.nhFilter = filterMode;
     body.classList.toggle("nh-panel-open", panelOpen);
 
+    window.dispatchEvent(
+      new CustomEvent("nh:appearance-state", {
+        detail: { darkMode, serifMode, deepShadow, filterMode, radius, themeColor },
+      })
+    );
+
     return () => {
       body.classList.remove("nh-dark", "nh-font-serif", "nh-panel-open");
       delete body.dataset.nhFilter;
     };
   }, [darkMode, serifMode, deepShadow, filterMode, radius, themeColor, panelOpen]);
+
+  useEffect(() => {
+    const onSetAppearance = (event) => {
+      const detail = event?.detail ?? {};
+
+      if (Object.hasOwn(detail, "darkMode")) setDarkMode(Boolean(detail.darkMode));
+      if (Object.hasOwn(detail, "serifMode")) setSerifMode(Boolean(detail.serifMode));
+      if (Object.hasOwn(detail, "deepShadow")) setDeepShadow(Boolean(detail.deepShadow));
+      if (Object.hasOwn(detail, "filterMode")) setFilterMode(String(detail.filterMode ?? "none"));
+      if (Object.hasOwn(detail, "radius")) {
+        const nextRadius = Number(detail.radius);
+        if (Number.isFinite(nextRadius)) setRadius(nextRadius);
+      }
+      if (Object.hasOwn(detail, "themeColor")) setThemeColor(String(detail.themeColor ?? "#89232e"));
+    };
+
+    window.addEventListener("nh:set-appearance", onSetAppearance);
+    return () => window.removeEventListener("nh:set-appearance", onSetAppearance);
+  }, []);
 
   useEffect(() => {
     const closeOnEsc = (event) => {
@@ -158,19 +167,80 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
 
   const renderSearchBody = () => (
     <>
-      <input className="nh-search-input" placeholder="搜索章节 / 角色 / 城市" aria-label="搜索" />
-      <p className="nh-quote">每日一言 任何命运的馈赠，早已在暗中标好了价格。</p>
+      <input className="nh-search-input" placeholder="搜索文章 / 标签 / 关键词" aria-label="搜索" />
+      <p className="nh-quote">输入关键词可快速定位文章内容。</p>
     </>
+  );
+
+  const renderIdentityCard = () => (
+    <section className="nh-widget nh-card nh-profile-card" aria-label="站长信息">
+      <div className="nh-profile-card-head">
+        <div className="nh-profile-avatar">
+          <Image
+            src={avatarSrc}
+            alt="Ricardo 头像"
+            width={88}
+            height={88}
+            onError={() => setAvatarSrc("/sakura.png")}
+          />
+        </div>
+        <p className="nh-profile-card-name">Ricardo</p>
+        <p className="nh-profile-card-role">前端 · AI 技术探索者</p>
+        <p className="nh-profile-card-status">持续更新中</p>
+      </div>
+
+      <p className="nh-profile-card-bio">这里主要分享前端开发与 AI 实践过程中的笔记、踩坑与项目复盘。</p>
+
+      <div className="nh-profile-card-stats">
+        <span>
+          <strong>{posts.length}</strong>
+          <small>文章</small>
+        </span>
+        <span>
+          <strong>{activeCategoryCount}</strong>
+          <small>分类</small>
+        </span>
+        <span>
+          <strong>{tags.length}</strong>
+          <small>标签</small>
+        </span>
+      </div>
+
+      <div className="nh-profile-card-links">
+        <Link href="/about" className="nh-profile-card-link">
+          关于我
+        </Link>
+        <Link href="/blog?topic=tech" className="nh-profile-card-link">
+          技术文章
+        </Link>
+        <a
+          href="https://wpa.qq.com/msgrd?v=3&uin=3239468786&site=qq&menu=yes"
+          target="_blank"
+          rel="noreferrer"
+          className="nh-profile-card-link"
+        >
+          QQ 3239468786
+        </a>
+        <a
+          href="https://github.com/LZY-Ricardo"
+          target="_blank"
+          rel="noreferrer"
+          className="nh-profile-card-link"
+        >
+          GitHub
+        </a>
+      </div>
+    </section>
   );
 
   const renderOverviewBody = () => (
     <div className="nh-profile">
-      <p className="nh-profile-name">ERII · 档案员</p>
-      <p className="nh-profile-status">卡塞尔值班中</p>
+      <p className="nh-profile-name">Ricardo</p>
+      <p className="nh-profile-status">前端与 AI 学习记录</p>
       <div className="nh-profile-stats">
-        <span>{posts.length} 份记录</span>
-        <span>{categories.length} 条谱系</span>
-        <span>{tags.length} 枚印记</span>
+        <span>{posts.length} 篇文章</span>
+        <span>{categories.length} 个分类</span>
+        <span>{tags.length} 个标签</span>
       </div>
     </div>
   );
@@ -209,7 +279,7 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
           </Link>
         ))
       ) : (
-        <span className="nh-muted">暂无印记</span>
+        <span className="nh-muted">暂无标签</span>
       )}
     </div>
   );
@@ -228,24 +298,24 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
     <div className="nh-controls">
       <label>
         <input type="checkbox" checked={darkMode} onChange={(e) => setDarkMode(e.target.checked)} />
-        夜幕模式
+        深色模式
       </label>
 
       <label>
         <input type="checkbox" checked={serifMode} onChange={(e) => setSerifMode(e.target.checked)} />
-        古典 Serif
+        衬线字体
       </label>
 
       <label>
         <input type="checkbox" checked={deepShadow} onChange={(e) => setDeepShadow(e.target.checked)} />
-        深渊阴影
+        阴影增强
       </label>
 
       <label>
         滤镜
         <select value={filterMode} onChange={(e) => setFilterMode(e.target.value)}>
           <option value="none">关闭</option>
-          <option value="sunset">夕照</option>
+          <option value="sunset">暖色</option>
           <option value="dim">暗化</option>
           <option value="gray">灰度</option>
         </select>
@@ -264,50 +334,28 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
       </label>
 
       <label>
-        主色
+        主题色
         <input type="color" value={themeColor} onChange={(e) => setThemeColor(e.target.value)} />
       </label>
     </div>
   );
 
-  const renderSwitcherBody = () => {
-    if (activeSwitcherTab === "catalog") return renderCatalogBody();
-    if (activeSwitcherTab === "tool") return renderToolsBody();
-    return renderOverviewBody();
-  };
-
   const panelRenderer = {
-    search: () => <WidgetFrame title="索引检索">{renderSearchBody()}</WidgetFrame>,
-    overview: () => <WidgetFrame title="学院概览">{renderOverviewBody()}</WidgetFrame>,
-    catalog: () => <WidgetFrame title="章节目录">{renderCatalogBody()}</WidgetFrame>,
-    category: () => <WidgetFrame title="谱系">{renderCategoriesBody()}</WidgetFrame>,
-    tag: () => <WidgetFrame title="印记">{renderTagsBody()}</WidgetFrame>,
-    tool: () => <WidgetFrame title="炼金调律">{renderToolsBody()}</WidgetFrame>,
+    search: () => <WidgetFrame title="站内搜索">{renderSearchBody()}</WidgetFrame>,
+    overview: () => <WidgetFrame title="站点信息">{renderOverviewBody()}</WidgetFrame>,
+    catalog: () => <WidgetFrame title="文章目录">{renderCatalogBody()}</WidgetFrame>,
+    category: () => <WidgetFrame title="分类">{renderCategoriesBody()}</WidgetFrame>,
+    tag: () => <WidgetFrame title="标签">{renderTagsBody()}</WidgetFrame>,
+    tool: () => <WidgetFrame title="显示设置">{renderToolsBody()}</WidgetFrame>,
   };
 
   const renderActivePanel = panelRenderer[activePanel] ?? panelRenderer.overview;
 
   return (
     <div className="nh-leftbar-wrap">
-      <aside className="nh-leftbar nh-leftbar-desktop" aria-label="侧边功能栏">
-        <WidgetFrame title="索引检索">{renderSearchBody()}</WidgetFrame>
-
-        <section className="nh-widget nh-card">
-          <Tabs
-            value={activeSwitcherTab}
-            onChange={setSwitcherTab}
-            items={[
-              { id: "catalog", label: "章节目录" },
-              { id: "overview", label: "学院概览" },
-              { id: "tool", label: "调律" },
-            ]}
-          />
-          <div className="nh-switcher-body">{renderSwitcherBody()}</div>
-        </section>
-
-        <WidgetFrame title="谱系">{renderCategoriesBody()}</WidgetFrame>
-        <WidgetFrame title="印记">{renderTagsBody()}</WidgetFrame>
-        <WidgetFrame title="最新记录">{renderRecentBody()}</WidgetFrame>
+      <aside className="nh-leftbar nh-leftbar-desktop" aria-label="左侧信息栏">
+        <WidgetFrame title="站内搜索">{renderSearchBody()}</WidgetFrame>
+        {renderIdentityCard()}
       </aside>
 
       <div className="nh-leftbar-float" aria-label="浮动面板">
@@ -342,7 +390,7 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
 
           <div className="nh-float-panel-body">
             {renderActivePanel()}
-            {activePanel !== "search" ? <WidgetFrame title="最新记录">{renderRecentBody()}</WidgetFrame> : null}
+            {activePanel !== "search" ? <WidgetFrame title="最新文章">{renderRecentBody()}</WidgetFrame> : null}
           </div>
         </section>
       </div>
