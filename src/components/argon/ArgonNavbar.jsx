@@ -15,6 +15,12 @@ const navItems = [
     title: "前端与 AI 技术分享内容",
   },
   {
+    label: "项目",
+    href: "/projects",
+    type: "projects",
+    title: "查看我的项目简介、技术栈与链接",
+  },
+  {
     label: "TeamSpeak",
     href: "/blog?category=TeamSpeak",
     type: "category",
@@ -47,6 +53,7 @@ const navItems = [
 
 function isItemActive(item, pathname, currentCategory, currentTag, currentTopic) {
   if (item.type === "home") return pathname === "/";
+  if (item.type === "projects") return pathname === "/projects";
   if (item.type === "about") return pathname === "/about";
   if (item.type === "blog") return pathname === "/blog" && !currentCategory;
   if (item.type === "category") return pathname === "/blog" && currentCategory === item.category;
