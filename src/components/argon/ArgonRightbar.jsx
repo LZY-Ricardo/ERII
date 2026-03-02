@@ -72,6 +72,7 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
   const recentPosts = useMemo(() => posts.slice(0, 6), [posts]);
 
   const [switcherTab, setSwitcherTab] = useState("overview");
+  const [contentTab, setContentTab] = useState("recent");
   const [darkMode, setDarkMode] = useState(false);
   const [serifMode, setSerifMode] = useState(true);
   const [deepShadow, setDeepShadow] = useState(false);
@@ -226,52 +227,62 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
           </WidgetFrame>
         ) : null}
 
-        <WidgetFrame title="分类导航">
-          <div className="nh-chip-wrap">
-            {categories.map((category) => (
-              <Link
-                key={category.label}
-                href={`/blog?category=${encodeURIComponent(category.label)}`}
-                className="nh-chip"
-              >
-                {category.displayLabel} {category.count}
-              </Link>
-            ))}
-          </div>
-        </WidgetFrame>
+        <WidgetFrame title="内容导航">
+          <Tabs
+            value={contentTab}
+            onChange={setContentTab}
+            items={[
+              { id: "recent", label: "最新" },
+              { id: "category", label: "分类" },
+              { id: "tag", label: "标签" },
+            ]}
+          />
+          <div className="nh-switcher-body">
+            {contentTab === "category" ? (
+              <div className="nh-chip-wrap">
+                {categories.length ? (
+                  categories.map((category) => (
+                    <Link
+                      key={category.label}
+                      href={`/blog?category=${encodeURIComponent(category.label)}`}
+                      className="nh-chip"
+                    >
+                      {category.displayLabel} {category.count}
+                    </Link>
+                  ))
+                ) : (
+                  <span className="nh-muted">暂无分类</span>
+                )}
+              </div>
+            ) : null}
 
-        <WidgetFrame title="常用标签">
-          <div className="nh-chip-wrap">
-            {tags.length ? (
-              tags.map((tag) => (
-                <Link key={tag.label} href={`/blog?tag=${encodeURIComponent(tag.label)}`} className="nh-chip">
-                  {tag.label} {tag.count}
-                </Link>
-              ))
-            ) : (
-              <span className="nh-muted">暂无标签</span>
-            )}
-          </div>
-        </WidgetFrame>
+            {contentTab === "tag" ? (
+              <div className="nh-chip-wrap">
+                {tags.length ? (
+                  tags.map((tag) => (
+                    <Link key={tag.label} href={`/blog?tag=${encodeURIComponent(tag.label)}`} className="nh-chip">
+                      {tag.label} {tag.count}
+                    </Link>
+                  ))
+                ) : (
+                  <span className="nh-muted">暂无标签</span>
+                )}
+              </div>
+            ) : null}
 
-        <WidgetFrame title="最新文章">
-          <ul className="nh-recent-list">
-            {recentPosts.map((post) => (
-              <li key={post.slug}>
-                <Link href={`/blog/${encodeURIComponent(post.slug)}`}>{post.frontmatter.title}</Link>
-              </li>
-            ))}
-          </ul>
-        </WidgetFrame>
-
-        <WidgetFrame title="快捷入口">
-          <div className="nh-rightbar-links">
-            <Link href="/">全部文章</Link>
-            <Link href="/blog?topic=tech">技术分享</Link>
-            <Link href="/about">关于本站</Link>
-            <a href="https://github.com/LZY-Ricardo" target="_blank" rel="noreferrer">
-              GitHub
-            </a>
+            {contentTab === "recent" ? (
+              <ul className="nh-recent-list">
+                {recentPosts.length ? (
+                  recentPosts.map((post) => (
+                    <li key={post.slug}>
+                      <Link href={`/blog/${encodeURIComponent(post.slug)}`}>{post.frontmatter.title}</Link>
+                    </li>
+                  ))
+                ) : (
+                  <li className="nh-muted">暂无文章</li>
+                )}
+              </ul>
+            ) : null}
           </div>
         </WidgetFrame>
       </aside>
