@@ -1551,6 +1551,22 @@ body {
   background: rgba(213, 232, 255, 0.84);
 }
 
+.nh-project-live-badge {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 2;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: #fff8ef;
+  border: 1px solid rgba(255, 214, 138, 0.45);
+  background: linear-gradient(115deg, rgba(247, 118, 95, 0.95), rgba(243, 168, 77, 0.95));
+  box-shadow: 0 6px 16px rgba(114, 42, 31, 0.28);
+}
+
 .nh-project-body {
   display: grid;
   gap: 10px;
@@ -1592,6 +1608,21 @@ body {
   margin-top: 2px;
 }
 
+.nh-project-live-cta {
+  margin-top: 2px;
+}
+
+.nh-project-live-muted {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  color: rgba(66, 50, 57, 0.68);
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px dashed rgba(0, 0, 0, 0.16);
+}
+
 .nh-project-link {
   text-decoration: none;
   color: var(--nh-text);
@@ -1607,6 +1638,31 @@ body {
 .nh-project-link:hover {
   background: rgba(var(--nh-theme-rgb), 0.14);
   border-color: rgba(var(--nh-theme-rgb), 0.36);
+}
+
+.nh-project-link.is-live {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff8f2;
+  border-color: rgba(255, 190, 112, 0.36);
+  background: linear-gradient(115deg, rgba(var(--nh-theme-rgb), 0.95), rgba(233, 137, 77, 0.92));
+  box-shadow: 0 8px 18px rgba(74, 31, 34, 0.24);
+}
+
+.nh-project-link.is-live:hover {
+  background: linear-gradient(115deg, rgba(var(--nh-theme-rgb), 0.98), rgba(242, 151, 92, 0.96));
+  border-color: rgba(255, 206, 132, 0.58);
+  box-shadow: 0 10px 20px rgba(74, 31, 34, 0.3);
+}
+
+.nh-project-link.is-secondary {
+  background: rgba(255, 255, 255, 0.68);
 }
 
 .nh-project-empty {
@@ -2155,6 +2211,29 @@ body {
 
 .nh-body.nh-dark .nh-project-tagline {
   color: rgba(var(--nh-accent-rgb), 0.88);
+}
+
+.nh-body.nh-dark .nh-project-live-badge {
+  color: #fff4e7;
+  border-color: rgba(255, 206, 132, 0.52);
+  background: linear-gradient(115deg, rgba(215, 95, 80, 0.9), rgba(212, 140, 63, 0.92));
+}
+
+.nh-body.nh-dark .nh-project-live-muted {
+  color: rgba(236, 224, 210, 0.84);
+  background: rgba(22, 27, 36, 0.6);
+  border-color: rgba(220, 228, 243, 0.24);
+}
+
+.nh-body.nh-dark .nh-project-link.is-live {
+  color: #fff3e4;
+  border-color: rgba(255, 206, 132, 0.38);
+  background: linear-gradient(115deg, rgba(172, 66, 73, 0.94), rgba(188, 113, 58, 0.95));
+}
+
+.nh-body.nh-dark .nh-project-link.is-live:hover {
+  border-color: rgba(255, 206, 132, 0.56);
+  background: linear-gradient(115deg, rgba(185, 74, 82, 0.96), rgba(198, 122, 64, 0.98));
 }
 
 .nh-body.nh-dark .nh-project-status[data-state="building"] {

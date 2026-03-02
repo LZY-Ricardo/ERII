@@ -1,20 +1,26 @@
 import Image from "next/image";
 import Link from "next/link";
 
-function ProjectAction({ action }) {
+function isLiveAction(action) {
+  return /在线|预览|体验/i.test(String(action?.label ?? ""));
+}
+
+function ProjectAction({ action, className = "" }) {
   const href = String(action?.href ?? "").trim();
   if (!href) return null;
 
+  const combinedClass = `nh-project-link ${className}`.trim();
+
   if (action.external) {
     return (
-      <a href={href} target="_blank" rel="noreferrer" className="nh-project-link">
+      <a href={href} target="_blank" rel="noreferrer" className={combinedClass}>
         {action.label}
       </a>
     );
   }
 
   return (
-    <Link href={href} className="nh-project-link">
+    <Link href={href} className={combinedClass}>
       {action.label}
     </Link>
   );
@@ -22,6 +28,8 @@ function ProjectAction({ action }) {
 
 export default function ProjectCard({ project }) {
   const links = Array.isArray(project?.links) ? project.links.slice(0, 3) : [];
+  const liveAction = links.find((item) => isLiveAction(item)) ?? null;
+  const secondaryActions = links.filter((item) => item !== liveAction);
 
   return (
     <article className="nh-project-card nh-card">
@@ -41,6 +49,8 @@ export default function ProjectCard({ project }) {
         <span className="nh-project-status" data-state={project?.state ?? "active"}>
           {project?.status ?? "持续更新"}
         </span>
+
+        {liveAction ? <span className="nh-project-live-badge">LIVE</span> : null}
       </div>
 
       <div className="nh-project-body">
@@ -56,10 +66,22 @@ export default function ProjectCard({ project }) {
           ))}
         </div>
 
-        {links.length ? (
+        <div className="nh-project-live-cta">
+          {liveAction ? (
+            <ProjectAction action={{ ...liveAction, label: "在线体验 ↗" }} className="is-live" />
+          ) : (
+            <span className="nh-project-live-muted">暂未开放在线体验</span>
+          )}
+        </div>
+
+        {secondaryActions.length ? (
           <div className="nh-project-links">
-            {links.map((action) => (
-              <ProjectAction key={`${project.id}:${action.label}:${action.href}`} action={action} />
+            {secondaryActions.map((action) => (
+              <ProjectAction
+                key={`${project.id}:${action.label}:${action.href}`}
+                action={action}
+                className="is-secondary"
+              />
             ))}
           </div>
         ) : null}
@@ -67,4 +89,3 @@ export default function ProjectCard({ project }) {
     </article>
   );
 }
-
