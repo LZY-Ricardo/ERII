@@ -678,8 +678,7 @@ body {
 }
 
 .nh-rightbar {
-  position: sticky;
-  top: 120px;
+  position: static;
   display: grid;
   gap: 16px;
 }
@@ -754,6 +753,94 @@ body {
   margin: 10px 0 0;
   font-size: 13px;
   color: rgba(54, 72, 99, 0.75);
+}
+
+.nh-daily-quote {
+  display: grid;
+  gap: 12px;
+}
+
+.nh-daily-quote-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(152deg, rgba(255, 255, 255, 0.82), rgba(255, 247, 236, 0.56));
+  border-color: rgba(var(--nh-theme-rgb), 0.16);
+}
+
+.nh-daily-quote-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 14% 20%, rgba(var(--nh-theme-rgb), 0.24), transparent 48%),
+    radial-gradient(circle at 88% 84%, rgba(var(--nh-accent-rgb), 0.2), transparent 46%);
+}
+
+.nh-daily-quote-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.nh-daily-quote-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.nh-daily-quote-kicker,
+.nh-daily-quote-date {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--nh-theme-rgb), 0.2);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.nh-daily-quote-kicker {
+  padding: 3px 8px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(73, 53, 58, 0.82);
+}
+
+.nh-daily-quote-date {
+  padding: 2px 9px;
+  font-size: 11px;
+  color: rgba(63, 47, 53, 0.82);
+}
+
+.nh-daily-quote-text {
+  margin: 0;
+  position: relative;
+  padding-left: 14px;
+  border-left: 2px solid rgba(var(--nh-theme-rgb), 0.42);
+  font-size: 14.5px;
+  line-height: 1.95;
+  font-family: var(--nh-font-heading);
+  color: rgba(52, 39, 45, 0.92);
+}
+
+.nh-daily-quote-text::before {
+  content: "“";
+  position: absolute;
+  left: -1px;
+  top: -14px;
+  font-size: 32px;
+  line-height: 1;
+  color: rgba(var(--nh-accent-rgb), 0.82);
+}
+
+.nh-daily-quote-meta {
+  margin: 0;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--nh-theme-rgb), 0.18);
+  background: rgba(255, 255, 255, 0.56);
+  font-size: 12px;
+  color: rgba(66, 50, 57, 0.76);
 }
 
 .nh-tabs {
@@ -1679,6 +1766,27 @@ body {
   background: rgba(22, 27, 36, 0.76);
   border-color: rgba(220, 228, 243, 0.2);
   color: var(--nh-text);
+}
+
+.nh-body.nh-dark .nh-daily-quote-card {
+  background: linear-gradient(156deg, rgba(35, 24, 29, 0.84), rgba(28, 20, 25, 0.7));
+  border-color: rgba(220, 228, 243, 0.22);
+}
+
+.nh-body.nh-dark .nh-daily-quote-kicker,
+.nh-body.nh-dark .nh-daily-quote-date,
+.nh-body.nh-dark .nh-daily-quote-meta {
+  background: rgba(22, 27, 36, 0.76);
+  border-color: rgba(220, 228, 243, 0.2);
+  color: rgba(236, 224, 210, 0.9);
+}
+
+.nh-body.nh-dark .nh-daily-quote-text {
+  color: rgba(240, 229, 217, 0.94);
+}
+
+.nh-body.nh-dark .nh-daily-quote-text::before {
+  color: rgba(var(--nh-accent-rgb), 0.7);
 }
 
 .nh-body.nh-dark .nh-rightbar-links a {

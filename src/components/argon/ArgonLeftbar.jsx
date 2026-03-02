@@ -14,6 +14,28 @@ const PANEL_ITEMS = [
   { id: "tool", label: "设置" },
 ];
 
+const DAILY_LONGZU_QUOTES = [
+  { text: "命运这种东西，生来就是要被踏于足下的。", source: "《龙族》" },
+  { text: "所谓弃族的命运，就是要穿越荒原，再次竖起战旗，返回故乡。", source: "《龙族》" },
+  { text: "有些时间点错过一次，就好比错过了一生。", source: "《龙族》" },
+  { text: "如果喜欢谁，就满世界去找她，别等她来找你。", source: "《龙族》" },
+  { text: "真正的勇气，不是没有恐惧，而是带着恐惧仍然向前。", source: "《龙族》" },
+  { text: "人总要为自己相信的东西，付出一点代价。", source: "《龙族》" },
+  { text: "总有些路必须一个人走，总有些夜要自己熬过去。", source: "《龙族》" },
+  { text: "你可以退后一步，但别把后背交给命运。", source: "《龙族》" },
+  { text: "成长就是把哭声调成静音，然后继续向前。", source: "《龙族》" },
+  { text: "世界上没有真正的感同身受，但可以并肩而行。", source: "《龙族》" },
+  { text: "当黑暗降临时，记得你也曾是别人的光。", source: "《龙族》" },
+  { text: "愿你出走半生，归来仍有少年之心。", source: "《龙族》" },
+];
+
+function getDailyLongzuQuote(now = new Date()) {
+  const yearStart = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - yearStart) / 86400000);
+  const index = (dayOfYear - 1 + DAILY_LONGZU_QUOTES.length) % DAILY_LONGZU_QUOTES.length;
+  return DAILY_LONGZU_QUOTES[index];
+}
+
 function collectCategories(posts) {
   const counts = new Map();
   for (const post of posts) {
@@ -57,9 +79,9 @@ function hexToRgb(hex) {
   return `${r},${g},${b}`;
 }
 
-function WidgetFrame({ title, children }) {
+function WidgetFrame({ title, children, className = "" }) {
   return (
-    <section className="nh-widget nh-card">
+    <section className={`nh-widget nh-card ${className}`.trim()}>
       <h3 className="nh-widget-title">{title}</h3>
       {children}
     </section>
@@ -70,6 +92,12 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
   const categories = useMemo(() => collectCategories(posts), [posts]);
   const tags = useMemo(() => collectTags(posts), [posts]);
   const recentPosts = useMemo(() => posts.slice(0, 5), [posts]);
+  const dailyQuote = useMemo(() => {
+    const now = new Date();
+    const quote = getDailyLongzuQuote(now);
+    const dateText = new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit" }).format(now);
+    return { quote, dateText };
+  }, []);
   const activeCategoryCount = useMemo(
     () => categories.filter((item) => item.count > 0).length,
     [categories]
@@ -170,6 +198,17 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
       <input className="nh-search-input" placeholder="搜索文章 / 标签 / 关键词" aria-label="搜索" />
       <p className="nh-quote">输入关键词可快速定位文章内容。</p>
     </>
+  );
+
+  const renderDailyQuoteBody = () => (
+    <div className="nh-daily-quote">
+      <div className="nh-daily-quote-head">
+        <span className="nh-daily-quote-kicker">LONGZU QUOTE</span>
+        <time className="nh-daily-quote-date">{dailyQuote.dateText}</time>
+      </div>
+      <blockquote className="nh-daily-quote-text">“{dailyQuote.quote.text}”</blockquote>
+      <p className="nh-daily-quote-meta">{dailyQuote.quote.source}</p>
+    </div>
   );
 
   const renderIdentityCard = () => (
@@ -354,7 +393,9 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
   return (
     <div className="nh-leftbar-wrap">
       <aside className="nh-leftbar nh-leftbar-desktop" aria-label="左侧信息栏">
-        <WidgetFrame title="站内搜索">{renderSearchBody()}</WidgetFrame>
+        <WidgetFrame title="每日一言" className="nh-daily-quote-card">
+          {renderDailyQuoteBody()}
+        </WidgetFrame>
         {renderIdentityCard()}
       </aside>
 
