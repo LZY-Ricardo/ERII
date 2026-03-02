@@ -1350,6 +1350,64 @@ body {
   font-family: var(--nh-font-ui);
 }
 
+.nh-page-head.nh-page-hero {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: min(100%, 1260px);
+  position: relative;
+  padding: 20px 20px 20px;
+  text-align: center;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.nh-page-head.nh-page-hero::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  width: min(92%, 760px);
+  height: clamp(120px, 23vw, 190px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 20% 36%, rgba(102, 66, 204, 0.22), transparent 42%),
+    radial-gradient(circle at 76% 62%, rgba(236, 141, 85, 0.18), transparent 48%);
+  filter: blur(10px);
+}
+
+.nh-page-head.nh-page-hero h1,
+.nh-page-head.nh-page-hero p {
+  position: relative;
+  z-index: 1;
+}
+
+.nh-page-head.nh-page-hero h1 {
+  margin: 0;
+  font-size: clamp(52px, 8.2vw, 96px);
+  line-height: 1.1;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  font-family: var(--nh-font-heading);
+  background: linear-gradient(94deg, #6d7cf7 4%, #a975f4 35%, #cf7ea3 66%, #f2aa6d 96%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 14px 34px rgba(31, 20, 35, 0.26);
+}
+
+.nh-page-head.nh-page-hero p {
+  margin: 10px 0 0;
+  font-size: clamp(24px, 3vw, 44px);
+  line-height: 1.24;
+  letter-spacing: 0.06em;
+  color: rgba(138, 83, 190, 0.96);
+  text-shadow: 0 8px 22px rgba(27, 17, 31, 0.24);
+  font-family: var(--nh-font-heading);
+}
+
 .nh-post-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1974,6 +2032,15 @@ body {
     width: 136px;
   }
 
+  .nh-page-head.nh-page-hero {
+    padding: 34px 10px 30px;
+  }
+
+  .nh-page-head.nh-page-hero p {
+    margin-top: 8px;
+    font-size: clamp(22px, 5.3vw, 32px);
+  }
+
   .nh-container {
     padding-top: 76px;
   }
@@ -2000,6 +2067,19 @@ body {
 
   .nh-nav-search-shell.is-open .nh-nav-search-input {
     width: 108px;
+  }
+
+  .nh-page-head.nh-page-hero {
+    padding: 28px 6px 26px;
+  }
+
+  .nh-page-head.nh-page-hero h1 {
+    letter-spacing: 0.05em;
+  }
+
+  .nh-page-head.nh-page-hero p {
+    margin-top: 6px;
+    letter-spacing: 0.04em;
   }
 
   .nh-fab-tabs {

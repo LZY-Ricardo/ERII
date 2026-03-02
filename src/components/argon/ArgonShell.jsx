@@ -8,11 +8,14 @@ export default function ArgonShell({
   tocItems = [],
   title = "",
   subtitle = "",
+  titleMode = "card",
   activeCategory = "",
   activeTag = "",
   activeTopic = "",
   children,
 }) {
+  const isHeroTitle = titleMode === "hero";
+
   return (
     <div className="nh-page">
       <a className="nh-skip-link" href="#nh-main">
@@ -27,10 +30,17 @@ export default function ArgonShell({
 
       <div className="nh-container">
         <div className="nh-layout">
+          {isHeroTitle && title ? (
+            <section className="nh-page-head nh-page-hero">
+              <h1>{title}</h1>
+              {subtitle ? <p>{subtitle}</p> : null}
+            </section>
+          ) : null}
+
           <ArgonLeftbar posts={posts} tocItems={tocItems} />
 
           <main id="nh-main" className="nh-main" tabIndex={-1}>
-            {title ? (
+            {!isHeroTitle && title ? (
               <section className="nh-page-head nh-card">
                 <h1>{title}</h1>
                 {subtitle ? <p>{subtitle}</p> : null}
