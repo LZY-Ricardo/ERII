@@ -152,66 +152,68 @@ export default function ArgonNavbar({ activeCategory = "", activeTag = "", activ
     <header className="nh-header">
       <nav className={`nh-navbar ${isScrolled ? "is-scrolled" : "is-top"}`} aria-label="站点导航">
         <div className="nh-navbar-inner">
-          <Link href="/" className="nh-brand" aria-label="回到首页" onClick={() => setIsSearchOpen(false)}>
-            <Image src="/sakura.png" alt="" width={26} height={26} priority />
-            <span>ERII · 前端与 AI 博客</span>
-          </Link>
+          <div className="nh-navbar-left">
+            <Link href="/" className="nh-brand" aria-label="回到首页" onClick={() => setIsSearchOpen(false)}>
+              <Image src="/sakura.png" alt="" width={26} height={26} priority />
+            </Link>
 
-          <ul className="nh-nav-list">
-            {navItems.map((item) => (
-              <li key={`${item.label}:${item.href}`}>
-                <Link
-                  href={item.href}
-                  className={`nh-nav-link ${isItemActive(
-                    item,
-                    pathname,
-                    currentCategory,
-                    currentTag,
-                    currentTopic
-                  ) ? "is-active" : ""}`}
-                  title={item.title}
-                  onClick={() => setIsSearchOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-            <li>
-              <form
-                ref={searchShellRef}
-                className={`nh-nav-search-shell ${isSearchOpen ? "is-open" : ""}`}
-                role="search"
-                aria-label="站内搜索"
-                onSubmit={handleSearchSubmit}
+            <ul className="nh-nav-list">
+              {navItems.map((item) => (
+                <li key={`${item.label}:${item.href}`}>
+                  <Link
+                    href={item.href}
+                    className={`nh-nav-link ${isItemActive(
+                      item,
+                      pathname,
+                      currentCategory,
+                      currentTag,
+                      currentTopic
+                    ) ? "is-active" : ""}`}
+                    title={item.title}
+                    onClick={() => setIsSearchOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="nh-navbar-right">
+            <form
+              ref={searchShellRef}
+              className={`nh-nav-search-shell ${isSearchOpen ? "is-open" : ""}`}
+              role="search"
+              aria-label="站内搜索"
+              onSubmit={handleSearchSubmit}
+            >
+              <button
+                type="button"
+                className="nh-nav-search-toggle"
+                aria-label={isSearchOpen ? "执行搜索" : "展开搜索"}
+                title={isSearchOpen ? "执行搜索" : "展开搜索"}
+                onClick={handleSearchToggle}
               >
-                <button
-                  type="button"
-                  className="nh-nav-search-toggle"
-                  aria-label={isSearchOpen ? "执行搜索" : "展开搜索"}
-                  title={isSearchOpen ? "执行搜索" : "展开搜索"}
-                  onClick={handleSearchToggle}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path
-                      d="M15.5 14h-.79l-.28-.27a6 6 0 1 0-.71.71l.27.28v.79L20 21.5 21.5 20l-6-6zm-5.5 0A4.5 4.5 0 1 1 10 5a4.5 4.5 0 0 1 0 9z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </button>
-                <input
-                  ref={searchInputRef}
-                  type="search"
-                  className="nh-nav-search-input"
-                  placeholder="搜索什么..."
-                  value={searchKeyword}
-                  onChange={(event) => setSearchKeyword(event.target.value)}
-                  onKeyDown={handleSearchKeyDown}
-                  tabIndex={isSearchOpen ? 0 : -1}
-                  aria-hidden={!isSearchOpen}
-                />
-              </form>
-            </li>
-          </ul>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path
+                    d="M15.5 14h-.79l-.28-.27a6 6 0 1 0-.71.71l.27.28v.79L20 21.5 21.5 20l-6-6zm-5.5 0A4.5 4.5 0 1 1 10 5a4.5 4.5 0 0 1 0 9z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
+              <input
+                ref={searchInputRef}
+                type="search"
+                className="nh-nav-search-input"
+                placeholder="搜索什么..."
+                value={searchKeyword}
+                onChange={(event) => setSearchKeyword(event.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                tabIndex={isSearchOpen ? 0 : -1}
+                aria-hidden={!isSearchOpen}
+              />
+            </form>
+          </div>
         </div>
         <div className="nh-navbar-progress" aria-hidden="true">
           <span style={{ width: `${scrollProgress}%` }} />
