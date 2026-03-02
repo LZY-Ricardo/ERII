@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const navItems = [
   { label: "首页", href: "/", type: "home", title: "查看全部文章与最新更新" },
@@ -63,6 +63,10 @@ export default function ArgonNavbar({ activeCategory = "", activeTag = "", activ
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const searchInputRef = useRef(null);
+  const searchShellRef = useRef(null);
 
   useEffect(() => {
     let frame = 0;
@@ -92,15 +96,63 @@ export default function ArgonNavbar({ activeCategory = "", activeTag = "", activ
     };
   }, []);
 
-  const openSearchPanel = () => {
-    window.dispatchEvent(new CustomEvent("nh:open-panel", { detail: { panelId: "search" } }));
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    const timer = window.setTimeout(() => {
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    }, 180);
+    return () => window.clearTimeout(timer);
+  }, [isSearchOpen]);
+
+  useEffect(() => {
+    if (!isSearchOpen) return;
+
+    const handlePointerDown = (event) => {
+      if (searchShellRef.current?.contains(event.target)) return;
+      setIsSearchOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isSearchOpen]);
+
+  const openSearchPanel = (keyword = "") => {
+    window.dispatchEvent(
+      new CustomEvent("nh:open-panel", { detail: { panelId: "search", keyword: String(keyword ?? "") } })
+    );
+  };
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    openSearchPanel(searchKeyword.trim());
+  };
+
+  const handleSearchToggle = () => {
+    if (!isSearchOpen) {
+      setIsSearchOpen(true);
+      return;
+    }
+    if (searchKeyword.trim()) {
+      openSearchPanel(searchKeyword.trim());
+      return;
+    }
+    setIsSearchOpen(false);
+  };
+
+  const handleSearchKeyDown = (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setSearchKeyword("");
+      setIsSearchOpen(false);
+    }
   };
 
   return (
     <header className="nh-header">
       <nav className={`nh-navbar ${isScrolled ? "is-scrolled" : "is-top"}`} aria-label="站点导航">
         <div className="nh-navbar-inner">
-          <Link href="/" className="nh-brand" aria-label="回到首页">
+          <Link href="/" className="nh-brand" aria-label="回到首页" onClick={() => setIsSearchOpen(false)}>
             <Image src="/sakura.png" alt="" width={26} height={26} priority />
             <span>ERII · 前端与 AI 博客</span>
           </Link>
@@ -118,21 +170,46 @@ export default function ArgonNavbar({ activeCategory = "", activeTag = "", activ
                     currentTopic
                   ) ? "is-active" : ""}`}
                   title={item.title}
+                  onClick={() => setIsSearchOpen(false)}
                 >
                   {item.label}
                 </Link>
               </li>
             ))}
             <li>
-              <button
-                type="button"
-                className="nh-nav-search"
+              <form
+                ref={searchShellRef}
+                className={`nh-nav-search-shell ${isSearchOpen ? "is-open" : ""}`}
+                role="search"
                 aria-label="站内搜索"
-                title="打开站内搜索面板"
-                onClick={openSearchPanel}
+                onSubmit={handleSearchSubmit}
               >
-                站内搜索
-              </button>
+                <button
+                  type="button"
+                  className="nh-nav-search-toggle"
+                  aria-label={isSearchOpen ? "执行搜索" : "展开搜索"}
+                  title={isSearchOpen ? "执行搜索" : "展开搜索"}
+                  onClick={handleSearchToggle}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path
+                      d="M15.5 14h-.79l-.28-.27a6 6 0 1 0-.71.71l.27.28v.79L20 21.5 21.5 20l-6-6zm-5.5 0A4.5 4.5 0 1 1 10 5a4.5 4.5 0 0 1 0 9z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </button>
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  className="nh-nav-search-input"
+                  placeholder="搜索什么..."
+                  value={searchKeyword}
+                  onChange={(event) => setSearchKeyword(event.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  tabIndex={isSearchOpen ? 0 : -1}
+                  aria-hidden={!isSearchOpen}
+                />
+              </form>
             </li>
           </ul>
         </div>

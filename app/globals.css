@@ -589,28 +589,86 @@ body {
   color: #fff;
 }
 
-.nh-nav-search {
+.nh-nav-search-shell {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0);
+  padding: 2px 4px;
+  transition: width 0.24s ease, background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.nh-nav-search-shell.is-open {
+  background: rgba(246, 247, 250, 0.92);
+  border-color: rgba(255, 255, 255, 0.36);
+  box-shadow: 0 8px 18px rgba(17, 20, 29, 0.16);
+}
+
+.nh-nav-search-toggle {
+  width: 30px;
+  height: 30px;
   border: 0;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   color: rgba(255, 255, 255, 0.96);
-  font-size: 14px;
-  font-family: var(--nh-font-ui);
-  font-weight: 600;
-  border-radius: 999px;
-  padding: 8px 11px;
-  white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   transition: background-color 0.22s ease, color 0.22s ease;
 }
 
-.nh-nav-search:hover {
+.nh-nav-search-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.nh-nav-search-shell:hover .nh-nav-search-toggle {
   background: rgba(255, 255, 255, 0.14);
   color: #fff;
 }
 
+.nh-nav-search-shell.is-open .nh-nav-search-toggle {
+  color: rgba(58, 66, 84, 0.78);
+}
+
+.nh-nav-search-shell.is-open:hover .nh-nav-search-toggle {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(45, 53, 71, 0.86);
+}
+
+.nh-nav-search-input {
+  width: 0;
+  opacity: 0;
+  border: 0;
+  background: transparent;
+  color: #2d3547;
+  font-size: 14px;
+  font-family: var(--nh-font-ui);
+  pointer-events: none;
+  transition: width 0.24s ease, opacity 0.18s ease;
+}
+
+.nh-nav-search-input::placeholder {
+  color: rgba(62, 74, 96, 0.58);
+}
+
+.nh-nav-search-input:focus {
+  outline: none;
+}
+
+.nh-nav-search-shell.is-open .nh-nav-search-input {
+  width: 180px;
+  opacity: 1;
+  pointer-events: auto;
+  margin-right: 6px;
+}
+
 .nh-nav-link:focus-visible,
-.nh-nav-search:focus-visible {
+.nh-nav-search-toggle:focus-visible,
+.nh-nav-search-input:focus-visible {
   outline: 2px solid rgba(var(--nh-accent-rgb), 0.92);
   outline-offset: 1px;
 }
@@ -1891,9 +1949,8 @@ body {
     padding: 7px 8px;
   }
 
-  .nh-nav-search {
-    font-size: 12.5px;
-    padding: 7px 8px;
+  .nh-nav-search-shell.is-open .nh-nav-search-input {
+    width: 136px;
   }
 
   .nh-container {
@@ -1922,6 +1979,10 @@ body {
 
   .nh-nav-list {
     max-width: 74vw;
+  }
+
+  .nh-nav-search-shell.is-open .nh-nav-search-input {
+    width: 108px;
   }
 
   .nh-fab-tabs {
