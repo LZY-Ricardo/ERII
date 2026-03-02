@@ -11,7 +11,10 @@ const PROJECTS = [
     tech: ["Next.js", "React", "Vercel"],
     cover: "/images/projects/erii.png",
     featured: true,
-    links: [{ label: "GitHub", href: "https://github.com/LZY-Ricardo/Erii", external: true }],
+    links: [
+      { label: "\u5728\u7EBF\u4F53\u9A8C", href: "https://blog.sunandyu.top/", external: true },
+      { label: "GitHub", href: "https://github.com/LZY-Ricardo/Erii", external: true },
+    ],
   },
   {
     id: "unmark",
