@@ -1,8 +1,36 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getCategoryThemeLabel, inferCategoryFromPost } from "@/src/lib/postTaxonomy";
+
+const DEPLOYED_PROJECTS = [
+  {
+    id: "erii",
+    name: "Erii",
+    logo: "/images/projects/erii.png",
+    summary: "个人博客主站与技术内容入口",
+    liveUrl: "https://blog.sunandyu.top/",
+    repoUrl: "https://github.com/LZY-Ricardo/Erii",
+  },
+  {
+    id: "unmark",
+    name: "Unmark",
+    logo: "/images/projects/unmark-real-v2.png",
+    summary: "无水印解析工具在线版",
+    liveUrl: "https://unmark.ricardoiyu.top/",
+    repoUrl: "https://github.com/LZY-Ricardo/Unmark",
+  },
+  {
+    id: "wardrobe-little-ai",
+    name: "Wardrobe-Little-AI",
+    logo: "/images/projects/file_1772469201085_918.png",
+    summary: "智能穿搭 AI 应用演示站",
+    liveUrl: "https://wardrobe-little-ai.vercel.app/",
+    repoUrl: "https://github.com/LZY-Ricardo/Wardrobe-Little-AI",
+  },
+];
 
 function collectCategories(posts) {
   const counts = new Map();
@@ -216,6 +244,38 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
             {switcherTab === "tool" ? renderToolsBody() : renderOverviewBody()}
           </div>
         </section>
+
+        <WidgetFrame title="在线项目">
+          <div className="nh-rightbar-projects">
+            {DEPLOYED_PROJECTS.map((project) => (
+              <article key={project.id} className="nh-rightbar-project-item">
+                <span className="nh-rightbar-project-live">LIVE</span>
+                <div className="nh-rightbar-project-head">
+                  <span className="nh-rightbar-project-logo" aria-hidden="true">
+                    <Image src={project.logo} alt="" width={34} height={34} />
+                  </span>
+                  <div className="nh-rightbar-project-meta">
+                    <p className="nh-rightbar-project-name">{project.name}</p>
+                    <p className="nh-rightbar-project-summary">{project.summary}</p>
+                  </div>
+                </div>
+                <div className="nh-rightbar-project-actions">
+                  <a href={project.liveUrl} target="_blank" rel="noreferrer" className="nh-rightbar-project-live-btn">
+                    在线体验
+                  </a>
+                  <a
+                    href={project.repoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="nh-rightbar-project-github-btn"
+                  >
+                    GitHub
+                  </a>
+                </div>
+              </article>
+            ))}
+          </div>
+        </WidgetFrame>
 
         {tocItems.length ? (
           <WidgetFrame title="文章目录">
