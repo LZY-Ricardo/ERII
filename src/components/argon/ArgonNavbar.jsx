@@ -8,11 +8,11 @@ import { useEffect, useState } from "react";
 const navItems = [
   { label: "首页", href: "/", type: "home", title: "查看全部文章与最新更新" },
   {
-    label: "技术文章",
+    label: "技术分享",
     href: "/blog?topic=tech",
     type: "topic",
     topic: "tech",
-    title: "前端与 AI 相关技术内容",
+    title: "前端与 AI 技术分享内容",
   },
   {
     label: "TeamSpeak",

@@ -267,7 +267,7 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
         <WidgetFrame title="快捷入口">
           <div className="nh-rightbar-links">
             <Link href="/">全部文章</Link>
-            <Link href="/blog?topic=tech">技术文章</Link>
+            <Link href="/blog?topic=tech">技术分享</Link>
             <Link href="/about">关于本站</Link>
             <a href="https://github.com/LZY-Ricardo" target="_blank" rel="noreferrer">
               GitHub

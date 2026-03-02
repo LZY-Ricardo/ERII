@@ -211,7 +211,7 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
           关于我
         </Link>
         <Link href="/blog?topic=tech" className="nh-profile-card-link">
-          技术文章
+          技术分享
         </Link>
         <a
           href="https://wpa.qq.com/msgrd?v=3&uin=3239468786&site=qq&menu=yes"

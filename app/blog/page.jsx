@@ -14,7 +14,7 @@ export default async function BlogIndexPage({ searchParams }) {
   const categoryLabel = getCategoryThemeLabel(category);
 
   const title = topic === "tech"
-    ? "技术文章：前端与 AI"
+    ? "技术分享：前端与 AI"
     : category
       ? `分类：${categoryLabel}${category && category !== categoryLabel ? `（${category}）` : ""}`
       : tag
