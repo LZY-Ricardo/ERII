@@ -83,7 +83,7 @@ const PROJECTS = [
     state: "building",
     focus: ["frontend", "tooling"],
     tech: ["React", "TypeScript", "Low-Code"],
-    cover: "/images/projects/ricardo-low-code-platform-frontend.png",
+    cover: "/images/projects/ricardo-low-code-platform-frontend-v2.png",
     featured: false,
     links: [
       {
@@ -157,7 +157,7 @@ const PROJECTS = [
     state: "active",
     focus: ["tooling"],
     tech: ["Timeline", "Data", "Visualization"],
-    cover: "/images/projects/time-sequence.png",
+    cover: "/images/projects/time-sequence-v2.png",
     featured: false,
     links: [{ label: "GitHub", href: "https://github.com/LZY-Ricardo/timeSequence", external: true }],
   },
@@ -170,7 +170,7 @@ const PROJECTS = [
     state: "active",
     focus: ["tooling"],
     tech: ["Markdown", "Knowledge Base", "Notes"],
-    cover: "/images/projects/ricardo-notebook.png",
+    cover: "/images/projects/ricardo-notebook-v2.png",
     featured: false,
     links: [{ label: "GitHub", href: "https://github.com/LZY-Ricardo/Ricardo_notebook", external: true }],
   },
