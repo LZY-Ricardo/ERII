@@ -1,45 +1,38 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { getAllProjects } from "@/src/lib/projects";
 import { getCategoryThemeLabel, inferCategoryFromPost } from "@/src/lib/postTaxonomy";
 
-const DEPLOYED_PROJECTS = [
-  {
-    id: "erii",
-    name: "Erii",
-    logo: "/images/projects/erii.png",
-    summary: "个人博客主站与技术内容入口",
-    liveUrl: "https://blog.sunandyu.top/",
-    repoUrl: "https://github.com/LZY-Ricardo/Erii",
-  },
-  {
-    id: "unmark",
-    name: "Unmark",
-    logo: "/images/projects/unmark-real-v2.png",
-    summary: "无水印解析工具在线版",
-    liveUrl: "https://unmark.ricardoiyu.top/",
-    repoUrl: "https://github.com/LZY-Ricardo/Unmark",
-  },
-  {
-    id: "wardrobe-little-ai",
-    name: "Wardrobe-Little-AI",
-    logo: "/images/projects/file_1772469201085_918.png",
-    summary: "智能穿搭 AI 应用演示站",
-    liveUrl: "https://wardrobe-little-ai.vercel.app/",
-    repoUrl: "https://github.com/LZY-Ricardo/Wardrobe-Little-AI",
-  },
-];
+function isGitHubAction(action) {
+  const href = String(action?.href ?? "").trim().toLowerCase();
+  const label = String(action?.label ?? "").trim().toLowerCase();
+  return href.includes("github.com") || label.includes("github");
+}
+
+function isLiveAction(action) {
+  const href = String(action?.href ?? "").trim().toLowerCase();
+  if (/^https?:\/\//.test(href) && !isGitHubAction(action)) return true;
+
+  const label = String(action?.label ?? "").trim().toLowerCase();
+  return /live|preview|demo|在线|预览|体验/i.test(label);
+}
+
+function normalizeUrl(value) {
+  const href = String(value ?? "").trim();
+  return href ? href : "";
+}
 
 function collectCategories(posts) {
   const counts = new Map();
+
   for (const post of posts) {
     const key = inferCategoryFromPost(post);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
 
-  const categoryOrder = ["TeamSpeak", "电脑技巧", "直播", "游戏", "音乐", "影视", "未分类"];
+  const categoryOrder = ["TeamSpeak", "电脑技术", "直播", "游戏", "音乐", "影视", "未分类"];
   return categoryOrder
     .map((label) => ({
       label,
@@ -51,6 +44,7 @@ function collectCategories(posts) {
 
 function collectTags(posts) {
   const counts = new Map();
+
   for (const post of posts) {
     const tags = post?.frontmatter?.tags ?? [];
     for (const tag of tags) {
@@ -98,6 +92,29 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
   const categories = useMemo(() => collectCategories(posts), [posts]);
   const tags = useMemo(() => collectTags(posts), [posts]);
   const recentPosts = useMemo(() => posts.slice(0, 6), [posts]);
+
+  const deployedProjects = useMemo(() => {
+    const projects = getAllProjects();
+    return projects
+      .map((project) => {
+        const links = Array.isArray(project?.links) ? project.links : [];
+        const liveAction = links.find((item) => isLiveAction(item)) ?? null;
+        const liveUrl = normalizeUrl(liveAction?.href);
+        if (!liveUrl) return null;
+
+        return {
+          id: String(project?.id ?? project?.name ?? liveUrl),
+          name: String(project?.name ?? ""),
+          liveUrl,
+        };
+      })
+      .filter(Boolean);
+  }, []);
+
+  const deployedProjectNames = useMemo(
+    () => deployedProjects.slice(0, 3).map((project) => project.name),
+    [deployedProjects]
+  );
 
   const [switcherTab, setSwitcherTab] = useState("overview");
   const [contentTab, setContentTab] = useState("recent");
@@ -246,34 +263,28 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
         </section>
 
         <WidgetFrame title="在线项目">
-          <div className="nh-rightbar-projects">
-            {DEPLOYED_PROJECTS.map((project) => (
-              <article key={project.id} className="nh-rightbar-project-item">
-                <span className="nh-rightbar-project-live">LIVE</span>
-                <div className="nh-rightbar-project-head">
-                  <span className="nh-rightbar-project-logo" aria-hidden="true">
-                    <Image src={project.logo} alt="" width={34} height={34} />
-                  </span>
-                  <div className="nh-rightbar-project-meta">
-                    <p className="nh-rightbar-project-name">{project.name}</p>
-                    <p className="nh-rightbar-project-summary">{project.summary}</p>
+          <div className="nh-rightbar-online">
+            {deployedProjects.length ? (
+              <>
+                <p className="nh-rightbar-online-count">
+                  <strong>{deployedProjects.length}</strong> 个项目已上线
+                </p>
+                {deployedProjectNames.length ? (
+                  <div className="nh-rightbar-online-tags">
+                    {deployedProjectNames.map((name) => (
+                      <span key={name} className="nh-chip">
+                        {name}
+                      </span>
+                    ))}
                   </div>
-                </div>
-                <div className="nh-rightbar-project-actions">
-                  <a href={project.liveUrl} target="_blank" rel="noreferrer" className="nh-rightbar-project-live-btn">
-                    在线体验
-                  </a>
-                  <a
-                    href={project.repoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="nh-rightbar-project-github-btn"
-                  >
-                    GitHub
-                  </a>
-                </div>
-              </article>
-            ))}
+                ) : null}
+                <Link href="/projects" className="nh-rightbar-online-entry">
+                  查看全部项目
+                </Link>
+              </>
+            ) : (
+              <p className="nh-muted">暂无已部署项目</p>
+            )}
           </div>
         </WidgetFrame>
 

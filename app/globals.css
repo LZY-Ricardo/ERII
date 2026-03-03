@@ -783,138 +783,54 @@ body {
   border-color: rgba(var(--nh-theme-rgb), 0.34);
 }
 
-.nh-rightbar-projects {
+.nh-rightbar-online {
   display: grid;
-  gap: 12px;
-}
-
-.nh-rightbar-project-item {
-  position: relative;
-  border-radius: 18px;
+  gap: 10px;
+  border-radius: 16px;
   border: 1px solid rgba(var(--nh-theme-rgb), 0.2);
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.82), rgba(255, 247, 238, 0.7));
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.82), rgba(255, 247, 238, 0.68));
   box-shadow: 0 12px 26px rgba(35, 20, 24, 0.1);
-  padding: 12px 12px 11px;
-  display: grid;
-  gap: 10px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  padding: 12px 12px 13px;
 }
 
-.nh-rightbar-project-item:hover {
-  transform: translateY(-2px);
-  border-color: rgba(var(--nh-theme-rgb), 0.34);
-  box-shadow: 0 16px 30px rgba(35, 20, 24, 0.16);
-}
-
-.nh-rightbar-project-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  min-width: 0;
-}
-
-.nh-rightbar-project-logo {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  border: 1px solid rgba(var(--nh-theme-rgb), 0.24);
-  background: rgba(255, 255, 255, 0.82);
-}
-
-.nh-rightbar-project-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.nh-rightbar-project-meta {
-  min-width: 0;
-  display: grid;
-  gap: 4px;
-}
-
-.nh-rightbar-project-name {
+.nh-rightbar-online-count {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.25;
   font-family: var(--nh-font-ui);
-  color: #413239;
-  font-weight: 700;
+  font-size: 14px;
+  color: #42343b;
 }
 
-.nh-rightbar-project-live {
-  position: absolute;
-  right: 10px;
-  top: 10px;
+.nh-rightbar-online-count strong {
+  font-size: 18px;
+  color: rgba(var(--nh-theme-rgb), 0.95);
+  margin-right: 4px;
+}
+
+.nh-rightbar-online-tags {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 18px;
-  border-radius: 999px;
-  padding: 0 7px;
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  font-weight: 700;
-  color: #fff8ef;
-  border: 1px solid rgba(255, 210, 148, 0.42);
-  background: linear-gradient(115deg, rgba(247, 118, 95, 0.95), rgba(243, 168, 77, 0.95));
-}
-
-.nh-rightbar-project-summary {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.55;
-  color: rgba(54, 72, 99, 0.8);
-}
-
-.nh-rightbar-project-actions {
-  display: grid;
-  grid-template-columns: 1fr auto;
+  flex-wrap: wrap;
   gap: 8px;
-  align-items: center;
 }
 
-.nh-rightbar-project-live-btn,
-.nh-rightbar-project-github-btn {
-  height: 30px;
+.nh-rightbar-online-entry {
+  height: 32px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  text-decoration: none;
   font-size: 12px;
   font-family: var(--nh-font-ui);
   font-weight: 600;
-  border: 1px solid transparent;
-  text-decoration: none;
-}
-
-.nh-rightbar-project-live-btn {
   color: #fffaf5;
+  border: 1px solid rgba(255, 190, 112, 0.38);
   background: linear-gradient(115deg, rgba(var(--nh-theme-rgb), 0.95), rgba(233, 137, 77, 0.92));
-  border-color: rgba(255, 190, 112, 0.35);
   box-shadow: 0 8px 16px rgba(74, 31, 34, 0.2);
 }
 
-.nh-rightbar-project-live-btn:hover {
+.nh-rightbar-online-entry:hover {
+  border-color: rgba(255, 206, 132, 0.54);
   background: linear-gradient(115deg, rgba(var(--nh-theme-rgb), 0.98), rgba(242, 151, 92, 0.96));
-  border-color: rgba(255, 206, 132, 0.5);
-}
-
-.nh-rightbar-project-github-btn {
-  padding: 0 10px;
-  color: rgba(50, 63, 86, 0.88);
-  border-color: rgba(0, 0, 0, 0.14);
-  background: rgba(255, 255, 255, 0.68);
-}
-
-.nh-rightbar-project-github-btn:hover {
-  border-color: rgba(var(--nh-theme-rgb), 0.38);
-  background: rgba(var(--nh-theme-rgb), 0.12);
 }
 
 .nh-leftbar-float {
@@ -2410,50 +2326,25 @@ body {
   background: rgba(var(--nh-theme-rgb), 0.28);
 }
 
-.nh-body.nh-dark .nh-rightbar-project-item {
+.nh-body.nh-dark .nh-rightbar-online {
   background: linear-gradient(155deg, rgba(22, 27, 36, 0.88), rgba(18, 22, 30, 0.82));
   border-color: rgba(220, 228, 243, 0.22);
   box-shadow: 0 14px 28px rgba(9, 12, 16, 0.38);
 }
 
-.nh-body.nh-dark .nh-rightbar-project-name {
+.nh-body.nh-dark .nh-rightbar-online-count {
   color: var(--nh-text);
 }
 
-.nh-body.nh-dark .nh-rightbar-project-summary {
-  color: rgba(232, 224, 211, 0.84);
-}
-
-.nh-body.nh-dark .nh-rightbar-project-logo {
-  border-color: rgba(var(--nh-accent-rgb), 0.36);
-  background: rgba(18, 22, 30, 0.92);
-}
-
-.nh-body.nh-dark .nh-rightbar-project-live {
-  border-color: rgba(255, 206, 132, 0.52);
-  background: linear-gradient(115deg, rgba(215, 95, 80, 0.9), rgba(212, 140, 63, 0.92));
-}
-
-.nh-body.nh-dark .nh-rightbar-project-live-btn {
+.nh-body.nh-dark .nh-rightbar-online-entry {
   color: #fff4e7;
   border-color: rgba(255, 206, 132, 0.38);
   background: linear-gradient(115deg, rgba(172, 66, 73, 0.94), rgba(188, 113, 58, 0.95));
 }
 
-.nh-body.nh-dark .nh-rightbar-project-live-btn:hover {
+.nh-body.nh-dark .nh-rightbar-online-entry:hover {
   border-color: rgba(255, 206, 132, 0.56);
   background: linear-gradient(115deg, rgba(185, 74, 82, 0.96), rgba(198, 122, 64, 0.98));
-}
-
-.nh-body.nh-dark .nh-rightbar-project-github-btn {
-  color: rgba(236, 224, 210, 0.92);
-  border-color: rgba(220, 228, 243, 0.22);
-  background: rgba(22, 27, 36, 0.78);
-}
-
-.nh-body.nh-dark .nh-rightbar-project-github-btn:hover {
-  border-color: rgba(var(--nh-theme-rgb), 0.46);
-  background: rgba(var(--nh-theme-rgb), 0.3);
 }
 
 .nh-body.nh-font-serif {

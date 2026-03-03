@@ -1,8 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
 
+function isGitHubAction(action) {
+  const href = String(action?.href ?? "").trim().toLowerCase();
+  const label = String(action?.label ?? "").trim().toLowerCase();
+  return href.includes("github.com") || label.includes("github");
+}
+
 function isLiveAction(action) {
-  return /在线|预览|体验/i.test(String(action?.label ?? ""));
+  const href = String(action?.href ?? "").trim().toLowerCase();
+  if (/^https?:\/\//.test(href) && !isGitHubAction(action)) return true;
+
+  const label = String(action?.label ?? "").trim().toLowerCase();
+  return /live|preview|demo|在线|预览|体验/.test(label);
 }
 
 function ProjectAction({ action, className = "" }) {
@@ -37,7 +47,7 @@ export default function ProjectCard({ project }) {
         {project?.cover ? (
           <Image
             src={project.cover}
-            alt={`${project.name} 封面`}
+            alt={`${project.name} cover`}
             width={960}
             height={540}
             className="nh-project-cover"
@@ -47,7 +57,7 @@ export default function ProjectCard({ project }) {
         )}
 
         <span className="nh-project-status" data-state={project?.state ?? "active"}>
-          {project?.status ?? "持续更新"}
+          {project?.status ?? "更新中"}
         </span>
 
         {liveAction ? <span className="nh-project-live-badge">LIVE</span> : null}
@@ -68,7 +78,7 @@ export default function ProjectCard({ project }) {
 
         <div className="nh-project-live-cta">
           {liveAction ? (
-            <ProjectAction action={{ ...liveAction, label: "在线体验 ↗" }} className="is-live" />
+            <ProjectAction action={{ ...liveAction, label: "在线体验" }} className="is-live" />
           ) : (
             <span className="nh-project-live-muted">暂未开放在线体验</span>
           )}
