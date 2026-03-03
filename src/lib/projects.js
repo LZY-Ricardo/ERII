@@ -86,6 +86,7 @@ const PROJECTS = [
     cover: "/images/projects/ricardo-low-code-platform-frontend-v2.png",
     featured: false,
     links: [
+      { label: "在线体验", href: "https://lingocode.ricardolzy.top/", external: true },
       {
         label: "GitHub",
         href: "https://github.com/LZY-Ricardo/Ricardo_low-code-platform-frontend",
@@ -104,7 +105,10 @@ const PROJECTS = [
     tech: ["React", "Hooks", "UI"],
     cover: "/images/projects/react-playground-v2.png",
     featured: true,
-    links: [{ label: "GitHub", href: "https://github.com/LZY-Ricardo/React-Playground", external: true }],
+    links: [
+      { label: "在线体验", href: "https://play.ricardolzy.top/", external: true },
+      { label: "GitHub", href: "https://github.com/LZY-Ricardo/React-Playground", external: true },
+    ],
   },
   {
     id: "zen-reader",
