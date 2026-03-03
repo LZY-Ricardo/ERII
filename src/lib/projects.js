@@ -115,7 +115,7 @@ const PROJECTS = [
     state: "active",
     focus: ["frontend"],
     tech: ["React", "Reader UI", "Typography"],
-    cover: "/images/projects/zen-reader.png",
+    cover: "/images/projects/zen-reader-v2.png",
     featured: false,
     links: [{ label: "GitHub", href: "https://github.com/LZY-Ricardo/zenReader", external: true }],
   },
@@ -128,9 +128,12 @@ const PROJECTS = [
     state: "research",
     focus: ["ai", "tooling"],
     tech: ["Knowledge", "AI", "Notes"],
-    cover: "/images/projects/chroma-study.png",
+    cover: "/images/projects/chroma-study-v2.png",
     featured: false,
-    links: [{ label: "GitHub", href: "https://github.com/LZY-Ricardo/ChromaStudy", external: true }],
+    links: [
+      { label: "在线体验", href: "https://chromastudy.ricardolzy.top/", external: true },
+      { label: "GitHub", href: "https://github.com/LZY-Ricardo/ChromaStudy", external: true },
+    ],
   },
   {
     id: "mind-nexus",
