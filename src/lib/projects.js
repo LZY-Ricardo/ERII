@@ -144,7 +144,7 @@ const PROJECTS = [
     state: "building",
     focus: ["ai", "tooling"],
     tech: ["Mindmap", "AI", "Workflow"],
-    cover: "/images/projects/mind-nexus.png",
+    cover: "/images/projects/mind-nexus-v2.png",
     featured: true,
     links: [{ label: "GitHub", href: "https://github.com/LZY-Ricardo/MindNexus", external: true }],
   },
