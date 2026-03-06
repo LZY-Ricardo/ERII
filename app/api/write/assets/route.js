@@ -59,10 +59,25 @@ export async function POST(request) {
 
   try {
     const db = requireDb();
-    await db.sql`
-      INSERT INTO assets (url, pathname, content_type, size)
-      VALUES (${blob.url}, ${blob.pathname}, ${blob.contentType ?? null}, ${blob.size ?? null})
-    `;
+    try {
+      await db.sql`
+        INSERT INTO assets (url, pathname, content_type, size, source_provider, source_url)
+        VALUES (
+          ${blob.url},
+          ${blob.pathname},
+          ${blob.contentType ?? null},
+          ${blob.size ?? null},
+          'internal',
+          NULL
+        )
+      `;
+    } catch (error) {
+      if (String(error?.code ?? "") !== "42703") throw error;
+      await db.sql`
+        INSERT INTO assets (url, pathname, content_type, size)
+        VALUES (${blob.url}, ${blob.pathname}, ${blob.contentType ?? null}, ${blob.size ?? null})
+      `;
+    }
   } catch {
     // best-effort: upload success is more important than bookkeeping
   }

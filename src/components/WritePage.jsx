@@ -7,6 +7,14 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import ResizableImage from "./ResizableImage";
+import BlockComposer from "./BlockComposer";
+import { blocksToMdx } from "@/src/lib/content/renderPipeline";
+import {
+  buildBlocksContentJson,
+  createBlock,
+  legacyContentToBlocks,
+  normalizeBlocksPayload,
+} from "@/src/lib/content/blockEditorModel";
 import {
   Bold,
   Code,
@@ -65,6 +73,9 @@ export default function WritePage() {
   const [tags, setTags] = useState("");
   const [cover, setCover] = useState("");
   const [content, setContent] = useState("");
+  const [contentFormat, setContentFormat] = useState("mdx");
+  const [blocks, setBlocks] = useState(() => [createBlock("paragraph")]);
+  const [blockUploadTargetId, setBlockUploadTargetId] = useState(null);
   const [toast, setToast] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [password, setPassword] = useState("");
@@ -287,7 +298,21 @@ export default function WritePage() {
       setDescription(post.description || "");
       setCover(post.cover || "");
       setTags(Array.isArray(post.tags) ? post.tags.join(", ") : "");
-      setContent(post.content || "");
+      const loadedBody = post.content || post.renderBody || "";
+      const loadedFormat = String(post.contentFormat ?? "mdx").toLowerCase() === "blocks"
+        ? "blocks"
+        : "mdx";
+      setContentFormat(loadedFormat);
+      setContent(loadedBody);
+      if (loadedFormat === "blocks") {
+        const loadedBlocks = normalizeBlocksPayload(post.contentJson);
+        setBlocks(
+          loadedBlocks.length ? loadedBlocks : legacyContentToBlocks(loadedBody)
+        );
+      } else {
+        setBlocks([createBlock("paragraph", { text: loadedBody })]);
+      }
+      setBlockUploadTargetId(null);
       setLoadedStatus(post.status || "");
       router.replace(`/write?slug=${encodeURIComponent(post.slug)}`);
       setIsSettingsOpen(false);
@@ -311,6 +336,18 @@ export default function WritePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthed, urlSlug]);
 
+  const isBlocksMode = contentFormat === "blocks";
+  const normalizedBlocks = useMemo(
+    () => normalizeBlocksPayload(blocks),
+    [blocks]
+  );
+
+  const editorBody = useMemo(() => {
+    if (!isBlocksMode) return content;
+    const rendered = blocksToMdx(buildBlocksContentJson(normalizedBlocks));
+    return rendered || "";
+  }, [content, isBlocksMode, normalizedBlocks]);
+
   const frontmatter = useMemo(() => {
     const tagsValue = toYamlTags(tags);
     const coverLine = cover?.trim()
@@ -321,7 +358,7 @@ export default function WritePage() {
     )}"\ntags: [${tagsValue}]\n${coverLine}---\n\n`;
   }, [title, date, description, tags, cover]);
 
-  const fullMdx = useMemo(() => frontmatter + content, [frontmatter, content]);
+  const fullMdx = useMemo(() => frontmatter + editorBody, [frontmatter, editorBody]);
 
   const filteredPostIndex = useMemo(() => {
     const query = postIndexQuery.trim().toLowerCase();
@@ -381,6 +418,27 @@ export default function WritePage() {
     }, 0);
   };
 
+  const switchEditorMode = (nextMode) => {
+    if (nextMode !== "mdx" && nextMode !== "blocks") return;
+    if (nextMode === contentFormat) return;
+
+    if (nextMode === "blocks") {
+      const seed = legacyContentToBlocks(content);
+      setBlocks(seed);
+      setContentFormat("blocks");
+      return;
+    }
+
+    const nextContent = blocksToMdx(buildBlocksContentJson(normalizedBlocks));
+    setContent(nextContent || content);
+    setContentFormat("mdx");
+    setBlockUploadTargetId(null);
+  };
+
+  const appendBlock = (type) => {
+    setBlocks((prev) => [...normalizeBlocksPayload(prev), createBlock(type)]);
+  };
+
   const handleDownload = () => {
     const blob = new Blob([fullMdx], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -408,7 +466,11 @@ export default function WritePage() {
     description,
     tags,
     cover,
-    content,
+    content: editorBody,
+    contentFormat,
+    contentJson: isBlocksMode ? buildBlocksContentJson(normalizedBlocks) : null,
+    renderBody: editorBody,
+    editorSource: "internal",
   });
 
   const handleSaveDraft = async () => {
@@ -480,6 +542,13 @@ export default function WritePage() {
 
   const handlePickImage = () => {
     if (!requireAuthOrOpenSettings()) return;
+    setBlockUploadTargetId(null);
+    uploadInputRef.current?.click();
+  };
+
+  const handlePickImageForBlock = (blockId) => {
+    if (!requireAuthOrOpenSettings()) return;
+    setBlockUploadTargetId(blockId || null);
     uploadInputRef.current?.click();
   };
 
@@ -515,10 +584,37 @@ export default function WritePage() {
     if (!url || !file) return;
 
     const fallbackAlt = file.name.replace(/\.[a-z0-9]+$/i, "");
+
+    if (isBlocksMode) {
+      if (blockUploadTargetId) {
+        setBlocks((prev) =>
+          normalizeBlocksPayload(prev).map((item) =>
+            item.id === blockUploadTargetId
+              ? {
+                ...item,
+                type: "image",
+                src: url,
+                alt: item.alt || fallbackAlt,
+                width: item.width || 500,
+              }
+              : item
+          )
+        );
+      } else {
+        setBlocks((prev) => [
+          ...normalizeBlocksPayload(prev),
+          createBlock("image", { src: url, alt: fallbackAlt, width: 500 }),
+        ]);
+      }
+      setBlockUploadTargetId(null);
+      showToast("Image inserted");
+      return;
+    }
+
     insertAtSelection(
       (selected) => `<img src="${url}" alt="${selected || fallbackAlt}" width="500" />`
     );
-    showToast("图片已插入");
+    showToast("Image inserted");
   };
 
   const handlePickCover = () => {
@@ -564,8 +660,21 @@ export default function WritePage() {
   };
 
   const handleImageResize = useCallback((src, newWidth) => {
+    if (isBlocksMode) {
+      setBlocks((prev) => {
+        let matched = false;
+        return normalizeBlocksPayload(prev).map((item) => {
+          if (matched) return item;
+          if (item.type !== "image") return item;
+          if (String(item.src ?? "") !== String(src ?? "")) return item;
+          matched = true;
+          return { ...item, width: Math.round(newWidth) };
+        });
+      });
+      return;
+    }
+
     setContent((prev) => {
-      // Match <img ... src="THE_SRC" ... width="XXX" ... />
       const escapedSrc = src.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const regex = new RegExp(
         `(<img[^>]*src=["']${escapedSrc}["'][^>]*width=["'])\\d+(["'][^>]*\\/?>)`,
@@ -573,7 +682,7 @@ export default function WritePage() {
       );
       return prev.replace(regex, `$1${Math.round(newWidth)}$2`);
     });
-  }, []);
+  }, [isBlocksMode]);
 
   const resetDraft = () => {
     setSlug("");
@@ -583,6 +692,9 @@ export default function WritePage() {
     setTags("");
     setCover("");
     setContent("");
+    setContentFormat("mdx");
+    setBlocks([createBlock("paragraph")]);
+    setBlockUploadTargetId(null);
     setLoadedStatus("");
     router.replace("/write");
     showToast("已新建空白稿");
@@ -961,66 +1073,135 @@ export default function WritePage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full bg-transparent p-0 font-serif text-4xl font-bold tracking-wide text-wafu-sumi outline-none placeholder:text-wafu-sumi/20 caret-erii-red"
-                placeholder="无题..."
+                placeholder="Untitled..."
                 spellCheck={false}
               />
-            </div>
 
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onPaste={handlePaste}
-              className="zen-scrollbar min-h-0 flex-1 resize-none bg-transparent px-8 pb-24 font-mono text-[15px] leading-loose text-wafu-sumi/85 outline-none placeholder:text-wafu-sumi/20 caret-erii-red selection:bg-erii-red/15 selection:text-wafu-sumi"
-              placeholder="在此处开始书写你的故事..."
-              spellCheck={false}
-            />
-
-            <div className="border-t border-wafu-sumi/10 bg-wafu-paper/40 px-6 py-2 backdrop-blur-sm">
-              <div className="flex items-center gap-1">
-                <ToolButton
-                  icon={<Bold size={18} />}
-                  onClick={() => insertText("**", "**")}
-                  tooltip="太字"
-                />
-                <ToolButton
-                  icon={<Italic size={18} />}
-                  onClick={() => insertText("*", "*")}
-                  tooltip="斜体"
-                />
-                <ToolButton
-                  icon={
-                    <span className="px-0.5 font-serif text-[16px] leading-none">
-                      「」
-                    </span>
+              <div className="mt-4 inline-flex rounded-full border border-wafu-sumi/15 bg-white/70 p-1">
+                <button
+                  type="button"
+                  onClick={() => switchEditorMode("mdx")}
+                  className={
+                    "rounded-full px-4 py-1.5 text-xs font-mono tracking-wide transition-colors " +
+                    (!isBlocksMode
+                      ? "bg-white text-wafu-sumi"
+                      : "text-wafu-sumi/55 hover:text-wafu-sumi")
                   }
-                  onClick={() => insertText("> ")}
-                  tooltip="引用"
-                />
-                <ToolButton
-                  icon={<List size={18} />}
-                  onClick={() => insertText("- ")}
-                  tooltip="列表"
-                />
-                <ToolButton
-                  icon={<Code size={18} />}
-                  onClick={() => insertText("`", "`")}
-                  tooltip="代码"
-                />
-                <ToolButton
-                  icon={<Link2 size={18} />}
-                  onClick={() => insertText("[", "](https://)")}
-                  tooltip="结缘"
-                />
-                <ToolButton
-                  icon={<Mountain size={18} />}
-                  onClick={handlePickImage}
-                  tooltip={isAuthed ? "上传图片" : "上传图片（需登录）"}
-                />
+                >
+                  MDX
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchEditorMode("blocks")}
+                  className={
+                    "rounded-full px-4 py-1.5 text-xs font-mono tracking-wide transition-colors " +
+                    (isBlocksMode
+                      ? "bg-white text-wafu-sumi"
+                      : "text-wafu-sumi/55 hover:text-wafu-sumi")
+                  }
+                >
+                  BLOCKS
+                </button>
               </div>
             </div>
-          </section>
 
+            {isBlocksMode ? (
+              <BlockComposer
+                blocks={normalizedBlocks}
+                onChange={setBlocks}
+                onUploadImage={handlePickImageForBlock}
+                disabled={isBusy}
+              />
+            ) : (
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onPaste={handlePaste}
+                className="zen-scrollbar min-h-0 flex-1 resize-none bg-transparent px-8 pb-24 font-mono text-[15px] leading-loose text-wafu-sumi/85 outline-none placeholder:text-wafu-sumi/20 caret-erii-red selection:bg-erii-red/15 selection:text-wafu-sumi"
+                placeholder="Start writing your story..."
+                spellCheck={false}
+              />
+            )}
+
+            <div className="border-t border-wafu-sumi/10 bg-wafu-paper/40 px-6 py-2 backdrop-blur-sm">
+              {isBlocksMode ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => appendBlock("paragraph")}
+                    className="rounded-full border border-wafu-sumi/15 bg-white/85 px-3 py-1 text-xs text-wafu-sumi/70 transition-colors hover:text-erii-red"
+                  >
+                    + Paragraph
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => appendBlock("heading")}
+                    className="rounded-full border border-wafu-sumi/15 bg-white/85 px-3 py-1 text-xs text-wafu-sumi/70 transition-colors hover:text-erii-red"
+                  >
+                    + Heading
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => appendBlock("code")}
+                    className="rounded-full border border-wafu-sumi/15 bg-white/85 px-3 py-1 text-xs text-wafu-sumi/70 transition-colors hover:text-erii-red"
+                  >
+                    + Code
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => appendBlock("image")}
+                    className="rounded-full border border-wafu-sumi/15 bg-white/85 px-3 py-1 text-xs text-wafu-sumi/70 transition-colors hover:text-erii-red"
+                  >
+                    + Image
+                  </button>
+                  <ToolButton
+                    icon={<Mountain size={18} />}
+                    onClick={handlePickImage}
+                    tooltip="Upload image"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <ToolButton
+                    icon={<Bold size={18} />}
+                    onClick={() => insertText("**", "**")}
+                    tooltip="Bold"
+                  />
+                  <ToolButton
+                    icon={<Italic size={18} />}
+                    onClick={() => insertText("*", "*")}
+                    tooltip="Italic"
+                  />
+                  <ToolButton
+                    icon={<span className="px-0.5 font-serif text-[16px] leading-none">&quot;</span>}
+                    onClick={() => insertText("> ")}
+                    tooltip="Quote"
+                  />
+                  <ToolButton
+                    icon={<List size={18} />}
+                    onClick={() => insertText("- ")}
+                    tooltip="List"
+                  />
+                  <ToolButton
+                    icon={<Code size={18} />}
+                    onClick={() => insertText("`", "`")}
+                    tooltip="Code"
+                  />
+                  <ToolButton
+                    icon={<Link2 size={18} />}
+                    onClick={() => insertText("[", "](https://)")}
+                    tooltip="Link"
+                  />
+                  <ToolButton
+                    icon={<Mountain size={18} />}
+                    onClick={handlePickImage}
+                    tooltip="Upload image"
+                  />
+                </div>
+              )}
+            </div>
+          </section>
           <section className="zen-scrollbar min-h-0 overflow-y-auto bg-wafu-paper/40 bg-washi-texture p-8 md:p-10">
             <article className="mx-auto max-w-3xl rounded-3xl border border-wafu-sumi/10 bg-wafu-paper/80 p-8 shadow-sm backdrop-blur">
               <header>
@@ -1054,7 +1235,7 @@ export default function WritePage() {
                     ),
                   }}
                 >
-                  {content}
+                  {editorBody}
                 </ReactMarkdown>
               </div>
             </article>

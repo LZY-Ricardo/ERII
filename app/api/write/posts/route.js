@@ -1,27 +1,15 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { requireDb } from "@/src/lib/db";
 import { isWriteAuthed } from "@/src/lib/writeGuard";
-import { generateFallbackSlug, slugify } from "@/src/lib/slugify";
-import { revalidateTag } from "next/cache";
+import {
+  normalizePostInput,
+  toApiPost,
+  upsertPostContent,
+} from "@/src/lib/content/contentService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function parseTags(raw) {
-  if (Array.isArray(raw)) {
-    return raw.map((t) => String(t).trim()).filter(Boolean);
-  }
-  return String(raw ?? "")
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
-}
-
-function normalizeDate(value) {
-  const raw = String(value ?? "").slice(0, 10);
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-  return new Date().toISOString().slice(0, 10);
-}
 
 function unauthorized() {
   return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
@@ -39,29 +27,46 @@ export async function GET(request) {
 
   const url = new URL(request.url);
   const status = url.searchParams.get("status") ?? "draft";
-  const limit = Math.min(
-    Math.max(Number(url.searchParams.get("limit") ?? 50), 1),
-    200
-  );
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 50), 1), 200);
 
   const db = requireDb();
 
   let result;
-  if (status === "all") {
-    result = await db.sql`
-      SELECT slug, title, date, status, updated_at
-      FROM posts
-      ORDER BY updated_at DESC
-      LIMIT ${limit}
-    `;
-  } else {
-    result = await db.sql`
-      SELECT slug, title, date, status, updated_at
-      FROM posts
-      WHERE status = ${status}
-      ORDER BY updated_at DESC
-      LIMIT ${limit}
-    `;
+  try {
+    if (status === "all") {
+      result = await db.sql`
+        SELECT slug, title, date, status, content_format, editor_source, updated_at
+        FROM posts
+        ORDER BY updated_at DESC
+        LIMIT ${limit}
+      `;
+    } else {
+      result = await db.sql`
+        SELECT slug, title, date, status, content_format, editor_source, updated_at
+        FROM posts
+        WHERE status = ${status}
+        ORDER BY updated_at DESC
+        LIMIT ${limit}
+      `;
+    }
+  } catch (error) {
+    if (String(error?.code ?? "") !== "42703") throw error;
+    if (status === "all") {
+      result = await db.sql`
+        SELECT slug, title, date, status, updated_at
+        FROM posts
+        ORDER BY updated_at DESC
+        LIMIT ${limit}
+      `;
+    } else {
+      result = await db.sql`
+        SELECT slug, title, date, status, updated_at
+        FROM posts
+        WHERE status = ${status}
+        ORDER BY updated_at DESC
+        LIMIT ${limit}
+      `;
+    }
   }
 
   const posts = result.rows.map((row) => ({
@@ -85,44 +90,34 @@ export async function POST(request) {
     );
   }
 
-  const title = String(body?.title ?? "").trim();
-  const content = String(body?.content ?? "");
-  const description = String(body?.description ?? "").trim() || null;
-  const cover = String(body?.cover ?? "").trim() || null;
-  const date = normalizeDate(body?.date);
-  const tags = parseTags(body?.tags);
-
-  const providedSlug = String(body?.slug ?? "").trim();
-  const normalizedProvidedSlug = providedSlug ? slugify(providedSlug) : "";
-  if (providedSlug && !normalizedProvidedSlug) {
+  const normalizedInput = normalizePostInput(body, {
+    status: "draft",
+    fallbackSlugPrefix: "draft",
+  });
+  if (normalizedInput.error) {
     return NextResponse.json(
-      { ok: false, error: "Invalid slug." },
+      { ok: false, error: normalizedInput.error },
       { status: 400 }
     );
   }
 
-  const slugBase = normalizedProvidedSlug || slugify(title) || generateFallbackSlug();
-  const slug = slugBase;
-
-  const db = requireDb();
-
-  await db.sql`
-    INSERT INTO posts (slug, title, date, description, cover, tags, content, status, updated_at, published_at)
-    VALUES (${slug}, ${title || "无题"}, ${date}, ${description}, ${cover}, ${tags}, ${content}, 'draft', NOW(), NULL)
-    ON CONFLICT (slug) DO UPDATE SET
-      title = EXCLUDED.title,
-      date = EXCLUDED.date,
-      description = EXCLUDED.description,
-      cover = EXCLUDED.cover,
-      tags = EXCLUDED.tags,
-      content = EXCLUDED.content,
-      status = 'draft',
-      updated_at = NOW(),
-      published_at = NULL
-  `;
+  const post = await upsertPostContent({
+    input: normalizedInput,
+    status: "draft",
+    createdBy: "internal",
+  });
 
   revalidateTag("posts");
-  revalidateTag(`post:${slug}`);
+  revalidateTag(`post:${post.slug}`);
+  revalidateTag(`post-render:${post.slug}`);
+  revalidateTag(`post-revision:${post.slug}`);
 
-  return NextResponse.json({ ok: true, slug, status: "draft" });
+  return NextResponse.json({
+    ok: true,
+    slug: post.slug,
+    status: "draft",
+    revisionId: post.revisionId,
+    revisionNo: post.revisionNo,
+    post: toApiPost(post),
+  });
 }

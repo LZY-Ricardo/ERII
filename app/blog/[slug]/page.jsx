@@ -22,7 +22,8 @@ export default async function BlogPostPage({ params }) {
   if (!post) notFound();
 
   const posts = await getSortedPostsData();
-  const tocItems = extractTocItems(post.content);
+  const articleBody = post.renderBody || post.content || "";
+  const tocItems = extractTocItems(articleBody);
 
   return (
     <ArgonShell posts={posts} tocItems={tocItems}>
@@ -41,7 +42,7 @@ export default async function BlogPostPage({ params }) {
         <div className="nh-divider" />
 
         <div className="nh-article-content prose max-w-none prose-slate prose-headings:font-serif prose-strong:text-slate-800">
-          <MDXRemote source={post.content} />
+          <MDXRemote source={articleBody} />
         </div>
 
         {Array.isArray(post.frontmatter.tags) && post.frontmatter.tags.length ? (

@@ -1,27 +1,14 @@
 import { NextResponse } from "next/server";
-import { requireDb } from "@/src/lib/db";
-import { isWriteAuthed } from "@/src/lib/writeGuard";
-import { generateFallbackSlug, slugify } from "@/src/lib/slugify";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { isWriteAuthed } from "@/src/lib/writeGuard";
+import {
+  normalizePostInput,
+  toApiPost,
+  upsertPostContent,
+} from "@/src/lib/content/contentService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function parseTags(raw) {
-  if (Array.isArray(raw)) {
-    return raw.map((t) => String(t).trim()).filter(Boolean);
-  }
-  return String(raw ?? "")
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
-}
-
-function normalizeDate(value) {
-  const raw = String(value ?? "").slice(0, 10);
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
-  return new Date().toISOString().slice(0, 10);
-}
 
 function unauthorized() {
   return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
@@ -40,49 +27,39 @@ export async function POST(request) {
     );
   }
 
-  const title = String(body?.title ?? "").trim();
-  const content = String(body?.content ?? "");
-  const description = String(body?.description ?? "").trim() || null;
-  const cover = String(body?.cover ?? "").trim() || null;
-  const date = normalizeDate(body?.date);
-  const tags = parseTags(body?.tags);
-
-  const providedSlug = String(body?.slug ?? "").trim();
-  const normalizedProvidedSlug = providedSlug ? slugify(providedSlug) : "";
-  if (providedSlug && !normalizedProvidedSlug) {
+  const normalizedInput = normalizePostInput(body, {
+    status: "published",
+    fallbackSlugPrefix: "post",
+  });
+  if (normalizedInput.error) {
     return NextResponse.json(
-      { ok: false, error: "Invalid slug." },
+      { ok: false, error: normalizedInput.error },
       { status: 400 }
     );
   }
 
-  const slugBase =
-    normalizedProvidedSlug || slugify(title) || generateFallbackSlug("post");
-  const slug = slugBase;
-
-  const db = requireDb();
-
-  await db.sql`
-    INSERT INTO posts (slug, title, date, description, cover, tags, content, status, updated_at, published_at)
-    VALUES (${slug}, ${title || "无题"}, ${date}, ${description}, ${cover}, ${tags}, ${content}, 'published', NOW(), NOW())
-    ON CONFLICT (slug) DO UPDATE SET
-      title = EXCLUDED.title,
-      date = EXCLUDED.date,
-      description = EXCLUDED.description,
-      cover = EXCLUDED.cover,
-      tags = EXCLUDED.tags,
-      content = EXCLUDED.content,
-      status = 'published',
-      updated_at = NOW(),
-      published_at = NOW()
-  `;
+  const post = await upsertPostContent({
+    input: normalizedInput,
+    status: "published",
+    createdBy: "internal",
+  });
 
   revalidateTag("posts");
-  revalidateTag(`post:${slug}`);
+  revalidateTag(`post:${post.slug}`);
+  revalidateTag(`post-render:${post.slug}`);
+  revalidateTag(`post-revision:${post.slug}`);
   revalidatePath("/");
   revalidatePath("/blog");
   revalidatePath("/blog/[slug]");
-  revalidatePath(`/blog/${encodeURIComponent(slug)}`);
+  revalidatePath(`/blog/${encodeURIComponent(post.slug)}`);
 
-  return NextResponse.json({ ok: true, slug, status: "published" });
+  return NextResponse.json({
+    ok: true,
+    slug: post.slug,
+    status: "published",
+    revisionId: post.revisionId,
+    revisionNo: post.revisionNo,
+    post: toApiPost(post),
+  });
 }
+
