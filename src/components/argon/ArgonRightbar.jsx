@@ -24,6 +24,29 @@ function normalizeUrl(value) {
   return href ? href : "";
 }
 
+function normalizeCardTransparency(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 25;
+  return Math.min(65, Math.max(0, Math.round(numeric)));
+}
+
+function applyCardTransparencyPreview(value) {
+  if (typeof document === "undefined") return;
+
+  const safeTransparency = normalizeCardTransparency(value);
+  const alpha = Number((1 - safeTransparency / 100).toFixed(3));
+  const solidAlpha = Number((1 - (safeTransparency / 100) * 0.85).toFixed(3));
+  const body = document.body;
+  const darkMode = body.classList.contains("nh-dark");
+
+  const bg = darkMode ? `rgba(38, 28, 31, ${alpha})` : `rgba(255, 249, 242, ${alpha})`;
+  const solid = darkMode ? `rgba(44, 30, 34, ${solidAlpha})` : `rgba(255, 250, 245, ${solidAlpha})`;
+
+  body.style.setProperty("--nh-card-transparency", `${safeTransparency}`);
+  body.style.setProperty("--nh-card-bg", bg);
+  body.style.setProperty("--nh-card-bg-solid", solid);
+}
+
 function collectCategories(posts) {
   const counts = new Map();
 
@@ -124,6 +147,7 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
   const [filterMode, setFilterMode] = useState("none");
   const [radius, setRadius] = useState(30);
   const [themeColor, setThemeColor] = useState("#89232e");
+  const [cardTransparency, setCardTransparency] = useState(25);
 
   const emitAppearance = (patch) => {
     window.dispatchEvent(new CustomEvent("nh:set-appearance", { detail: patch }));
@@ -138,11 +162,22 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
       setFilterMode(String(detail.filterMode ?? "none"));
       setRadius(Number(detail.radius ?? 30));
       setThemeColor(String(detail.themeColor ?? "#89232e"));
+      if (Object.hasOwn(detail, "cardTransparency")) {
+        setCardTransparency(normalizeCardTransparency(detail.cardTransparency));
+      } else if (Object.hasOwn(detail, "cardOpacity")) {
+        setCardTransparency(normalizeCardTransparency(100 - Number(detail.cardOpacity)));
+      } else {
+        setCardTransparency(25);
+      }
     };
 
     window.addEventListener("nh:appearance-state", onAppearanceState);
     return () => window.removeEventListener("nh:appearance-state", onAppearanceState);
   }, []);
+
+  useEffect(() => {
+    applyCardTransparencyPreview(cardTransparency);
+  }, [cardTransparency, darkMode]);
 
   const renderOverviewBody = () => (
     <div className="nh-profile">
@@ -239,6 +274,23 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
             const next = e.target.value;
             setThemeColor(next);
             emitAppearance({ themeColor: next });
+          }}
+        />
+      </label>
+
+      <label>
+        卡片透明度 {cardTransparency}%
+        <input
+          type="range"
+          min="0"
+          max="65"
+          step="1"
+          value={cardTransparency}
+          onChange={(e) => {
+            const next = normalizeCardTransparency(e.target.value);
+            setCardTransparency(next);
+            applyCardTransparencyPreview(next);
+            emitAppearance({ cardTransparency: next });
           }}
         />
       </label>

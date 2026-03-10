@@ -79,6 +79,30 @@ function hexToRgb(hex) {
   return `${r},${g},${b}`;
 }
 
+function normalizeCardTransparency(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 25;
+  return Math.min(65, Math.max(0, Math.round(numeric)));
+}
+
+function buildCardBackground(transparency, darkMode) {
+  const safeTransparency = normalizeCardTransparency(transparency);
+  const alpha = Number((1 - safeTransparency / 100).toFixed(3));
+  const solidAlpha = Number((1 - (safeTransparency / 100) * 0.85).toFixed(3));
+
+  if (darkMode) {
+    return {
+      bg: `rgba(38, 28, 31, ${alpha})`,
+      solid: `rgba(44, 30, 34, ${solidAlpha})`,
+    };
+  }
+
+  return {
+    bg: `rgba(255, 249, 242, ${alpha})`,
+    solid: `rgba(255, 250, 245, ${solidAlpha})`,
+  };
+}
+
 function WidgetFrame({ title, children, className = "" }) {
   return (
     <section className={`nh-widget nh-card ${className}`.trim()}>
@@ -110,6 +134,7 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
   const [filterMode, setFilterMode] = useState("none");
   const [radius, setRadius] = useState(30);
   const [themeColor, setThemeColor] = useState("#89232e");
+  const [cardTransparency, setCardTransparency] = useState(25);
 
   const [panelOpen, setPanelOpen] = useState(false);
   const [activePanel, setActivePanel] = useState("overview");
@@ -121,6 +146,12 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
     root.style.setProperty("--nh-theme", themeColor);
     root.style.setProperty("--nh-theme-rgb", hexToRgb(themeColor));
     root.style.setProperty("--nh-radius", `${radius}px`);
+    const safeTransparency = normalizeCardTransparency(cardTransparency);
+    const cardBackground = buildCardBackground(safeTransparency, darkMode);
+    root.style.setProperty("--nh-card-transparency", `${safeTransparency}`);
+    body.style.setProperty("--nh-card-transparency", `${safeTransparency}`);
+    body.style.setProperty("--nh-card-bg", cardBackground.bg);
+    body.style.setProperty("--nh-card-bg-solid", cardBackground.solid);
     root.style.setProperty(
       "--nh-shadow",
       deepShadow
@@ -135,15 +166,18 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
 
     window.dispatchEvent(
       new CustomEvent("nh:appearance-state", {
-        detail: { darkMode, serifMode, deepShadow, filterMode, radius, themeColor },
+        detail: { darkMode, serifMode, deepShadow, filterMode, radius, themeColor, cardTransparency },
       })
     );
 
     return () => {
       body.classList.remove("nh-dark", "nh-font-serif", "nh-panel-open");
       delete body.dataset.nhFilter;
+      body.style.removeProperty("--nh-card-bg");
+      body.style.removeProperty("--nh-card-bg-solid");
+      body.style.removeProperty("--nh-card-transparency");
     };
-  }, [darkMode, serifMode, deepShadow, filterMode, radius, themeColor, panelOpen]);
+  }, [darkMode, serifMode, deepShadow, filterMode, radius, themeColor, cardTransparency, panelOpen]);
 
   useEffect(() => {
     const onSetAppearance = (event) => {
@@ -158,6 +192,11 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
         if (Number.isFinite(nextRadius)) setRadius(nextRadius);
       }
       if (Object.hasOwn(detail, "themeColor")) setThemeColor(String(detail.themeColor ?? "#89232e"));
+      if (Object.hasOwn(detail, "cardTransparency")) {
+        setCardTransparency(normalizeCardTransparency(detail.cardTransparency));
+      } else if (Object.hasOwn(detail, "cardOpacity")) {
+        setCardTransparency(normalizeCardTransparency(100 - Number(detail.cardOpacity)));
+      }
     };
 
     window.addEventListener("nh:set-appearance", onSetAppearance);
@@ -375,6 +414,18 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
       <label>
         主题色
         <input type="color" value={themeColor} onChange={(e) => setThemeColor(e.target.value)} />
+      </label>
+
+      <label>
+        卡片透明度 {cardTransparency}%
+        <input
+          type="range"
+          min="0"
+          max="65"
+          step="1"
+          value={cardTransparency}
+          onChange={(e) => setCardTransparency(normalizeCardTransparency(e.target.value))}
+        />
       </label>
     </div>
   );

@@ -341,8 +341,11 @@ body {
   --nh-bg-overlay-top: rgba(255, 255, 255, 0);
   --nh-bg-overlay-bottom: rgba(255, 255, 255, 0);
   --nh-text: #3b2f34;
-  --nh-card-bg: rgba(255, 249, 242, 0.46);
-  --nh-card-bg-solid: rgba(255, 250, 245, 0.6);
+  --nh-card-transparency: 25;
+  --nh-card-alpha: calc(1 - (var(--nh-card-transparency) / 100));
+  --nh-card-alpha-solid: calc(1 - ((var(--nh-card-transparency) / 100) * 0.85));
+  --nh-card-bg: rgba(255, 249, 242, var(--nh-card-alpha));
+  --nh-card-bg-solid: rgba(255, 250, 245, var(--nh-card-alpha-solid));
   --nh-radius: 30px;
   --nh-shadow: 0 15px 35px rgba(60, 30, 34, 0.14), 0 5px 15px rgba(34, 18, 20, 0.1);
   --nh-font:
@@ -829,6 +832,100 @@ body {
 }
 
 .nh-rightbar-online-entry:hover {
+  border-color: rgba(255, 206, 132, 0.54);
+  background: linear-gradient(115deg, rgba(var(--nh-theme-rgb), 0.98), rgba(242, 151, 92, 0.96));
+}
+
+.nh-unmark-float {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  z-index: 72;
+  width: min(340px, calc(100vw - 24px));
+  display: grid;
+  gap: 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(var(--nh-theme-rgb), 0.24);
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.95), rgba(252, 244, 237, 0.9));
+  box-shadow: 0 16px 30px rgba(35, 20, 24, 0.18);
+  padding: 14px 14px 13px;
+  font-family: var(--nh-font-ui);
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.42s ease,
+    transform 0.42s ease;
+}
+
+.nh-unmark-float.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.nh-unmark-float.is-fading {
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+}
+
+.nh-unmark-float-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: rgba(57, 47, 53, 0.7);
+  background: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+}
+
+.nh-unmark-float-close:hover {
+  color: rgba(57, 47, 53, 0.9);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.nh-unmark-float-close span {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.nh-unmark-float-title {
+  margin: 0;
+  padding-right: 24px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #392f35;
+}
+
+.nh-unmark-float-copy {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.68;
+  color: rgba(57, 47, 53, 0.84);
+}
+
+.nh-unmark-float-cta {
+  width: fit-content;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fffaf5;
+  border: 1px solid rgba(255, 190, 112, 0.38);
+  background: linear-gradient(115deg, rgba(var(--nh-theme-rgb), 0.96), rgba(233, 137, 77, 0.92));
+  box-shadow: 0 8px 16px rgba(74, 31, 34, 0.2);
+}
+
+.nh-unmark-float-cta:hover {
   border-color: rgba(255, 206, 132, 0.54);
   background: linear-gradient(115deg, rgba(var(--nh-theme-rgb), 0.98), rgba(242, 151, 92, 0.96));
 }
@@ -2185,8 +2282,8 @@ body {
   --nh-bg-overlay-top: rgba(9, 7, 8, 0.36);
   --nh-bg-overlay-bottom: rgba(9, 7, 8, 0.62);
   --nh-text: #eaded1;
-  --nh-card-bg: rgba(38, 28, 31, 0.48);
-  --nh-card-bg-solid: rgba(44, 30, 34, 0.62);
+  --nh-card-bg: rgba(38, 28, 31, var(--nh-card-alpha));
+  --nh-card-bg-solid: rgba(44, 30, 34, var(--nh-card-alpha-solid));
   color-scheme: dark;
 }
 
@@ -2345,6 +2442,30 @@ body {
 .nh-body.nh-dark .nh-rightbar-online-entry:hover {
   border-color: rgba(255, 206, 132, 0.56);
   background: linear-gradient(115deg, rgba(185, 74, 82, 0.96), rgba(198, 122, 64, 0.98));
+}
+
+.nh-body.nh-dark .nh-unmark-float {
+  border-color: rgba(220, 228, 243, 0.24);
+  background: linear-gradient(155deg, rgba(22, 27, 36, 0.92), rgba(18, 22, 30, 0.86));
+  box-shadow: 0 16px 30px rgba(9, 12, 16, 0.4);
+}
+
+.nh-body.nh-dark .nh-unmark-float-title {
+  color: #f4e7db;
+}
+
+.nh-body.nh-dark .nh-unmark-float-copy {
+  color: rgba(244, 231, 219, 0.82);
+}
+
+.nh-body.nh-dark .nh-unmark-float-close {
+  color: rgba(244, 231, 219, 0.74);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nh-body.nh-dark .nh-unmark-float-close:hover {
+  color: rgba(244, 231, 219, 0.92);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .nh-body.nh-font-serif {

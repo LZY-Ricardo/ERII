@@ -2,6 +2,7 @@ import ArgonFooter from "@/src/components/argon/ArgonFooter";
 import ArgonLeftbar from "@/src/components/argon/ArgonLeftbar";
 import ArgonNavbar from "@/src/components/argon/ArgonNavbar";
 import ArgonRightbar from "@/src/components/argon/ArgonRightbar";
+import UnmarkFloatingPrompt from "@/src/components/argon/UnmarkFloatingPrompt";
 
 export default function ArgonShell({
   posts = [],
@@ -55,6 +56,8 @@ export default function ArgonShell({
           <ArgonRightbar posts={posts} tocItems={tocItems} />
         </div>
       </div>
+
+      <UnmarkFloatingPrompt />
     </div>
   );
 }
