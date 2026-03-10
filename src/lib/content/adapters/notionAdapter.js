@@ -279,7 +279,7 @@ async function notionBlocksToEditorBlocks(blocks, options = {}) {
 function extractTitle(page) {
   const titleProp = pickTitleProperty(page?.properties);
   const title = richTextToPlain(titleProp?.title ?? []);
-  return title.trim() || "Untitled";
+  return title.trim() || "无题";
 }
 
 function blockPreviewText(block) {
@@ -378,4 +378,3 @@ export async function fetchNotionPageAsPostInput({
 export function isNotionConfigured() {
   return Boolean(getNotionToken());
 }
-

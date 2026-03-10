@@ -16,15 +16,15 @@ import {
 } from "@/src/lib/content/blockEditorModel";
 
 const BLOCK_INSERT_TYPES = [
-  ["paragraph", "Paragraph"],
-  ["heading", "Heading"],
-  ["quote", "Quote"],
-  ["list", "List"],
-  ["code", "Code"],
-  ["image", "Image"],
-  ["callout", "Callout"],
-  ["embed", "Embed"],
-  ["divider", "Divider"],
+  ["paragraph", "段落"],
+  ["heading", "标题"],
+  ["quote", "引用"],
+  ["list", "列表"],
+  ["code", "代码"],
+  ["image", "图片"],
+  ["callout", "提示"],
+  ["embed", "嵌入"],
+  ["divider", "分割线"],
 ];
 
 function BlockActionButton({ label, onClick, disabled, icon }) {
@@ -195,9 +195,9 @@ export default function BlockComposer({
     <div className="zen-scrollbar min-h-0 flex-1 overflow-y-auto px-8 pb-24">
       <div className="rounded-2xl border border-wafu-sumi/10 bg-white/40 p-4">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <p className="font-serif text-xs tracking-[0.24em] text-wafu-sumi/60">BLOCKS</p>
+          <p className="font-serif text-xs tracking-[0.24em] text-wafu-sumi/60">区块</p>
           <span className="rounded-full border border-wafu-sumi/15 bg-white/85 px-3 py-1 text-[11px] font-mono text-wafu-sumi/65">
-            {safeBlocks.length} blocks
+            {safeBlocks.length} 个区块
           </span>
         </div>
         <BlockTypePills onInsert={insertBlock} disabled={disabled} />
@@ -226,7 +226,7 @@ export default function BlockComposer({
                 <button
                   type="button"
                   disabled={disabled}
-                  title="Drag to reorder"
+                  title="拖拽排序"
                   className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-wafu-sumi/15 bg-white/90 text-wafu-sumi/55 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <GripVertical size={14} />
@@ -250,25 +250,25 @@ export default function BlockComposer({
 
               <div className="flex items-center gap-1">
                 <BlockActionButton
-                  label="Up"
+                  label="上移"
                   icon={<ArrowUp size={12} />}
                   onClick={() => moveBlock(index, -1)}
                   disabled={disabled || index === 0}
                 />
                 <BlockActionButton
-                  label="Down"
+                  label="下移"
                   icon={<ArrowDown size={12} />}
                   onClick={() => moveBlock(index, 1)}
                   disabled={disabled || index === safeBlocks.length - 1}
                 />
                 <BlockActionButton
-                  label="Delete"
+                  label="删除"
                   icon={<Trash2 size={12} />}
                   onClick={() => removeBlock(block.id)}
                   disabled={disabled}
                 />
                 <BlockActionButton
-                  label="Add"
+                  label="添加"
                   icon={<Plus size={12} />}
                   onClick={() => insertBlock("paragraph", index + 1)}
                   disabled={disabled}
@@ -282,7 +282,7 @@ export default function BlockComposer({
                 disabled={disabled}
                 onChange={(event) => updateBlock(block.id, { text: event.target.value })}
                 className="min-h-20 w-full resize-y rounded-md border border-wafu-sumi/20 bg-white px-3 py-2 text-sm text-wafu-sumi outline-none focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
-                placeholder="Type your content..."
+                placeholder="输入内容..."
               />
             )}
 
@@ -306,7 +306,7 @@ export default function BlockComposer({
                   disabled={disabled}
                   onChange={(event) => updateBlock(block.id, { text: event.target.value })}
                   className="rounded-md border border-wafu-sumi/20 bg-white px-3 py-2 text-sm text-wafu-sumi outline-none focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
-                  placeholder="Heading text..."
+                  placeholder="标题内容..."
                 />
               </div>
             )}
@@ -320,7 +320,7 @@ export default function BlockComposer({
                     disabled={disabled}
                     onChange={(event) => updateBlock(block.id, { ordered: event.target.checked })}
                   />
-                  Ordered list
+                  有序列表
                 </label>
                 <textarea
                   value={Array.isArray(block.items) ? block.items.join("\n") : ""}
@@ -334,7 +334,7 @@ export default function BlockComposer({
                     })
                   }
                   className="min-h-24 w-full resize-y rounded-md border border-wafu-sumi/20 bg-white px-3 py-2 text-sm text-wafu-sumi outline-none focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
-                  placeholder="One item per line..."
+                  placeholder="每行一项..."
                 />
               </div>
             )}
@@ -346,14 +346,14 @@ export default function BlockComposer({
                   disabled={disabled}
                   onChange={(event) => updateBlock(block.id, { language: event.target.value })}
                   className="w-40 rounded-md border border-wafu-sumi/20 bg-white px-3 py-2 text-xs font-mono text-wafu-sumi outline-none focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
-                  placeholder="language"
+                  placeholder="语言"
                 />
                 <textarea
                   value={block.code || ""}
                   disabled={disabled}
                   onChange={(event) => updateBlock(block.id, { code: event.target.value })}
                   className="min-h-28 w-full resize-y rounded-md border border-wafu-sumi/20 bg-white px-3 py-2 font-mono text-sm text-wafu-sumi outline-none focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
-                  placeholder="Code..."
+                  placeholder="代码内容..."
                 />
               </div>
             )}
@@ -368,7 +368,7 @@ export default function BlockComposer({
                     className="inline-flex items-center gap-2 rounded-full border border-wafu-sumi/15 bg-white/85 px-3 py-1.5 text-xs text-wafu-sumi/75 transition-colors hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <ImagePlus size={14} />
-                    Upload
+                    上传
                   </button>
                 </div>
                 <input
@@ -384,7 +384,7 @@ export default function BlockComposer({
                     disabled={disabled}
                     onChange={(event) => updateBlock(block.id, { alt: event.target.value })}
                     className="rounded-md border border-wafu-sumi/20 bg-white px-3 py-2 text-sm text-wafu-sumi outline-none focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
-                    placeholder="alt text"
+                    placeholder="替代文本"
                   />
                   <input
                     type="number"
@@ -394,7 +394,7 @@ export default function BlockComposer({
                     disabled={disabled}
                     onChange={(event) => updateBlock(block.id, { width: Number(event.target.value) || 500 })}
                     className="rounded-md border border-wafu-sumi/20 bg-white px-3 py-2 text-sm text-wafu-sumi outline-none focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
-                    placeholder="width"
+                    placeholder="宽度"
                   />
                 </div>
                 <input
@@ -402,7 +402,7 @@ export default function BlockComposer({
                   disabled={disabled}
                   onChange={(event) => updateBlock(block.id, { caption: event.target.value })}
                   className="w-full rounded-md border border-wafu-sumi/20 bg-white px-3 py-2 text-sm text-wafu-sumi outline-none focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
-                  placeholder="caption (optional)"
+                  placeholder="图片说明（可选）"
                 />
               </div>
             )}
@@ -415,10 +415,10 @@ export default function BlockComposer({
                   onChange={(event) => updateBlock(block.id, { tone: event.target.value })}
                   className="rounded-md border border-wafu-sumi/20 bg-white px-3 py-2 text-xs text-wafu-sumi outline-none focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
                 >
-                  <option value="note">Note</option>
-                  <option value="info">Info</option>
-                  <option value="warning">Warning</option>
-                  <option value="tip">Tip</option>
+                  <option value="note">备注</option>
+                  <option value="info">信息</option>
+                  <option value="warning">警告</option>
+                  <option value="tip">技巧</option>
                 </select>
               </div>
             )}
@@ -437,14 +437,14 @@ export default function BlockComposer({
                   disabled={disabled}
                   onChange={(event) => updateBlock(block.id, { title: event.target.value })}
                   className="w-full rounded-md border border-wafu-sumi/20 bg-white px-3 py-2 text-sm text-wafu-sumi outline-none focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
-                  placeholder="Link title (optional)"
+                  placeholder="链接标题（可选）"
                 />
               </div>
             )}
 
             {block.type === "divider" && (
               <div className="rounded-md border border-dashed border-wafu-sumi/20 bg-white/70 px-3 py-4 text-center text-xs font-mono text-wafu-sumi/45">
-                --- divider ---
+                --- 分割线 ---
               </div>
             )}
           </div>
@@ -453,4 +453,3 @@ export default function BlockComposer({
     </div>
   );
 }
-

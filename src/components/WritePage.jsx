@@ -48,6 +48,15 @@ function sanitizeFileName(name) {
   return cleaned.length ? cleaned : "untitled";
 }
 
+function getStatusLabel(status) {
+  const normalized = String(status ?? "").trim().toLowerCase();
+  if (!normalized) return "新稿";
+  if (normalized === "draft") return "草稿";
+  if (normalized === "published") return "已发布";
+  if (normalized === "archived") return "已归档";
+  return String(status ?? "").trim();
+}
+
 function ToolButton({ icon, onClick, tooltip }) {
   return (
     <button
@@ -272,7 +281,7 @@ export default function WritePage() {
   const loadDraft = async (targetSlug) => {
     if (!requireAuthOrOpenSettings()) return;
     if (!targetSlug) {
-      showToast("需要 slug");
+      showToast("需要文章标识（slug）");
       return;
     }
 
@@ -607,14 +616,14 @@ export default function WritePage() {
         ]);
       }
       setBlockUploadTargetId(null);
-      showToast("Image inserted");
+      showToast("图片已插入");
       return;
     }
 
     insertAtSelection(
       (selected) => `<img src="${url}" alt="${selected || fallbackAlt}" width="500" />`
     );
-    showToast("Image inserted");
+    showToast("图片已插入");
   };
 
   const handlePickCover = () => {
@@ -734,8 +743,8 @@ export default function WritePage() {
 
             <div className="select-none font-serif text-[11px] tracking-[0.28em] text-wafu-sumi/50">
               {slug
-                ? `${slug} · ${loadedStatus ? String(loadedStatus).toUpperCase() : "NEW"}`
-                : "DRAFTING..."}
+                ? `${slug} · ${getStatusLabel(loadedStatus)}`
+                : "编辑中…"}
             </div>
           </div>
 
@@ -809,7 +818,7 @@ export default function WritePage() {
           >
             <div className="flex items-center justify-between gap-4 border-b border-wafu-sumi/10 pb-4">
               <div className="select-none font-serif text-xs tracking-[0.32em] text-wafu-sumi/60">
-                SETTINGS
+                设置
               </div>
               <button
                 type="button"
@@ -833,12 +842,12 @@ export default function WritePage() {
                 />
               </label>
               <label className="grid gap-2">
-                <span className="text-xs font-medium text-wafu-sumi/80">slug</span>
+                <span className="text-xs font-medium text-wafu-sumi/80">标识（slug）</span>
                 <input
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   className="w-full rounded-md border border-wafu-sumi/20 bg-white/90 px-3 py-2.5 text-sm font-mono text-wafu-sumi outline-none transition-all placeholder:text-wafu-sumi/30 focus:bg-white focus:border-erii-red/30 focus:ring-4 focus:ring-erii-red/15"
-                  placeholder="auto"
+                  placeholder="自动生成"
                 />
               </label>
               <div className="grid gap-2 md:col-span-2">
@@ -978,7 +987,7 @@ export default function WritePage() {
               <section className="mt-6 rounded-2xl border border-wafu-sumi/15 bg-white/80 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="select-none font-serif text-xs tracking-[0.28em] text-wafu-sumi/60">
-                    POSTS
+                    文章
                   </div>
                   <button
                     type="button"
@@ -1034,7 +1043,7 @@ export default function WritePage() {
                               </span>
                               <span className="h-1 w-1 rounded-full bg-wafu-sumi/25" />
                               <span className="rounded-full border border-wafu-sumi/15 bg-white/85 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider">
-                                {post.status}
+                                {getStatusLabel(post.status)}
                               </span>
                             </div>
                           </div>
@@ -1073,7 +1082,7 @@ export default function WritePage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full bg-transparent p-0 font-serif text-4xl font-bold tracking-wide text-wafu-sumi outline-none placeholder:text-wafu-sumi/20 caret-erii-red"
-                placeholder="Untitled..."
+                placeholder="无题..."
                 spellCheck={false}
               />
 
@@ -1100,7 +1109,7 @@ export default function WritePage() {
                       : "text-wafu-sumi/55 hover:text-wafu-sumi")
                   }
                 >
-                  BLOCKS
+                  区块
                 </button>
               </div>
             </div>
@@ -1119,7 +1128,7 @@ export default function WritePage() {
                 onChange={(e) => setContent(e.target.value)}
                 onPaste={handlePaste}
                 className="zen-scrollbar min-h-0 flex-1 resize-none bg-transparent px-8 pb-24 font-mono text-[15px] leading-loose text-wafu-sumi/85 outline-none placeholder:text-wafu-sumi/20 caret-erii-red selection:bg-erii-red/15 selection:text-wafu-sumi"
-                placeholder="Start writing your story..."
+                placeholder="从这里开始写作..."
                 spellCheck={false}
               />
             )}
@@ -1132,33 +1141,33 @@ export default function WritePage() {
                     onClick={() => appendBlock("paragraph")}
                     className="rounded-full border border-wafu-sumi/15 bg-white/85 px-3 py-1 text-xs text-wafu-sumi/70 transition-colors hover:text-erii-red"
                   >
-                    + Paragraph
+                    + 段落
                   </button>
                   <button
                     type="button"
                     onClick={() => appendBlock("heading")}
                     className="rounded-full border border-wafu-sumi/15 bg-white/85 px-3 py-1 text-xs text-wafu-sumi/70 transition-colors hover:text-erii-red"
                   >
-                    + Heading
+                    + 标题
                   </button>
                   <button
                     type="button"
                     onClick={() => appendBlock("code")}
                     className="rounded-full border border-wafu-sumi/15 bg-white/85 px-3 py-1 text-xs text-wafu-sumi/70 transition-colors hover:text-erii-red"
                   >
-                    + Code
+                    + 代码
                   </button>
                   <button
                     type="button"
                     onClick={() => appendBlock("image")}
                     className="rounded-full border border-wafu-sumi/15 bg-white/85 px-3 py-1 text-xs text-wafu-sumi/70 transition-colors hover:text-erii-red"
                   >
-                    + Image
+                    + 图片
                   </button>
                   <ToolButton
                     icon={<Mountain size={18} />}
                     onClick={handlePickImage}
-                    tooltip="Upload image"
+                    tooltip="上传图片"
                   />
                 </div>
               ) : (
@@ -1166,37 +1175,37 @@ export default function WritePage() {
                   <ToolButton
                     icon={<Bold size={18} />}
                     onClick={() => insertText("**", "**")}
-                    tooltip="Bold"
+                    tooltip="粗体"
                   />
                   <ToolButton
                     icon={<Italic size={18} />}
                     onClick={() => insertText("*", "*")}
-                    tooltip="Italic"
+                    tooltip="斜体"
                   />
                   <ToolButton
                     icon={<span className="px-0.5 font-serif text-[16px] leading-none">&quot;</span>}
                     onClick={() => insertText("> ")}
-                    tooltip="Quote"
+                    tooltip="引用"
                   />
                   <ToolButton
                     icon={<List size={18} />}
                     onClick={() => insertText("- ")}
-                    tooltip="List"
+                    tooltip="列表"
                   />
                   <ToolButton
                     icon={<Code size={18} />}
                     onClick={() => insertText("`", "`")}
-                    tooltip="Code"
+                    tooltip="代码"
                   />
                   <ToolButton
                     icon={<Link2 size={18} />}
                     onClick={() => insertText("[", "](https://)")}
-                    tooltip="Link"
+                    tooltip="链接"
                   />
                   <ToolButton
                     icon={<Mountain size={18} />}
                     onClick={handlePickImage}
-                    tooltip="Upload image"
+                    tooltip="上传图片"
                   />
                 </div>
               )}
