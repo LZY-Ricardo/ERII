@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getCategoryThemeLabel, inferCategoryFromPost } from "@/src/lib/postTaxonomy";
 
@@ -38,12 +39,14 @@ export default function PostCard({ post }) {
       <Link href={`/blog/${post.slug}`} className="nh-post-cover-link" aria-label={title}>
         <span className="nh-post-cover-wrap">
           {post.frontmatter.cover ? (
-            <img
+            <Image
               src={post.frontmatter.cover}
               alt={title}
+              width={1200}
+              height={675}
               className="nh-post-cover"
               loading="lazy"
-              decoding="async"
+              unoptimized
             />
           ) : (
             <span className="nh-post-cover nh-post-cover-fallback" aria-hidden="true" />

@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export function DuckIcon({ className }) {
   return (
     <svg
@@ -104,13 +106,37 @@ export function SakuraIcon({ className }) {
 }
 
 export function HomeIcon({ className }) {
-  return <img src="/icons/home.png" className={className} alt="首页" />;
+  return (
+    <Image
+      src="/icons/home.png"
+      width={24}
+      height={24}
+      className={className}
+      alt="首页"
+    />
+  );
 }
 
 export function BlogIcon({ className }) {
-  return <img src="/icons/blog.png" className={className} alt="文章" />;
+  return (
+    <Image
+      src="/icons/blog.png"
+      width={24}
+      height={24}
+      className={className}
+      alt="文章"
+    />
+  );
 }
 
 export function AboutIcon({ className }) {
-  return <img src="/icons/about.png" className={className} alt="关于" />;
+  return (
+    <Image
+      src="/icons/about.png"
+      width={24}
+      height={24}
+      className={className}
+      alt="关于"
+    />
+  );
 }

@@ -1,12 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useRef, useState } from "react";
 
 export default function ResizableImage({ src, alt, width: initialWidth, onResize }) {
-    const [width, setWidth] = useState(initialWidth ? parseInt(initialWidth, 10) : null);
+    const parsedInitialWidth = Number.parseInt(initialWidth, 10);
+    const [width, setWidth] = useState(Number.isFinite(parsedInitialWidth) ? parsedInitialWidth : 640);
     const [isResizing, setIsResizing] = useState(false);
     const [showHandle, setShowHandle] = useState(false);
-    const imgRef = useRef(null);
+    const [aspectRatio, setAspectRatio] = useState(0.625);
+    const containerRef = useRef(null);
     const startXRef = useRef(0);
     const startWidthRef = useRef(0);
 
@@ -15,7 +18,7 @@ export default function ResizableImage({ src, alt, width: initialWidth, onResize
         e.stopPropagation();
         setIsResizing(true);
         startXRef.current = e.clientX;
-        startWidthRef.current = imgRef.current?.offsetWidth || 400;
+        startWidthRef.current = containerRef.current?.offsetWidth || width || 400;
 
         const handleMouseMove = (moveEvent) => {
             const delta = moveEvent.clientX - startXRef.current;
@@ -28,28 +31,43 @@ export default function ResizableImage({ src, alt, width: initialWidth, onResize
             document.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseup", handleMouseUp);
 
-            if (onResize && imgRef.current) {
-                onResize(src, imgRef.current.offsetWidth);
+            if (onResize && containerRef.current) {
+                onResize(src, containerRef.current.offsetWidth);
             }
         };
 
         document.addEventListener("mousemove", handleMouseMove);
         document.addEventListener("mouseup", handleMouseUp);
-    }, [src, onResize]);
+    }, [src, onResize, width]);
 
     return (
         <span
+            ref={containerRef}
             className="relative inline-block my-4"
             onMouseEnter={() => setShowHandle(true)}
             onMouseLeave={() => !isResizing && setShowHandle(false)}
+            style={{
+                width: `${width}px`,
+                maxWidth: "100%",
+            }}
         >
-            <img
-                ref={imgRef}
+            <Image
                 src={src}
                 alt={alt || ""}
-                style={{ width: width ? `${width}px` : "auto", maxWidth: "100%" }}
+                width={Math.max(100, Math.round(width))}
+                height={Math.max(80, Math.round(width * aspectRatio))}
+                unoptimized
+                loader={({ src: currentSrc }) => String(currentSrc ?? "")}
                 className="rounded-xl block"
+                style={{ width: "100%", height: "auto" }}
                 draggable={false}
+                onLoadingComplete={(img) => {
+                    const naturalWidth = Number(img?.naturalWidth ?? 0);
+                    const naturalHeight = Number(img?.naturalHeight ?? 0);
+                    if (naturalWidth > 0 && naturalHeight > 0) {
+                        setAspectRatio(naturalHeight / naturalWidth);
+                    }
+                }}
             />
             {showHandle && (
                 <span

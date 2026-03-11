@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
@@ -861,7 +862,15 @@ export default function WritePage() {
                 >
                   {cover ? (
                     <>
-                      <img src={cover} alt="封面预览" className="h-full w-full object-cover" />
+                      <Image
+                        src={cover}
+                        alt="封面预览"
+                        fill
+                        className="h-full w-full object-cover"
+                        unoptimized
+                        loader={({ src }) => String(src ?? "")}
+                        sizes="(max-width: 768px) 100vw, 384px"
+                      />
                       <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/20" />
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white opacity-0 transition-opacity group-hover:opacity-100">
                         <Plus size={20} />
