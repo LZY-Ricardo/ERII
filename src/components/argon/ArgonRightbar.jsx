@@ -193,7 +193,8 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
 
   const renderToolsBody = () => (
     <div className="nh-controls">
-      <label>
+      <label className="nh-control-check">
+        <span>深色模式</span>
         <input
           type="checkbox"
           checked={darkMode}
@@ -203,10 +204,10 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
             emitAppearance({ darkMode: checked });
           }}
         />
-        深色模式
       </label>
 
-      <label>
+      <label className="nh-control-check">
+        <span>衬线字体</span>
         <input
           type="checkbox"
           checked={serifMode}
@@ -216,10 +217,10 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
             emitAppearance({ serifMode: checked });
           }}
         />
-        衬线字体
       </label>
 
-      <label>
+      <label className="nh-control-check">
+        <span>阴影增强</span>
         <input
           type="checkbox"
           checked={deepShadow}
@@ -229,7 +230,6 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
             emitAppearance({ deepShadow: checked });
           }}
         />
-        阴影增强
       </label>
 
       <label>

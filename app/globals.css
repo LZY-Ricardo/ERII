@@ -1329,6 +1329,7 @@ body {
   gap: 10px;
   margin-top: 8px;
   font-size: 13px;
+  justify-items: stretch;
 }
 
 .nh-controls label {
@@ -1336,8 +1337,31 @@ body {
   gap: 6px;
 }
 
+.nh-controls label.nh-control-check {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  min-height: 26px;
+}
+
+.nh-controls label.nh-control-check span {
+  display: block;
+  line-height: 1.45;
+}
+
 .nh-controls input[type="checkbox"] {
+  margin: 0;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
   accent-color: var(--nh-theme);
+}
+
+.nh-controls label.nh-control-check input[type="checkbox"] {
+  justify-self: end;
+  align-self: center;
 }
 
 .nh-controls select,
