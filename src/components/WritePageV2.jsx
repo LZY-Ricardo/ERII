@@ -28,6 +28,7 @@ export default function WritePageV2() {
     tags: "",
     cover: "",
   });
+  const [postStatus, setPostStatus] = useState("draft");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [isAuthed, setIsAuthed] = useState(false);
@@ -60,15 +61,17 @@ export default function WritePageV2() {
       const res = await fetch(`/api/write/posts/${slug}`);
       if (res.ok) {
         const data = await res.json();
+        const post = data.post || data;
         setMetadata({
-          slug: data.slug || "",
-          title: data.title || "",
-          date: data.date || new Date().toISOString().split("T")[0],
-          description: data.description || "",
-          tags: data.tags || "",
-          cover: data.cover || "",
+          slug: post.slug || "",
+          title: post.title || "",
+          date: post.date || new Date().toISOString().split("T")[0],
+          description: post.description || "",
+          tags: post.tags || "",
+          cover: post.cover || "",
         });
-        setContent(data.content || "");
+        setContent(post.content || "");
+        setPostStatus(post.status || "draft");
         showToast("草稿已加载");
       }
     } catch (err) {
