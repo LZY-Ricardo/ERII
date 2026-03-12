@@ -56,8 +56,8 @@ export default async function BlogPostPage({ params }) {
         ) : null}
       </article>
 
-      <ArgonSharePanel post={post} />
       <ArgonCommentShell postSlug={post.slug} />
+      <ArgonSharePanel post={post} />
     </ArgonShell>
   );
 }

@@ -17,21 +17,15 @@ export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const toastIdRef = useRef(0);
 
-  // 确保在客户端渲染
-  useEffect(() => {
-    console.log("ToastProvider mounted");
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
   const addToast = useCallback((message, type = "info", duration = 3000) => {
-    console.log("addToast called:", { message, type, duration });
     const id = ++toastIdRef.current;
     const toast = { id, message, type, duration };
 
-    setToasts((prev) => {
-      const newToasts = [...prev, toast];
-      console.log("Toasts updated:", newToasts);
-      return newToasts;
-    });
+    setToasts((prev) => [...prev, toast]);
 
     if (duration > 0) {
       setTimeout(() => {
@@ -40,12 +34,7 @@ export function ToastProvider({ children }) {
     }
 
     return id;
-  }, []);
-
-  const removeToast = useCallback((id) => {
-    console.log("removeToast called:", id);
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  }, []);
+  }, [removeToast]);
 
   const success = useCallback((message, duration) => addToast(message, "success", duration), [addToast]);
   const error = useCallback((message, duration) => addToast(message, "error", duration), [addToast]);
@@ -71,8 +60,6 @@ export function ToastProvider({ children }) {
 }
 
 function ToastContainer({ toasts, onRemove }) {
-  console.log("ToastContainer rendering, toasts:", toasts);
-
   return (
     <div className="toast-container">
       {toasts.map((toast) => (

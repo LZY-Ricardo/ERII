@@ -135,3 +135,13 @@ CREATE TABLE IF NOT EXISTS comment_votes (
 
 CREATE INDEX IF NOT EXISTS comment_votes_comment_id_created_at_idx
   ON comment_votes (comment_id, created_at DESC);
+
+-- 管理员元数据（用于记录访问时间等）
+CREATE TABLE IF NOT EXISTS admin_meta (
+  id SERIAL PRIMARY KEY,
+  key TEXT NOT NULL UNIQUE,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS admin_meta_key_idx ON admin_meta (key);

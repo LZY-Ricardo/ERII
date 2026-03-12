@@ -108,7 +108,7 @@ export default function CommentSection({ postSlug }) {
         setLoadingMore(false);
       }
     },
-    [postSlug]
+    [postSlug, toast]
   );
 
   useEffect(() => {
@@ -520,19 +520,6 @@ function CommentForm({
             <span className="btn-inner--text">取消</span>
           </button>
 
-          <button
-            type="button"
-            className="btn btn-icon btn-outline-primary comment-btn pull-right"
-            onClick={() => {
-              console.log("Test toast button clicked");
-              toast.success("测试成功提示");
-              setTimeout(() => toast.error("测试错误提示"), 1000);
-            }}
-            title="测试提示"
-          >
-            测试
-          </button>
-
           <button ref={emotionBtnRef} id="comment_emotion_btn" className={`btn btn-icon pull-right ${emotionOpen ? "comment-emotion-keyboard-open" : ""}`} type="button" title="表情" onClick={() => setEmotionOpen((prev) => !prev)}>
             <Smile size={20} />
           </button>
@@ -588,79 +575,32 @@ function FieldGroup({
 }
 
 function CaptchaField({ captchaEquation, value, onChange, disabled }) {
-  const [showTooltip, setShowTooltip] = useState(false);
-  const tooltipTimeoutRef = useRef(null);
-  const inputRef = useRef(null);
-
-  const handleMouseEnter = () => {
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current);
-    }
-    setShowTooltip(true);
-  };
-
-  const handleMouseLeave = () => {
-    tooltipTimeoutRef.current = setTimeout(() => {
-      setShowTooltip(false);
-    }, 150);
-  };
-
-  const handleFocus = () => {
-    setShowTooltip(true);
-  };
-
-  const handleBlur = () => {
-    setShowTooltip(false);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (tooltipTimeoutRef.current) {
-        clearTimeout(tooltipTimeoutRef.current);
-      }
-    };
-  }, []);
-
   return (
     <div className="col-md-3">
       <div className="form-group">
         <div className="input-group input-group-alternative mb-4 post-comment-captcha-container" data-captcha={captchaEquation}>
+          <span className="captcha-tooltip" aria-hidden="true">
+            <span className="captcha-tooltip-content">
+              <span className="captcha-tooltip-equation">{captchaEquation}</span>
+            </span>
+            <span className="captcha-tooltip-arrow" />
+          </span>
           <div className="input-group-prepend">
             <span className="input-group-text">
               <KeyRound size={16} />
             </span>
           </div>
-          <div className="position-relative">
-            <input
-              ref={inputRef}
-              id="post_comment_captcha"
-              className="form-control"
-              placeholder="验证码"
-              type="text"
-              inputMode="numeric"
-              aria-label={`验证码，计算 ${captchaEquation} 并输入结果`}
-              value={value}
-              onChange={(event) => onChange(event.target.value)}
-              disabled={disabled}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-            />
-            {showTooltip && (
-              <div
-                className="captcha-tooltip"
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-              >
-                <div className="captcha-tooltip-content">
-                  <span className="captcha-tooltip-equation">{captchaEquation}</span>
-                  <span className="captcha-tooltip-hint">?</span>
-                </div>
-                <div className="captcha-tooltip-arrow" />
-              </div>
-            )}
-          </div>
+          <input
+            id="post_comment_captcha"
+            className="form-control"
+            placeholder="验证码"
+            type="text"
+            inputMode="numeric"
+            aria-label={`验证码，计算 ${captchaEquation} 并输入结果`}
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            disabled={disabled}
+          />
         </div>
       </div>
     </div>
