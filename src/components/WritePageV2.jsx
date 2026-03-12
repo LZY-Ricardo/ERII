@@ -262,7 +262,28 @@ export default function WritePageV2() {
         </div>
       )}
 
-      <div className="flex-1 overflow-hidden relative min-h-0">
+      <div className="flex-1 overflow-hidden relative min-h-0" style={{
+        position: 'relative'
+      }}>
+        <style jsx global>{`
+          .bytemd {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 100% !important;
+          }
+          .bytemd-body {
+            height: calc(100% - 58px) !important;
+          }
+          .bytemd-editor, .bytemd-preview {
+            height: 100% !important;
+          }
+          .CodeMirror {
+            height: 100% !important;
+          }
+        `}</style>
         <Editor
               value={content}
               plugins={plugins}
