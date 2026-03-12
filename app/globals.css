@@ -3770,3 +3770,18 @@ body {
   color: rgba(244, 228, 214, 0.8);
 }
 
+
+/* 文章封面图片样式 */
+.nh-article-cover {
+  width: 100%;
+  margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+}
+
+.nh-article-cover img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}

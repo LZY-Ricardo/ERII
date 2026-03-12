@@ -10,7 +10,7 @@ const PROJECTS = [
     focus: ["frontend", "tooling"],
     tech: ["Next.js", "React", "Vercel"],
     cover: "/images/projects/erii.png",
-    featured: true,
+    featured: false,
     links: [
       { label: "在线体验", href: "https://blog.sunandyu.top/", external: true },
       { label: "GitHub", href: "https://github.com/LZY-Ricardo/Erii", external: true },
@@ -26,7 +26,7 @@ const PROJECTS = [
     focus: ["tooling", "frontend"],
     tech: ["React", "TypeScript", "UI"],
     cover: "/images/projects/unmark-real-v2.png",
-    featured: false,
+    featured: true,
     links: [
       { label: "在线体验", href: "https://unmark.ricardoiyu.top/", external: true },
       { label: "GitHub", href: "https://github.com/LZY-Ricardo/Unmark", external: true },
@@ -162,7 +162,7 @@ const PROJECTS = [
     focus: ["ai", "tooling"],
     tech: ["Mindmap", "AI", "Workflow"],
     cover: "/images/projects/mind-nexus-v2.png",
-    featured: true,
+    featured: false,
     links: [{ label: "GitHub", href: "https://github.com/LZY-Ricardo/MindNexus", external: true }],
   },
   {

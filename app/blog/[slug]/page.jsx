@@ -28,6 +28,11 @@ export default async function BlogPostPage({ params }) {
   return (
     <ArgonShell posts={posts} tocItems={tocItems}>
       <article className="nh-article nh-card">
+        {post.frontmatter.cover ? (
+          <div className="nh-article-cover">
+            <img src={post.frontmatter.cover} alt={post.frontmatter.title} />
+          </div>
+        ) : null}
         <header className="nh-article-head">
           <h1>{post.frontmatter.title}</h1>
           <div className="nh-article-meta">

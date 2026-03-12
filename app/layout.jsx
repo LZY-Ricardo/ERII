@@ -1,5 +1,7 @@
 import "./globals.css";
 import { ToastProvider } from "@/src/components/Toast";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 export const metadata = {
   title: "象龟的水坑 | 技术与生活",
@@ -15,6 +17,8 @@ export default function RootLayout({ children }) {
     <html lang="zh-CN">
       <body className="nh-body antialiased">
         <ToastProvider>{children}</ToastProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

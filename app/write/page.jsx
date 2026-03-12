@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import WritePage from "@/src/components/WritePage";
+import WritePageV2 from "@/src/components/WritePageV2";
 
 export default function WritePageRoute() {
   return (
     <Suspense fallback={null}>
-      <WritePage />
+      <WritePageV2 />
     </Suspense>
   );
 }

@@ -9,8 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@bytemd/plugin-frontmatter": "^1.22.0",
+    "@bytemd/plugin-gfm": "^1.22.0",
+    "@bytemd/plugin-highlight": "^1.22.0",
+    "@bytemd/react": "^1.22.0",
+    "@vercel/analytics": "^2.0.0",
     "@vercel/blob": "^2.0.0",
     "@vercel/postgres": "^0.10.0",
+    "@vercel/speed-insights": "^2.0.0",
+    "bytemd": "^1.22.0",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
