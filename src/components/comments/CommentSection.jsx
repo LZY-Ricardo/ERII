@@ -23,6 +23,7 @@ import {
   safeText,
   toPreview,
 } from "@/src/components/comments/commentHelpers";
+import { useToast } from "@/src/components/Toast";
 
 function getStoredProfile() {
   try {
@@ -41,6 +42,7 @@ function getStoredProfile() {
 }
 
 export default function CommentSection({ postSlug }) {
+  const toast = useToast();
   const [comments, setComments] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -81,7 +83,6 @@ export default function CommentSection({ postSlug }) {
       const targetPage = Math.max(1, Number(nextPage) || 1);
       if (append) setLoadingMore(true);
       else setLoading(true);
-      setError("");
 
       try {
         const response = await fetch(
@@ -101,7 +102,7 @@ export default function CommentSection({ postSlug }) {
         setCaptchaSeed(safeText(data?.captcha?.seed));
         setCaptchaEquation(safeText(data?.captcha?.equation) || "12 + 3 =");
       } catch (fetchError) {
-        setError(fetchError instanceof Error ? fetchError.message : "加载评论失败。");
+        toast.error(fetchError instanceof Error ? fetchError.message : "加载评论失败。");
       } finally {
         setLoading(false);
         setLoadingMore(false);
@@ -203,7 +204,7 @@ export default function CommentSection({ postSlug }) {
       }
       setComments((prev) => cloneAndUpdateVote(prev, commentId, Number(data.voteCount ?? 0)));
     } catch (voteError) {
-      setError(voteError instanceof Error ? voteError.message : "点赞失败。");
+      toast.error(voteError instanceof Error ? voteError.message : "点赞失败。");
     }
   };
 
@@ -228,8 +229,13 @@ export default function CommentSection({ postSlug }) {
       body: JSON.stringify(payload),
     });
     const data = await response.json();
+
+    console.log("API Response:", { ok: response.ok, status: response.status, data });
+
     if (!response.ok || !data?.ok) {
-      throw new Error(safeText(data?.error) || "评论发送失败。");
+      const errorMessage = safeText(data?.error) || "评论发送失败。";
+      console.log("Throwing error:", errorMessage);
+      throw new Error(errorMessage);
     }
 
     localStorage.setItem(
@@ -244,6 +250,7 @@ export default function CommentSection({ postSlug }) {
     setCaptchaSeed(safeText(data?.captcha?.seed));
     setCaptchaEquation(safeText(data?.captcha?.equation) || "12 + 3 =");
     resetEditorState();
+    toast.success("评论发送成功！");
     await loadComments(1);
   };
 
@@ -261,19 +268,22 @@ export default function CommentSection({ postSlug }) {
       throw new Error(safeText(data?.error) || "评论编辑失败。");
     }
     resetEditorState();
+    toast.success("评论编辑成功！");
     await loadComments(1);
   };
 
   const onSubmit = async () => {
     if (formSubmitting) return;
     setFormSubmitting(true);
-    setError("");
 
     try {
       if (editingComment) await submitEdit();
       else await submitComment();
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "提交失败。");
+      console.log("Caught error in onSubmit:", submitError);
+      const errorMessage = submitError instanceof Error ? submitError.message : "提交失败。";
+      console.log("Showing toast error:", errorMessage);
+      toast.error(errorMessage);
     } finally {
       setFormSubmitting(false);
     }
@@ -294,7 +304,6 @@ export default function CommentSection({ postSlug }) {
       <section id="comments" className="comments-area card shadow-sm nh-card" aria-label="评论列表">
         <div className="card-body">
           {loading ? <p className="nh-comment-hint">评论加载中...</p> : null}
-          {!loading && error ? <p className="nh-form-error">{error}</p> : null}
 
           {!loading && comments.length > 0 ? (
             <>
@@ -400,8 +409,6 @@ export default function CommentSection({ postSlug }) {
               onInsertEmotion={(value) => setDraft((prev) => `${prev}${value}`)}
             />
           </form>
-
-          {error ? <p className="nh-form-error">{error}</p> : null}
         </div>
       </section>
 
@@ -511,6 +518,19 @@ function CommentForm({
               <X size={15} />
             </span>
             <span className="btn-inner--text">取消</span>
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-icon btn-outline-primary comment-btn pull-right"
+            onClick={() => {
+              console.log("Test toast button clicked");
+              toast.success("测试成功提示");
+              setTimeout(() => toast.error("测试错误提示"), 1000);
+            }}
+            title="测试提示"
+          >
+            测试
           </button>
 
           <button ref={emotionBtnRef} id="comment_emotion_btn" className={`btn btn-icon pull-right ${emotionOpen ? "comment-emotion-keyboard-open" : ""}`} type="button" title="表情" onClick={() => setEmotionOpen((prev) => !prev)}>
