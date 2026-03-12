@@ -40,6 +40,7 @@ function warnMissingPostsTableOnce(error) {
 function mapListRow(row) {
   return {
     slug: row.slug,
+    commentCount: Number(row.comment_count ?? 0),
     frontmatter: {
       title: row.title,
       date: formatDate(row.date),
@@ -56,6 +57,7 @@ function mapDetailRow(row) {
 
   return {
     slug: row.slug,
+    commentCount: Number(row.comment_count ?? 0),
     frontmatter: {
       title: row.title,
       date: formatDate(row.date),
@@ -77,15 +79,40 @@ const getPublishedPostsFromDb = unstable_cache(
     let result;
     try {
       result = await db.sql`
-        SELECT slug, title, date, description, cover, tags
-        FROM posts
-        WHERE status = 'published'
-        ORDER BY date DESC
+        SELECT
+          p.slug,
+          p.title,
+          p.date,
+          p.description,
+          p.cover,
+          p.tags,
+          COALESCE(cc.comment_count, 0)::int AS comment_count
+        FROM posts p
+        LEFT JOIN (
+          SELECT post_slug, COUNT(*)::int AS comment_count
+          FROM comments
+          WHERE status = 'approved'
+          GROUP BY post_slug
+        ) cc ON cc.post_slug = p.slug
+        WHERE p.status = 'published'
+        ORDER BY p.date DESC
       `;
     } catch (error) {
       if (isMissingPostsTableError(error)) {
         warnMissingPostsTableOnce(error);
         return [];
+      }
+      const isMissingCommentsTable =
+        String(error?.code ?? "") === "42P01" &&
+        String(error?.message ?? "").toLowerCase().includes('relation "comments" does not exist');
+      if (isMissingCommentsTable) {
+        result = await db.sql`
+          SELECT slug, title, date, description, cover, tags, 0::int AS comment_count
+          FROM posts
+          WHERE status = 'published'
+          ORDER BY date DESC
+        `;
+        return result.rows.map(mapListRow);
       }
       throw error;
     }
@@ -104,9 +131,26 @@ function getPublishedPostFromDb(slug) {
       let result;
       try {
         result = await db.sql`
-          SELECT slug, title, date, description, cover, tags, content, content_format, content_json, render_body
-          FROM posts
-          WHERE slug = ${slug} AND status = 'published'
+          SELECT
+            p.slug,
+            p.title,
+            p.date,
+            p.description,
+            p.cover,
+            p.tags,
+            p.content,
+            p.content_format,
+            p.content_json,
+            p.render_body,
+            COALESCE(cc.comment_count, 0)::int AS comment_count
+          FROM posts p
+          LEFT JOIN (
+            SELECT post_slug, COUNT(*)::int AS comment_count
+            FROM comments
+            WHERE status = 'approved'
+            GROUP BY post_slug
+          ) cc ON cc.post_slug = p.slug
+          WHERE p.slug = ${slug} AND p.status = 'published'
           LIMIT 1
         `;
       } catch (error) {
@@ -114,9 +158,23 @@ function getPublishedPostFromDb(slug) {
           warnMissingPostsTableOnce(error);
           return null;
         }
+        const isMissingCommentsTable =
+          String(error?.code ?? "") === "42P01" &&
+          String(error?.message ?? "").toLowerCase().includes('relation "comments" does not exist');
+        if (isMissingCommentsTable) {
+          result = await db.sql`
+            SELECT slug, title, date, description, cover, tags, content, content_format, content_json, render_body, 0::int AS comment_count
+            FROM posts
+            WHERE slug = ${slug} AND status = 'published'
+            LIMIT 1
+          `;
+          const row = result.rows[0];
+          if (!row) return null;
+          return mapDetailRow(row);
+        }
         if (isMissingColumnError(error)) {
           result = await db.sql`
-            SELECT slug, title, date, description, cover, tags, content
+            SELECT slug, title, date, description, cover, tags, content, 0::int AS comment_count
             FROM posts
             WHERE slug = ${slug} AND status = 'published'
             LIMIT 1
@@ -145,4 +203,3 @@ export async function getPostData(slug) {
   if (!normalizedSlug) return null;
   return getPublishedPostFromDb(normalizedSlug);
 }
-

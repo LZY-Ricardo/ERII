@@ -21,6 +21,8 @@
   - 已发布文章二次编辑与再发布操作说明。
 - `Nighthaven-Replica-Plan.md`
   - Argon/Nighthaven 风格复刻计划与阶段进度。
+- `Comment-System-Replica-Implementation-Plan.md`
+  - Nighthaven 评论区高还原方案（数据库/API/UI/测试/分阶段验收）。
 - `ERIIEditorFeatureDevelopmentGuide.md`
   - 早期 `content/` 文件方案文档（历史参考）。
 - `WafuEditor.md`
@@ -30,4 +32,3 @@
 
 - 当前项目内容源已收敛为 DB-only（Postgres + Blob）。
 - 涉及 `content/` 文件读取的描述，均以历史参考为主。
-

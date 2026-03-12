@@ -28,7 +28,9 @@ export default function PostCard({ post }) {
   );
   const readMinutes = Math.max(1, Math.round(characterCount / 260));
   const views = hashNumber(token, 18, 320);
-  const comments = hashNumber(`${token}:comment`, 0, 9);
+  const comments = Number.isFinite(Number(post?.commentCount))
+    ? Number(post.commentCount)
+    : 0;
   const density = ["is-tall", "is-medium", "is-compact"][hashNumber(`${token}:density`, 0, 2)];
 
   return (
