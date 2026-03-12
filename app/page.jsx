@@ -7,7 +7,7 @@ import { getFeaturedProjects } from "@/src/lib/projects";
 
 export default async function HomePage() {
   const posts = await getSortedPostsData();
-  const featuredProjects = getFeaturedProjects(3);
+  const featuredProjects = await getFeaturedProjects(3);
 
   return (
     <ArgonShell

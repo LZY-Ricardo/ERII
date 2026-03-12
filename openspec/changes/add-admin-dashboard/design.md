@@ -73,11 +73,35 @@
   - 内容区：`flex-1 overflow-auto p-6 bg-gray-50`
   - 移动端：侧边栏变为抽屉式 overlay
 
-### 6. 文章管理 API：复用现有 write API
+### 6. 文章管理界面：文章 / 草稿箱分栏
 
-- **Decision**: `/admin/posts` 页面直接调用已有的 `/api/write/posts` API
-- **Why**: 写作后台已有完整的文章 CRUD API，无需重复构建
-- **Note**: admin session 和 write session 是独立的，需要 API 路由同时接受两种 session
+- **Decision**: `/admin/posts` 使用「文章 / 草稿箱」分栏展示两类内容，并在顶部提供搜索框
+- **Why**: 草稿箱需要与管理后台整合，分栏方式能保持结构清晰并减少额外路由
+- **UI sketch**:
+  - 顶部 tabs：文章、草稿箱（带数量）
+  - 搜索框：仅过滤当前分栏
+  - 列表：标题、更新时间、slug、编辑入口
+
+### 6.1 草稿箱深链
+
+- **Decision**: `/admin/posts` 支持 `tab=draft` 查询参数，用于从写作页直接跳转到草稿箱
+- **Why**: 维持单一后台入口，同时提升从写作页到草稿管理的路径效率
+
+### 7. 文章管理 API：使用 admin posts API
+
+- **Decision**: `/admin/posts` 页面调用 `/api/admin/posts`，通过 `status` 参数获取草稿或已发布文章
+- **Why**: admin API 已具备认证与聚合字段（评论数、更新时间），更契合后台场景
+- **Note**: 分栏数量可通过一次 `status=all` 获取后在前端计算
+
+### 8. 草稿自动保存（WritePageV2）
+
+- **Decision**: `/write` 编辑器在内容/元信息变更后进行 5 秒防抖自动保存
+- **Why**: 降低意外丢稿风险，且不干扰手动保存工作流
+- **Behavior**:
+  - 未登录时不触发自动保存
+  - 标题与正文均为空时不触发
+  - 自动保存成功后更新 URL slug（首次保存）
+  - 顶部显示轻量状态提示（保存中/已保存/不可用）
 
 ## Risks / Trade-offs
 

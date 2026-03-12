@@ -11,15 +11,18 @@
 - **新增** 数据驱动的导航配置系统，支持后续轻松扩展导航项
 - **新增** Next.js `middleware.js` 统一路由守卫，拦截所有 `/admin` (除 `/admin/login`) 未登录请求
 - **新增** `/admin` 仪表盘首页，展示基础统计信息（文章数、评论数等）
-- **新增** `/admin/posts` 文章管理页面（列表、搜索、状态管理）
+- **新增** `/admin/posts` 文章管理页面（文章/草稿箱分栏、搜索、列表）
+- **新增** `/write` 页面「草稿箱」入口，深链到后台草稿管理
+- **新增** `/write` 草稿自动保存（停顿后自动保存）
 - **重构** Admin 认证系统：**BREAKING** 废弃旧的纯 JSON session 方案，升级为与 Write 系统一致的 HMAC 签名方案
 - **重构** 现有评论管理页面：剥离内嵌登录逻辑，适配新 Layout
 
 ## Impact
 
-- Affected specs: `admin-dashboard` (新增)
+- Affected specs: `admin-dashboard`, `write-editor` (新增)
 - Affected code:
   - `app/admin/` — 整个目录重构，新增 layout.jsx、login/page.jsx、page.jsx、posts/page.jsx
+  - `src/components/WritePageV2.jsx` — 写作页草稿箱入口与自动保存
   - `src/lib/adminAuth.js` — **BREAKING** 重写认证逻辑，切换到 HMAC 签名
   - `src/components/admin/` — 新增 AdminSidebar、AdminHeader、adminNav 等组件
   - `middleware.js` — 新增或修改，添加 `/admin` 路由守卫

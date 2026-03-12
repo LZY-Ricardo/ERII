@@ -115,18 +115,46 @@
 
 ### Requirement: Admin Posts Management
 
-系统 SHALL 在 `/admin/posts` 路径提供文章管理功能，展示文章列表并支持基本操作。
+系统 SHALL 在 `/admin/posts` 路径提供文章管理功能，包含「文章 / 草稿箱」分栏与搜索。
 
-#### Scenario: 文章列表展示
+#### Scenario: 文章与草稿箱分栏
 
 - **WHEN** 用户访问 `/admin/posts`
-- **THEN** 显示所有文章列表，包含标题、状态（已发布/草稿）、创建时间
-- **AND** 支持按状态筛选
+- **THEN** 顶部显示「文章」与「草稿箱」两个分栏，并展示各自数量
+- **AND** 默认激活「文章」分栏（仅展示已发布文章）
+- **WHEN** 用户切换到「草稿箱」
+- **THEN** 列表仅展示草稿文章
+
+#### Scenario: 草稿箱深链
+
+- **WHEN** 用户访问 `/admin/posts?tab=draft`
+- **THEN** 页面默认激活「草稿箱」分栏并展示草稿列表
+
+#### Scenario: 搜索与空状态
+
+- **WHEN** 用户在搜索框输入关键词
+- **THEN** 仅在当前分栏内按标题/slug/标签过滤
+- **AND** 若无结果，显示空状态提示
+
+#### Scenario: 列表字段展示
+
+- **WHEN** 列表渲染文章项
+- **THEN** 每项显示标题（缺失时显示“无标题”）、更新时间、slug
+- **AND** 显示「编辑」操作入口
 
 #### Scenario: 编辑文章跳转
 
 - **WHEN** 用户点击文章的「编辑」按钮
 - **THEN** 跳转到 `/write?slug=<article-slug>` 进入写作编辑器
+
+### Requirement: Write Drafts Shortcut
+
+系统 SHALL 在 `/write` 页面提供「草稿箱」入口，直接跳转到后台草稿管理分栏。
+
+#### Scenario: 从写作页进入草稿箱
+
+- **WHEN** 用户在 `/write` 点击「草稿箱」
+- **THEN** 跳转到 `/admin/posts?tab=draft`
 
 ### Requirement: Admin Login Page
 

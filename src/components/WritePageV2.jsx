@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Editor } from "@bytemd/react";
 import gfm from "@bytemd/plugin-gfm";
@@ -34,6 +34,12 @@ export default function WritePageV2() {
   const [isAuthed, setIsAuthed] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isBusy, setIsBusy] = useState(false);
+  const [autoSaveState, setAutoSaveState] = useState("idle");
+  const [autoSaveAt, setAutoSaveAt] = useState("");
+  const autoSaveTimerRef = useRef(null);
+  const autoSaveInFlightRef = useRef(false);
+  const pendingAutoSaveRef = useRef(false);
+  const lastSavedSignatureRef = useRef("");
 
   useEffect(() => {
     checkAuth();
@@ -48,7 +54,8 @@ export default function WritePageV2() {
   const checkAuth = async () => {
     try {
       const res = await fetch("/api/write/session");
-      setIsAuthed(res.ok);
+      const data = await res.json().catch(() => null);
+      setIsAuthed(Boolean(data?.authenticated));
     } catch {
       setIsAuthed(false);
     } finally {
@@ -56,22 +63,81 @@ export default function WritePageV2() {
     }
   };
 
+  const buildDraftPayload = useCallback(
+    () => ({
+      slug: metadata.slug,
+      title: metadata.title,
+      date: metadata.date,
+      description: metadata.description,
+      tags: metadata.tags,
+      cover: metadata.cover,
+      content,
+    }),
+    [metadata, content]
+  );
+
+  const hasDraftContent = useCallback(() => {
+    const title = String(metadata.title ?? "").trim();
+    const body = String(content ?? "").trim();
+    return Boolean(title || body);
+  }, [metadata.title, content]);
+
+  const applySavedDraft = useCallback(
+    (payload, data, { updateAutoSave } = {}) => {
+      const savedSlug = data?.slug || data?.post?.slug || payload.slug || "";
+      if (savedSlug && savedSlug !== metadata.slug) {
+        setMetadata((prev) => ({ ...prev, slug: savedSlug }));
+      }
+      if (savedSlug && savedSlug !== urlSlug) {
+        router.replace(`/write?slug=${savedSlug}`);
+      }
+      const signaturePayload = { ...payload, slug: savedSlug || payload.slug };
+      lastSavedSignatureRef.current = JSON.stringify(signaturePayload);
+      if (updateAutoSave) {
+        setAutoSaveAt(
+          new Date().toLocaleTimeString("zh-CN", { hour12: false })
+        );
+        setAutoSaveState("saved");
+      }
+    },
+    [metadata.slug, router, urlSlug]
+  );
+
+  const postDraft = useCallback(async (payload) => {
+    const res = await fetch("/api/write/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      return { ok: false, error: data?.error || "保存失败" };
+    }
+    return { ok: true, data };
+  }, []);
+
   const loadDraft = async (slug) => {
     try {
       const res = await fetch(`/api/write/posts/${slug}`);
       if (res.ok) {
         const data = await res.json();
         const post = data.post || data;
-        setMetadata({
+        const nextMeta = {
           slug: post.slug || "",
           title: post.title || "",
           date: post.date || new Date().toISOString().split("T")[0],
           description: post.description || "",
           tags: post.tags || "",
           cover: post.cover || "",
-        });
-        setContent(post.content || "");
+        };
+        setMetadata(nextMeta);
+        const nextContent = post.content || "";
+        setContent(nextContent);
         setPostStatus(post.status || "draft");
+        lastSavedSignatureRef.current = JSON.stringify({
+          ...nextMeta,
+          content: nextContent,
+        });
         showToast("草稿已加载");
       }
     } catch (err) {
@@ -91,17 +157,14 @@ export default function WritePageV2() {
     }
     setIsBusy(true);
     try {
-      const res = await fetch("/api/write/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...metadata, content }),
-      });
-      if (res.ok) {
-        showToast("草稿已保存");
-        router.replace(`/write?slug=${metadata.slug}`);
-      } else {
-        showToast("保存失败");
+      const payload = buildDraftPayload();
+      const result = await postDraft(payload);
+      if (!result.ok) {
+        showToast(result.error || "保存失败");
+        return;
       }
+      applySavedDraft(payload, result.data);
+      showToast("草稿已保存");
     } catch {
       showToast("保存失败");
     } finally {
@@ -152,6 +215,81 @@ export default function WritePageV2() {
     return uploaded;
   };
 
+  const performAutoSave = useCallback(async () => {
+    if (!isAuthed || !hasDraftContent()) return;
+    const payload = buildDraftPayload();
+    const signature = JSON.stringify(payload);
+    if (signature === lastSavedSignatureRef.current) return;
+
+    if (autoSaveInFlightRef.current) {
+      pendingAutoSaveRef.current = true;
+      return;
+    }
+
+    autoSaveInFlightRef.current = true;
+    setAutoSaveState("saving");
+    const result = await postDraft(payload);
+    autoSaveInFlightRef.current = false;
+
+    if (result.ok) {
+      applySavedDraft(payload, result.data, { updateAutoSave: true });
+    } else {
+      setAutoSaveState("error");
+    }
+
+    if (pendingAutoSaveRef.current) {
+      pendingAutoSaveRef.current = false;
+      setTimeout(() => {
+        performAutoSave();
+      }, 0);
+    }
+  }, [applySavedDraft, buildDraftPayload, hasDraftContent, isAuthed, postDraft]);
+
+  useEffect(() => {
+    if (!isAuthed) {
+      setAutoSaveState("disabled");
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+      return;
+    }
+
+    if (!hasDraftContent()) {
+      setAutoSaveState("idle");
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+      return;
+    }
+
+    const signature = JSON.stringify(buildDraftPayload());
+    if (signature === lastSavedSignatureRef.current) return;
+
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      performAutoSave();
+    }, 5000);
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+    };
+  }, [buildDraftPayload, hasDraftContent, isAuthed, performAutoSave]);
+
+  const autoSaveLabel = (() => {
+    if (!isAuthed || !hasDraftContent()) return "";
+    if (autoSaveState === "saving") return "自动保存中…";
+    if (autoSaveState === "saved") {
+      return autoSaveAt ? `已自动保存 ${autoSaveAt}` : "已自动保存";
+    }
+    if (autoSaveState === "error") return "自动保存失败";
+    return "";
+  })();
+
   if (isAuthLoading) {
     return <div className="flex h-screen items-center justify-center">加载中...</div>;
   }
@@ -190,6 +328,18 @@ export default function WritePageV2() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <span className="text-[11px] text-wafu-sumi/45">
+            文章将自动保存至草稿箱
+          </span>
+          {autoSaveLabel ? (
+            <span className="text-[11px] text-wafu-sumi/55">{autoSaveLabel}</span>
+          ) : null}
+          <Link
+            href="/admin/posts?tab=draft"
+            className="rounded-full border border-wafu-sumi/10 bg-white/60 px-3 py-1.5 text-[11px] text-wafu-sumi/70 hover:bg-white/80"
+          >
+            草稿箱
+          </Link>
           <button
             onClick={() => setIsSettingsOpen(!isSettingsOpen)}
             className="text-wafu-sumi/55 hover:text-erii-red"
@@ -197,18 +347,11 @@ export default function WritePageV2() {
             <Settings size={18} />
           </button>
           <button
-            onClick={handleSave}
-            disabled={isBusy}
-            className="rounded-full border border-wafu-sumi/10 bg-white/60 px-4 py-2 text-xs text-wafu-sumi/70 hover:bg-white/80 disabled:opacity-60"
-          >
-            草稿
-          </button>
-          <button
             onClick={handlePublish}
             disabled={isBusy}
-            className="rounded-md bg-wafu-sumi px-4 py-2 text-xs text-wafu-paper hover:opacity-90 disabled:opacity-60"
+            className="rounded-full bg-[#e11d48] px-5 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-[#e11d48]/40 transition hover:bg-[#be123c] hover:shadow-md disabled:opacity-60"
           >
-            发布
+            发布文章
           </button>
         </div>
       </header>

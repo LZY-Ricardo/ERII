@@ -2,7 +2,7 @@ import Link from "next/link";
 import ArgonShell from "@/src/components/argon/ArgonShell";
 import ProjectCard from "@/src/components/ProjectCard";
 import { getSortedPostsData } from "@/src/lib/posts";
-import { PROJECT_FOCUS, filterProjectsByFocus, getAllProjects } from "@/src/lib/projects";
+import { PROJECT_FOCUS, getProjects } from "@/src/lib/projects";
 
 export default async function ProjectsPage({ searchParams }) {
   const posts = await getSortedPostsData();
@@ -13,8 +13,8 @@ export default async function ProjectsPage({ searchParams }) {
   const focus = isValidFocus ? focusRaw : "all";
   const focusLabel = PROJECT_FOCUS.find((item) => item.value === focus)?.label ?? "全部项目";
 
-  const allProjects = getAllProjects();
-  const projects = filterProjectsByFocus(allProjects, focus);
+  const projects = await getProjects({ focus });
+  const allProjects = await getProjects(); // 用于总数
 
   const title = focus === "all" ? "项目仓库" : `${focusLabel} 项目`;
   const subtitle =

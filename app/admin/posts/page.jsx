@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   FileText,
@@ -26,11 +27,13 @@ function fmtDate(v) {
 }
 
 export default function AdminPostsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("published");
 
   useEffect(() => {
     fetch("/api/admin/posts")
@@ -43,18 +46,54 @@ export default function AdminPostsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = posts.filter((p) => {
-    if (statusFilter !== "all" && p.status !== statusFilter) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return (
-        p.title?.toLowerCase().includes(q) ||
-        p.slug?.toLowerCase().includes(q) ||
-        p.tags?.some((t) => t.toLowerCase().includes(q))
-      );
+  useEffect(() => {
+    const tab = String(searchParams.get("tab") || "").toLowerCase();
+    if (tab === "draft") {
+      setActiveTab("draft");
+      return;
     }
-    return true;
-  });
+    if (tab === "published") {
+      setActiveTab("published");
+      return;
+    }
+    setActiveTab("published");
+  }, [searchParams]);
+
+  const { publishedCount, draftCount } = useMemo(() => {
+    let published = 0;
+    let draft = 0;
+    for (const post of posts) {
+      if (post.status === "published") published += 1;
+      if (post.status === "draft") draft += 1;
+    }
+    return { publishedCount: published, draftCount: draft };
+  }, [posts]);
+
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return posts.filter((post) => {
+      if (activeTab === "published" && post.status !== "published") return false;
+      if (activeTab === "draft" && post.status !== "draft") return false;
+      if (!query) return true;
+      return (
+        post.title?.toLowerCase().includes(query) ||
+        post.slug?.toLowerCase().includes(query) ||
+        post.tags?.some((t) => t.toLowerCase().includes(query))
+      );
+    });
+  }, [posts, activeTab, search]);
+
+  const updateTab = (nextTab) => {
+    setActiveTab(nextTab);
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextTab === "draft") {
+      params.set("tab", "draft");
+    } else {
+      params.delete("tab");
+    }
+    const query = params.toString();
+    router.replace(query ? `/admin/posts?${query}` : "/admin/posts");
+  };
 
   if (loading) {
     return (
@@ -76,6 +115,30 @@ export default function AdminPostsPage() {
     <div className="mx-auto max-w-5xl space-y-4">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-5 py-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => updateTab("published")}
+            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+              activeTab === "published"
+                ? "bg-rose-50 text-rose-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            文章 ({publishedCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => updateTab("draft")}
+            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+              activeTab === "draft"
+                ? "bg-rose-50 text-rose-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            草稿箱 ({draftCount})
+          </button>
+        </div>
         {/* Search */}
         <div className="relative flex-1 min-w-45">
           <Search
@@ -90,18 +153,6 @@ export default function AdminPostsPage() {
               text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
           />
         </div>
-
-        {/* Status filter */}
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm
-            text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
-        >
-          <option value="all">全部状态</option>
-          <option value="published">已发布</option>
-          <option value="draft">草稿</option>
-        </select>
 
         <span className="text-xs text-gray-400 ml-auto">
           共 {filtered.length} 篇
@@ -145,7 +196,7 @@ export default function AdminPostsPage() {
                       />
                       <div className="min-w-0">
                         <p className="font-medium text-gray-800 truncate">
-                          {post.title}
+                          {post.title || "无标题"}
                         </p>
                         <p className="text-xs text-gray-400 truncate">
                           /{post.slug}
@@ -154,7 +205,7 @@ export default function AdminPostsPage() {
                     </div>
                   </td>
                   <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
-                    {fmtDate(post.date)}
+                    {fmtDate(post.updatedAt || post.date)}
                   </td>
                   <td className="px-3 py-3 text-center">
                     <span

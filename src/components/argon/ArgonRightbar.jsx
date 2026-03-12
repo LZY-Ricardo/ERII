@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { getAllProjects } from "@/src/lib/projects";
 import { getCategoryThemeLabel, inferCategoryFromPost } from "@/src/lib/postTaxonomy";
 
 function isGitHubAction(action) {
@@ -116,8 +115,17 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
   const tags = useMemo(() => collectTags(posts), [posts]);
   const recentPosts = useMemo(() => posts.slice(0, 6), [posts]);
 
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/projects")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok) setProjects(data.data ?? []);
+      });
+  }, []);
+
   const deployedProjects = useMemo(() => {
-    const projects = getAllProjects();
     return projects
       .map((project) => {
         const links = Array.isArray(project?.links) ? project.links : [];
@@ -132,7 +140,7 @@ export default function ArgonRightbar({ posts = [], tocItems = [] }) {
         };
       })
       .filter(Boolean);
-  }, []);
+  }, [projects]);
 
   const deployedProjectNames = useMemo(
     () => deployedProjects.slice(0, 3).map((project) => project.name),

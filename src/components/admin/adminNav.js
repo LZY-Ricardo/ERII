@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   FileText,
+  Folder,
   Settings,
 } from "lucide-react";
 
@@ -27,6 +28,12 @@ export const adminNav = [
     label: "文章管理",
     href: "/admin/posts",
     icon: FileText,
+  },
+  {
+    key: "projects",
+    label: "项目管理",
+    href: "/admin/projects",
+    icon: Folder,
   },
   {
     key: "settings",
