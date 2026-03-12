@@ -1,7 +1,0 @@
-▲ Next.js 16.1.1 (Turbopack)
-- Local:         http://127.0.0.1:3020
-- Network:       http://127.0.0.1:3020
-
-✓ Starting...
-  Suggestion: If you intended to restart next dev, terminate the other process, and then try again.
-[?25h
