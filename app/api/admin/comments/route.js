@@ -1,30 +1,10 @@
 import { requireDb } from "@/src/lib/db";
-import { deserializeAdminSession, isSessionValid, getAdminSessionCookieName, getLastVisitTime, updateLastVisitTime } from "@/src/lib/adminAuth";
-import { cookies } from "next/headers";
-
-async function verifyAuth(request) {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get(getAdminSessionCookieName());
-
-  if (!sessionCookie) {
-    return { ok: false, error: "未登录", statusCode: 401 };
-  }
-
-  const session = deserializeAdminSession(sessionCookie.value);
-
-  if (!session || !isSessionValid(session)) {
-    return { ok: false, error: "会话已过期", statusCode: 401 };
-  }
-
-  return { ok: true };
-}
+import { getLastVisitTime, updateLastVisitTime } from "@/src/lib/adminAuth";
+import { requireAdmin } from "@/src/lib/adminGuard";
 
 export async function GET(request) {
-  const authResult = await verifyAuth(request);
-
-  if (!authResult.ok) {
-    return Response.json({ ok: false, error: authResult.error }, { status: authResult.statusCode });
-  }
+  const denied = await requireAdmin();
+  if (denied) return denied;
 
   try {
     const db = requireDb();

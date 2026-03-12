@@ -1,61 +1,63 @@
-import { requireDb } from "@/src/lib/db";
-import crypto from "node:crypto";
+/**
+ * Admin authentication – HMAC-signed sessions (shared crypto with writeAuth).
+ */
+import {
+  safeEqual,
+  createSignedSession,
+  isSignedSessionValid,
+} from "@/src/lib/sessionCrypto";
 
-const ADMIN_SESSION_COOKIE_NAME = "admin_session";
-const ADMIN_SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
+export const ADMIN_SESSION_COOKIE = "erii_admin_session";
 
-function getWritePassword() {
+const ADMIN_SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const ADMIN_SESSION_MAX_AGE_SECONDS = ADMIN_SESSION_MAX_AGE_MS / 1000;
+
+// ── Password verification ──────────────────────────────────────────
+
+function getAdminPassword() {
   return process.env.ERII_WRITE_PASSWORD || "";
 }
 
-function hashPassword(password) {
-  return crypto.createHash("sha256").update(password).digest("hex");
+export function verifyAdminPassword(password) {
+  const expected = getAdminPassword();
+  if (!expected) return false;
+  return safeEqual(String(password ?? ""), expected);
 }
 
-export async function verifyAdminPassword(password) {
-  const expectedHash = hashPassword(getWritePassword());
-  const inputHash = hashPassword(password);
-  return crypto.timingSafeEqual(
-    Buffer.from(expectedHash, "hex"),
-    Buffer.from(inputHash, "hex")
-  );
-}
+// ── Session creation / validation ──────────────────────────────────
 
-export function createAdminSession() {
-  const token = crypto.randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + ADMIN_SESSION_MAX_AGE);
-  return { token, expiresAt };
-}
-
-export function serializeAdminSession(session) {
-  return JSON.stringify({
-    token: session.token,
-    expiresAt: session.expiresAt.toISOString(),
+export function createAdminSessionValue() {
+  return createSignedSession({
+    maxAgeMs: ADMIN_SESSION_MAX_AGE_MS,
+    version: 1,
   });
 }
 
-export function deserializeAdminSession(cookieValue) {
-  try {
-    const data = JSON.parse(cookieValue);
-    return {
-      token: data.token,
-      expiresAt: new Date(data.expiresAt),
-    };
-  } catch {
-    return null;
-  }
+export function isAdminSessionValid(cookieValue) {
+  return isSignedSessionValid(cookieValue);
 }
 
-export function isSessionValid(session) {
-  if (!session || !session.expiresAt) return false;
-  return session.expiresAt > new Date();
+export function getAdminSessionCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
+  };
 }
 
-export function getAdminSessionCookieName() {
-  return ADMIN_SESSION_COOKIE_NAME;
+// ── Server-side auth helper (for App Router server components) ─────
+
+import { cookies } from "next/headers";
+
+export async function isAdminAuthed() {
+  const cookieStore = await cookies();
+  return isAdminSessionValid(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
 }
 
-// 管理员访问时间记录
+// ── Last visit time tracking (admin_meta table) ────────────────────
+
 export async function getLastVisitTime(db) {
   try {
     const result = await db.sql`

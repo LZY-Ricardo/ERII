@@ -1,5 +1,9 @@
-import { requireDb } from "@/src/lib/db";
-import { verifyAdminPassword, createAdminSession, serializeAdminSession, getAdminSessionCookieName } from "@/src/lib/adminAuth";
+import {
+  verifyAdminPassword,
+  createAdminSessionValue,
+  ADMIN_SESSION_COOKIE,
+  getAdminSessionCookieOptions,
+} from "@/src/lib/adminAuth";
 import { cookies } from "next/headers";
 
 export async function POST(request) {
@@ -8,30 +12,36 @@ export async function POST(request) {
     const { password } = body;
 
     if (!password || typeof password !== "string") {
-      return Response.json({ ok: false, error: "密码不能为空" }, { status: 400 });
+      return Response.json(
+        { ok: false, error: "密码不能为空" },
+        { status: 400 }
+      );
     }
 
-    const isValid = await verifyAdminPassword(password);
+    const isValid = verifyAdminPassword(password);
 
     if (!isValid) {
-      return Response.json({ ok: false, error: "密码错误" }, { status: 401 });
+      return Response.json(
+        { ok: false, error: "密码错误" },
+        { status: 401 }
+      );
     }
 
-    const session = createAdminSession();
-    const sessionValue = serializeAdminSession(session);
+    const sessionValue = createAdminSessionValue();
 
     const cookieStore = await cookies();
-    cookieStore.set(getAdminSessionCookieName(), sessionValue, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-      path: "/",
-    });
+    cookieStore.set(
+      ADMIN_SESSION_COOKIE,
+      sessionValue,
+      getAdminSessionCookieOptions()
+    );
 
     return Response.json({ ok: true });
   } catch (error) {
     console.error("Login error:", error);
-    return Response.json({ ok: false, error: "登录失败，请重试" }, { status: 500 });
+    return Response.json(
+      { ok: false, error: "登录失败，请重试" },
+      { status: 500 }
+    );
   }
 }

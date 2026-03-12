@@ -8,14 +8,17 @@ import {
   isWriteSessionValid,
   verifyWritePassword,
 } from "@/src/lib/writeAuth";
+import { ADMIN_SESSION_COOKIE, isAdminSessionValid } from "@/src/lib/adminAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const cookieStore = await cookies();
-  const cookieValue = cookieStore.get(WRITE_SESSION_COOKIE)?.value;
-  const authenticated = isWriteSessionValid(cookieValue);
+  const writeCookie = cookieStore.get(WRITE_SESSION_COOKIE)?.value;
+  const adminCookie = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
+  const authenticated =
+    isWriteSessionValid(writeCookie) || isAdminSessionValid(adminCookie);
   return NextResponse.json({ ok: true, authenticated });
 }
 
