@@ -11,7 +11,6 @@ import Link from "next/link";
 import bytemdZhHans from "bytemd/locales/zh_Hans.json";
 import gfmZhHans from "@bytemd/plugin-gfm/locales/zh_Hans.json";
 import "bytemd/dist/index.css";
-import "./WritePageV2.css";
 
 const plugins = [gfm({ locale: gfmZhHans }), highlight(), frontmatter()];
 
@@ -177,7 +176,7 @@ export default function WritePageV2() {
           <Link href="/" className="text-wafu-sumi/55 hover:text-erii-red shrink-0">
             <Home size={18} />
           </Link>
-          <div className="relative w-1/2 max-w-md min-w-0">
+          <div className="relative w-[calc(50vw-2rem)] min-w-0">
             <input
               type="text"
               placeholder="输入文章标题…"
