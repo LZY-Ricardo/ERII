@@ -29,43 +29,6 @@ export default function AdminCommentsPage() {
   const [selectedComment, setSelectedComment] = useState(null);
   const toast = useToast();
 
-  // 检查登录状态
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  // 加载评论
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadComments();
-    }
-  }, [isAuthenticated, loadComments]);
-
-  // 筛选评论
-  useEffect(() => {
-    if (statusFilter === "all") {
-      setFilteredComments(comments);
-    } else {
-      setFilteredComments(comments.filter((c) => c.status === statusFilter));
-    }
-  }, [statusFilter, comments]);
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch("/api/admin/comments");
-      if (response.ok) {
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      console.error("Auth check error:", error);
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const loadComments = useCallback(async () => {
     try {
       const response = await fetch("/api/admin/comments");
