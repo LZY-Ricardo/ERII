@@ -11,6 +11,7 @@ import Link from "next/link";
 import bytemdZhHans from "bytemd/locales/zh_Hans.json";
 import gfmZhHans from "@bytemd/plugin-gfm/locales/zh_Hans.json";
 import "bytemd/dist/index.css";
+import "./WritePageV2.css";
 
 const plugins = [gfm({ locale: gfmZhHans }), highlight(), frontmatter()];
 
@@ -553,41 +554,7 @@ export default function WritePageV2() {
         </div>
       )}
 
-      <div className="flex-1 overflow-hidden relative min-h-0" style={{
-        position: 'relative'
-      }}>
-        <style jsx global>{`
-          .bytemd {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            height: 100% !important;
-          }
-          .bytemd-body {
-            height: calc(100% - 58px) !important;
-          }
-          .bytemd-editor, .bytemd-preview {
-            height: 100% !important;
-          }
-          .CodeMirror {
-            height: 100% !important;
-          }
-        `}</style>
-        <style jsx>{`
-          @keyframes write-toast-in {
-            from {
-              opacity: 0;
-              transform: translate3d(0, 10px, 0) scale(0.98);
-            }
-
-            to {
-              opacity: 1;
-              transform: translate3d(0, 0, 0) scale(1);
-            }
-          }
-        `}</style>
+      <div className="flex-1 overflow-hidden relative min-h-0">
         <Editor
               value={content}
               plugins={plugins}
