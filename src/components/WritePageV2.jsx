@@ -6,7 +6,7 @@ import { Editor } from "@bytemd/react";
 import gfm from "@bytemd/plugin-gfm";
 import highlight from "@bytemd/plugin-highlight";
 import frontmatter from "@bytemd/plugin-frontmatter";
-import { Home, Settings } from "lucide-react";
+import { CheckCircle2, CircleAlert, Home, Info, Settings } from "lucide-react";
 import Link from "next/link";
 import bytemdZhHans from "bytemd/locales/zh_Hans.json";
 import gfmZhHans from "@bytemd/plugin-gfm/locales/zh_Hans.json";
@@ -30,7 +30,7 @@ export default function WritePageV2() {
   });
   const [postStatus, setPostStatus] = useState("draft");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState(null);
   const [isAuthed, setIsAuthed] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [authPassword, setAuthPassword] = useState("");
@@ -40,6 +40,7 @@ export default function WritePageV2() {
   const [autoSaveState, setAutoSaveState] = useState("idle");
   const [autoSaveAt, setAutoSaveAt] = useState("");
   const autoSaveTimerRef = useRef(null);
+  const toastTimerRef = useRef(null);
   const autoSaveInFlightRef = useRef(false);
   const pendingAutoSaveRef = useRef(false);
   const lastSavedSignatureRef = useRef("");
@@ -113,9 +114,29 @@ export default function WritePageV2() {
     return { ok: true, data };
   }, []);
 
-  const showToast = useCallback((msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
+  const showToast = useCallback((message, tone = "info") => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    setToast({
+      id: Date.now(),
+      message,
+      tone,
+    });
+
+    toastTimerRef.current = setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, 3200);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
   }, []);
 
   const loadDraft = useCallback(
@@ -141,10 +162,10 @@ export default function WritePageV2() {
             ...nextMeta,
             content: nextContent,
           });
-          showToast("草稿已加载");
+          showToast("草稿已加载", "info");
         }
       } catch {
-        showToast("加载失败");
+        showToast("加载失败", "error");
       }
     },
     [showToast]
@@ -158,7 +179,7 @@ export default function WritePageV2() {
 
   const handleSave = async () => {
     if (!metadata.slug || !metadata.title) {
-      showToast("请填写 slug 和标题");
+      showToast("请填写 slug 和标题", "error");
       return;
     }
     setIsBusy(true);
@@ -166,13 +187,13 @@ export default function WritePageV2() {
       const payload = buildDraftPayload();
       const result = await postDraft(payload);
       if (!result.ok) {
-        showToast(result.error || "保存失败");
+        showToast(result.error || "保存失败", "error");
         return;
       }
       applySavedDraft(payload, result.data);
-      showToast("草稿已保存");
+      showToast("草稿已保存", "success");
     } catch {
-      showToast("保存失败");
+      showToast("保存失败", "error");
     } finally {
       setIsBusy(false);
     }
@@ -204,7 +225,7 @@ export default function WritePageV2() {
 
       setAuthPassword("");
       setIsAuthed(true);
-      showToast("登录成功");
+      showToast("登录成功", "success");
     } catch {
       setAuthError("网络错误，请重试");
     } finally {
@@ -214,7 +235,7 @@ export default function WritePageV2() {
 
   const handlePublish = async () => {
     if (!metadata.slug || !metadata.title) {
-      showToast("请填写 slug 和标题");
+      showToast("请填写 slug 和标题", "error");
       return;
     }
     setIsBusy(true);
@@ -225,12 +246,12 @@ export default function WritePageV2() {
         body: JSON.stringify({ ...metadata, content }),
       });
       if (res.ok) {
-        showToast("发布成功");
+        showToast("发布成功", "success");
       } else {
-        showToast("发布失败");
+        showToast("发布失败", "error");
       }
     } catch {
-      showToast("发布失败");
+      showToast("发布失败", "error");
     } finally {
       setIsBusy(false);
     }
@@ -330,6 +351,43 @@ export default function WritePageV2() {
     return "";
   })();
 
+  const toastConfig = toast
+    ? {
+        success: {
+          icon: CheckCircle2,
+          eyebrow: "完成",
+          panelClass:
+            "border-emerald-200/80 bg-white/95 text-emerald-950 shadow-[0_18px_50px_rgba(5,150,105,0.18)]",
+          iconClass: "bg-emerald-100 text-emerald-700",
+          eyebrowClass: "text-emerald-700/80",
+        },
+        error: {
+          icon: CircleAlert,
+          eyebrow: "注意",
+          panelClass:
+            "border-rose-200/90 bg-white/95 text-rose-950 shadow-[0_18px_50px_rgba(225,29,72,0.18)]",
+          iconClass: "bg-rose-100 text-rose-700",
+          eyebrowClass: "text-rose-700/80",
+        },
+        info: {
+          icon: Info,
+          eyebrow: "提示",
+          panelClass:
+            "border-stone-200/90 bg-white/95 text-stone-900 shadow-[0_18px_50px_rgba(68,64,60,0.16)]",
+          iconClass: "bg-stone-100 text-stone-700",
+          eyebrowClass: "text-stone-600/80",
+        },
+      }[toast.tone] ?? {
+        icon: Info,
+        eyebrow: "提示",
+        panelClass:
+          "border-stone-200/90 bg-white/95 text-stone-900 shadow-[0_18px_50px_rgba(68,64,60,0.16)]",
+        iconClass: "bg-stone-100 text-stone-700",
+        eyebrowClass: "text-stone-600/80",
+      }
+    : null;
+  const ToastIcon = toastConfig?.icon ?? Info;
+
   if (isAuthLoading) {
     return <div className="flex h-screen items-center justify-center">加载中...</div>;
   }
@@ -423,11 +481,31 @@ export default function WritePageV2() {
         </div>
       </header>
 
-      {toast && (
-        <div className="fixed right-6 top-16 z-50 rounded-full border border-wafu-sumi/10 bg-wafu-paper/90 px-4 py-2 text-xs shadow-lg">
-          {toast}
+      {toast && toastConfig ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex justify-center px-4 sm:bottom-8">
+          <div
+            role={toast.tone === "error" ? "alert" : "status"}
+            aria-live={toast.tone === "error" ? "assertive" : "polite"}
+            className={`pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-2xl border px-4 py-3 backdrop-blur-md animate-[write-toast-in_240ms_cubic-bezier(0.22,1,0.36,1)] motion-reduce:animate-none ${toastConfig.panelClass}`}
+          >
+            <div
+              className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${toastConfig.iconClass}`}
+            >
+              <ToastIcon size={18} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p
+                className={`text-[10px] font-semibold uppercase tracking-[0.24em] ${toastConfig.eyebrowClass}`}
+              >
+                {toastConfig.eyebrow}
+              </p>
+              <p className="mt-1 text-sm font-medium leading-5 text-current">
+                {toast.message}
+              </p>
+            </div>
+          </div>
         </div>
-      )}
+      ) : null}
 
       {isSettingsOpen && (
         <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setIsSettingsOpen(false)}>
@@ -495,6 +573,19 @@ export default function WritePageV2() {
           }
           .CodeMirror {
             height: 100% !important;
+          }
+        `}</style>
+        <style jsx>{`
+          @keyframes write-toast-in {
+            from {
+              opacity: 0;
+              transform: translate3d(0, 10px, 0) scale(0.98);
+            }
+
+            to {
+              opacity: 1;
+              transform: translate3d(0, 0, 0) scale(1);
+            }
           }
         `}</style>
         <Editor
