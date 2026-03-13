@@ -33,6 +33,9 @@ export default function WritePageV2() {
   const [toast, setToast] = useState("");
   const [isAuthed, setIsAuthed] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const [autoSaveState, setAutoSaveState] = useState("idle");
   const [autoSaveAt, setAutoSaveAt] = useState("");
@@ -44,12 +47,6 @@ export default function WritePageV2() {
   useEffect(() => {
     checkAuth();
   }, []);
-
-  useEffect(() => {
-    if (urlSlug && isAuthed) {
-      loadDraft(urlSlug);
-    }
-  }, [urlSlug, isAuthed]);
 
   const checkAuth = async () => {
     try {
@@ -116,39 +113,48 @@ export default function WritePageV2() {
     return { ok: true, data };
   }, []);
 
-  const loadDraft = async (slug) => {
-    try {
-      const res = await fetch(`/api/write/posts/${slug}`);
-      if (res.ok) {
-        const data = await res.json();
-        const post = data.post || data;
-        const nextMeta = {
-          slug: post.slug || "",
-          title: post.title || "",
-          date: post.date || new Date().toISOString().split("T")[0],
-          description: post.description || "",
-          tags: post.tags || "",
-          cover: post.cover || "",
-        };
-        setMetadata(nextMeta);
-        const nextContent = post.content || "";
-        setContent(nextContent);
-        setPostStatus(post.status || "draft");
-        lastSavedSignatureRef.current = JSON.stringify({
-          ...nextMeta,
-          content: nextContent,
-        });
-        showToast("草稿已加载");
-      }
-    } catch (err) {
-      showToast("加载失败");
-    }
-  };
-
   const showToast = useCallback((msg) => {
     setToast(msg);
     setTimeout(() => setToast(""), 3000);
   }, []);
+
+  const loadDraft = useCallback(
+    async (slug) => {
+      try {
+        const res = await fetch(`/api/write/posts/${slug}`);
+        if (res.ok) {
+          const data = await res.json();
+          const post = data.post || data;
+          const nextMeta = {
+            slug: post.slug || "",
+            title: post.title || "",
+            date: post.date || new Date().toISOString().split("T")[0],
+            description: post.description || "",
+            tags: post.tags || "",
+            cover: post.cover || "",
+          };
+          setMetadata(nextMeta);
+          const nextContent = post.content || "";
+          setContent(nextContent);
+          setPostStatus(post.status || "draft");
+          lastSavedSignatureRef.current = JSON.stringify({
+            ...nextMeta,
+            content: nextContent,
+          });
+          showToast("草稿已加载");
+        }
+      } catch {
+        showToast("加载失败");
+      }
+    },
+    [showToast]
+  );
+
+  useEffect(() => {
+    if (urlSlug && isAuthed) {
+      loadDraft(urlSlug);
+    }
+  }, [isAuthed, loadDraft, urlSlug]);
 
   const handleSave = async () => {
     if (!metadata.slug || !metadata.title) {
@@ -169,6 +175,40 @@ export default function WritePageV2() {
       showToast("保存失败");
     } finally {
       setIsBusy(false);
+    }
+  };
+
+  const handleLogin = async (event) => {
+    event.preventDefault();
+
+    if (!authPassword.trim()) {
+      setAuthError("请输入写作密码");
+      return;
+    }
+
+    setAuthError("");
+    setIsLoggingIn(true);
+
+    try {
+      const res = await fetch("/api/write/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: authPassword }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.ok) {
+        setAuthError(data?.error || "登录失败");
+        return;
+      }
+
+      setAuthPassword("");
+      setIsAuthed(true);
+      showToast("登录成功");
+    } catch {
+      setAuthError("网络错误，请重试");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -296,15 +336,42 @@ export default function WritePageV2() {
 
   if (!isAuthed) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="mb-4">请先登录</p>
-          <button
-            onClick={() => setIsSettingsOpen(true)}
-            className="rounded-md bg-wafu-sumi px-4 py-2 text-wafu-paper"
+      <div className="flex h-screen items-center justify-center bg-wafu-paper px-4">
+        <div className="w-full max-w-sm rounded-2xl border border-wafu-sumi/10 bg-white/85 p-8 shadow-xl shadow-black/5 backdrop-blur">
+          <p className="text-center text-lg font-semibold text-wafu-sumi">请先登录</p>
+          <p className="mt-2 text-center text-sm text-wafu-sumi/55">
+            输入写作密码后进入编辑器
+          </p>
+
+          <form className="mt-6 space-y-4" onSubmit={handleLogin}>
+            <input
+              type="password"
+              value={authPassword}
+              onChange={(event) => setAuthPassword(event.target.value)}
+              placeholder="写作密码"
+              autoFocus
+              className="w-full rounded-xl border border-wafu-sumi/10 bg-wafu-paper/60 px-4 py-3 text-sm text-wafu-sumi outline-none transition focus:border-erii-red/40 focus:bg-white"
+            />
+
+            {authError ? (
+              <p className="text-sm text-[#be123c]">{authError}</p>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={isLoggingIn || !authPassword.trim()}
+              className="w-full rounded-xl bg-wafu-sumi px-4 py-3 text-sm font-medium text-wafu-paper transition hover:bg-[#2e2a26] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoggingIn ? "登录中…" : "登录"}
+            </button>
+          </form>
+
+          <Link
+            href="/admin/login?from=/write"
+            className="mt-4 block text-center text-xs text-wafu-sumi/45 transition hover:text-erii-red"
           >
-            打开设置
-          </button>
+            或前往后台登录页
+          </Link>
         </div>
       </div>
     );
