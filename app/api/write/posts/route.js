@@ -15,6 +15,10 @@ function unauthorized() {
   return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 }
 
+function isSlugConflictError(error) {
+  return String(error?.code ?? "") === "SLUG_CONFLICT";
+}
+
 function formatDate(value) {
   if (!value) return "";
   if (typeof value === "string") return value.slice(0, 10);
@@ -101,13 +105,30 @@ export async function POST(request) {
     );
   }
 
-  const post = await upsertPostContent({
-    input: normalizedInput,
-    status: "draft",
-    createdBy: "internal",
-  });
+  let post;
+  try {
+    post = await upsertPostContent({
+      input: normalizedInput,
+      status: "draft",
+      originalSlug: body?.originalSlug,
+      createdBy: "internal",
+    });
+  } catch (error) {
+    if (isSlugConflictError(error)) {
+      return NextResponse.json(
+        { ok: false, error: error.message || "Slug 已存在" },
+        { status: 409 }
+      );
+    }
+    throw error;
+  }
 
   revalidateTag("posts");
+  if (post.renamedFrom) {
+    revalidateTag(`post:${post.renamedFrom}`);
+    revalidateTag(`post-render:${post.renamedFrom}`);
+    revalidateTag(`post-revision:${post.renamedFrom}`);
+  }
   revalidateTag(`post:${post.slug}`);
   revalidateTag(`post-render:${post.slug}`);
   revalidateTag(`post-revision:${post.slug}`);

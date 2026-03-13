@@ -1,5 +1,6 @@
 import { requireDb } from "@/src/lib/db";
 import { generateFallbackSlug, slugify } from "@/src/lib/slugify";
+import { normalizeSlugParam } from "@/src/lib/slugParam";
 import {
   DEFAULT_EDITOR_SOURCE,
   DEFAULT_CONTENT_FORMAT,
@@ -51,6 +52,10 @@ function normalizeSlug(providedSlug, title, fallbackPrefix) {
   return { slug };
 }
 
+function normalizeOriginalSlug(value) {
+  return normalizeSlugParam(value);
+}
+
 function toNullableTrimmedText(value) {
   const normalized = String(value ?? "").trim();
   return normalized || null;
@@ -59,6 +64,18 @@ function toNullableTrimmedText(value) {
 function isLegacySchemaError(error) {
   const code = String(error?.code ?? "");
   return code === "42703" || code === "42P01";
+}
+
+function isMissingCommentsTableError(error) {
+  const code = String(error?.code ?? "");
+  const message = String(error?.message ?? "").toLowerCase();
+  return code === "42P01" && message.includes('relation "comments" does not exist');
+}
+
+function createSlugConflictError(message = "Slug already exists.") {
+  const error = new Error(message);
+  error.code = "SLUG_CONFLICT";
+  return error;
 }
 
 function toLegacyUpsertPayload(input, status) {
@@ -231,6 +248,59 @@ async function insertRevision(db, post, input, status, createdBy) {
   };
 }
 
+async function maybeRenamePostSlug(db, originalSlug, nextSlug) {
+  const safeOriginalSlug = normalizeOriginalSlug(originalSlug);
+  if (!safeOriginalSlug || safeOriginalSlug === nextSlug) {
+    return { renamedFrom: null };
+  }
+
+  const originalResult = await db.sql`
+    SELECT id, slug
+    FROM posts
+    WHERE slug = ${safeOriginalSlug}
+    LIMIT 1
+  `;
+  const originalPost = originalResult.rows[0];
+  if (!originalPost) {
+    return { renamedFrom: null };
+  }
+
+  const nextResult = await db.sql`
+    SELECT id, slug
+    FROM posts
+    WHERE slug = ${nextSlug}
+    LIMIT 1
+  `;
+  const existingNextPost = nextResult.rows[0];
+  if (existingNextPost && Number(existingNextPost.id) !== Number(originalPost.id)) {
+    throw createSlugConflictError("目标 slug 已存在，请更换后再保存。");
+  }
+
+  if (existingNextPost) {
+    return { renamedFrom: null };
+  }
+
+  await db.sql`
+    UPDATE posts
+    SET slug = ${nextSlug}, updated_at = NOW()
+    WHERE id = ${originalPost.id}
+  `;
+
+  try {
+    await db.sql`
+      UPDATE comments
+      SET post_slug = ${nextSlug}
+      WHERE post_slug = ${safeOriginalSlug}
+    `;
+  } catch (error) {
+    if (!isLegacySchemaError(error) && !isMissingCommentsTableError(error)) {
+      throw error;
+    }
+  }
+
+  return { renamedFrom: safeOriginalSlug };
+}
+
 export function normalizePostInput(rawBody, options = {}) {
   const fallbackPrefix = options.fallbackSlugPrefix || "draft";
   const status = options.status || "draft";
@@ -281,10 +351,12 @@ export function normalizePostInput(rawBody, options = {}) {
 export async function upsertPostContent({
   input,
   status = "draft",
+  originalSlug,
   createdBy = EDITOR_SOURCES.INTERNAL,
   dbClient,
 }) {
   const db = dbClient ?? requireDb();
+  const renameResult = await maybeRenamePostSlug(db, originalSlug, input.slug);
   let post;
 
   try {
@@ -303,6 +375,7 @@ export async function upsertPostContent({
 
   return {
     ...post,
+    renamedFrom: renameResult.renamedFrom,
     revisionId: revision.revisionId,
     revisionNo: revision.revisionNo,
   };
@@ -327,4 +400,3 @@ export function toApiPost(post) {
     latestRevisionId: post.latestRevisionId,
   };
 }
-

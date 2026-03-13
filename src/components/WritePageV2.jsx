@@ -6,7 +6,17 @@ import { Editor } from "@bytemd/react";
 import gfm from "@bytemd/plugin-gfm";
 import highlight from "@bytemd/plugin-highlight";
 import frontmatter from "@bytemd/plugin-frontmatter";
-import { CheckCircle2, CircleAlert, Home, Info, Settings, X } from "lucide-react";
+import {
+  CheckCircle2,
+  CircleAlert,
+  Home,
+  ImagePlus,
+  Info,
+  Loader2,
+  Settings,
+  Trash2,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import bytemdZhHans from "bytemd/locales/zh_Hans.json";
 import gfmZhHans from "@bytemd/plugin-gfm/locales/zh_Hans.json";
@@ -24,6 +34,17 @@ const CATEGORY_OPTIONS = [
   "音乐",
   "影视",
 ];
+
+function createEmptyMetadata() {
+  return {
+    slug: "",
+    title: "",
+    date: new Date().toISOString().split("T")[0],
+    description: "",
+    tags: "",
+    cover: "",
+  };
+}
 
 function parseTagsInput(raw) {
   return String(raw ?? "")
@@ -64,14 +85,8 @@ export default function WritePageV2() {
   const urlSlug = searchParams.get("slug") || "";
 
   const [content, setContent] = useState("");
-  const [metadata, setMetadata] = useState({
-    slug: "",
-    title: "",
-    date: new Date().toISOString().split("T")[0],
-    description: "",
-    tags: "",
-    cover: "",
-  });
+  const [metadata, setMetadata] = useState(createEmptyMetadata);
+  const [originalSlug, setOriginalSlug] = useState("");
   const [postStatus, setPostStatus] = useState("draft");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [toast, setToast] = useState(null);
@@ -81,6 +96,8 @@ export default function WritePageV2() {
   const [authError, setAuthError] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
+  const [isCoverUploading, setIsCoverUploading] = useState(false);
+  const [coverLocalPreview, setCoverLocalPreview] = useState("");
   const [autoSaveState, setAutoSaveState] = useState("idle");
   const [autoSaveAt, setAutoSaveAt] = useState("");
   const autoSaveTimerRef = useRef(null);
@@ -88,6 +105,19 @@ export default function WritePageV2() {
   const autoSaveInFlightRef = useRef(false);
   const pendingAutoSaveRef = useRef(false);
   const lastSavedSignatureRef = useRef("");
+  const coverFileInputRef = useRef(null);
+
+  const resetEditor = useCallback(() => {
+    setContent("");
+    setMetadata(createEmptyMetadata());
+    setOriginalSlug("");
+    setPostStatus("draft");
+    setIsCoverUploading(false);
+    setCoverLocalPreview("");
+    setAutoSaveState("idle");
+    setAutoSaveAt("");
+    lastSavedSignatureRef.current = "";
+  }, []);
 
   useEffect(() => {
     checkAuth();
@@ -107,6 +137,7 @@ export default function WritePageV2() {
 
   const buildDraftPayload = useCallback(
     () => ({
+      originalSlug: originalSlug || undefined,
       slug: metadata.slug,
       title: metadata.title,
       date: metadata.date,
@@ -115,7 +146,7 @@ export default function WritePageV2() {
       cover: metadata.cover,
       content,
     }),
-    [metadata, content]
+    [content, metadata, originalSlug]
   );
 
   const hasDraftContent = useCallback(() => {
@@ -130,6 +161,7 @@ export default function WritePageV2() {
       if (savedSlug && savedSlug !== metadata.slug) {
         setMetadata((prev) => ({ ...prev, slug: savedSlug }));
       }
+      setOriginalSlug(savedSlug || "");
       if (savedSlug && savedSlug !== urlSlug) {
         router.replace(`/write?slug=${savedSlug}`);
       }
@@ -183,6 +215,19 @@ export default function WritePageV2() {
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (coverLocalPreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(coverLocalPreview);
+      }
+    };
+  }, [coverLocalPreview]);
+
+  useEffect(() => {
+    if (!isAuthed || urlSlug) return;
+    resetEditor();
+  }, [isAuthed, resetEditor, urlSlug]);
+
   const loadDraft = useCallback(
     async (slug) => {
       try {
@@ -202,6 +247,7 @@ export default function WritePageV2() {
             cover: post.cover || "",
           };
           setMetadata(nextMeta);
+          setOriginalSlug(post.slug || "");
           const nextContent = post.content || "";
           setContent(nextContent);
           setPostStatus(post.status || "draft");
@@ -287,15 +333,19 @@ export default function WritePageV2() {
     }
     setIsBusy(true);
     try {
+      const payload = buildDraftPayload();
       const res = await fetch("/api/write/posts/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...metadata, content }),
+        body: JSON.stringify(payload),
       });
-      if (res.ok) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.ok) {
+        applySavedDraft(payload, data);
+        setPostStatus("published");
         showToast("发布成功", "success");
       } else {
-        showToast("发布失败", "error");
+        showToast(data?.error || "发布失败", "error");
       }
     } catch {
       showToast("发布失败", "error");
@@ -304,23 +354,82 @@ export default function WritePageV2() {
     }
   };
 
+  const uploadAsset = useCallback(async (file, prefix) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (prefix) {
+      formData.append("prefix", prefix);
+    }
+
+    const res = await fetch("/api/write/assets", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data?.ok || !data?.url) {
+      return { ok: false, error: data?.error || "上传失败" };
+    }
+
+    return { ok: true, url: data.url };
+  }, []);
+
   const uploadImages = async (files) => {
     const uploaded = [];
     for (const file of files) {
-      const formData = new FormData();
-      formData.append("file", file);
       try {
-        const res = await fetch("/api/write/assets", {
-          method: "POST",
-          body: formData,
-        });
-        if (res.ok) {
-          const data = await res.json();
-          uploaded.push({ url: data.url, alt: file.name });
+        const result = await uploadAsset(file);
+        if (result.ok) {
+          uploaded.push({ url: result.url, alt: file.name });
         }
       } catch {}
     }
     return uploaded;
+  };
+
+  const handleCoverUpload = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("请选择图片文件", "error");
+      return;
+    }
+
+    const localPreviewUrl = URL.createObjectURL(file);
+    setCoverLocalPreview(localPreviewUrl);
+    setIsCoverUploading(true);
+
+    try {
+      const result = await uploadAsset(file, "covers");
+      if (!result.ok) {
+        setCoverLocalPreview("");
+        showToast(result.error || "封面上传失败", "error");
+        return;
+      }
+
+      setMetadata((prev) => ({ ...prev, cover: result.url }));
+      setCoverLocalPreview("");
+      showToast("封面已上传", "success");
+    } catch {
+      setCoverLocalPreview("");
+      showToast("封面上传失败", "error");
+    } finally {
+      setIsCoverUploading(false);
+    }
+  };
+
+  const handleRemoveCover = () => {
+    setCoverLocalPreview("");
+    setMetadata((prev) => ({ ...prev, cover: "" }));
+
+    if (coverFileInputRef.current) {
+      coverFileInputRef.current.value = "";
+    }
+
+    showToast("已移除封面", "info");
   };
 
   const performAutoSave = useCallback(async () => {
@@ -400,7 +509,8 @@ export default function WritePageV2() {
 
   const selectedCategory = getCategoryFromTags(metadata.tags);
   const normalizedCover = String(metadata.cover ?? "").trim();
-  const hasCoverPreview = /^https?:\/\/\S+$/i.test(normalizedCover);
+  const coverPreviewUrl = coverLocalPreview || normalizedCover;
+  const hasCoverPreview = Boolean(coverPreviewUrl);
 
   const toastConfig = toast
     ? {
@@ -679,22 +789,77 @@ export default function WritePageV2() {
                 <h3 className="write-section-title">视觉信息</h3>
                 <div className="write-field-grid">
                   <label className="write-field">
-                    <span>封面图 URL</span>
-                    <input
-                      placeholder="https://..."
-                      value={metadata.cover}
-                      onChange={(e) => setMetadata({ ...metadata, cover: e.target.value })}
-                      className="write-input"
-                    />
+                    <span>上传封面图</span>
+                    <div className="write-cover-upload">
+                      <input
+                        ref={coverFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCoverUpload}
+                        className="sr-only"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => coverFileInputRef.current?.click()}
+                        disabled={isCoverUploading}
+                        className="write-cover-upload-trigger"
+                      >
+                        <span className="write-cover-upload-icon" aria-hidden>
+                          {isCoverUploading ? (
+                            <Loader2 size={16} className="animate-spin" />
+                          ) : (
+                            <ImagePlus size={16} />
+                          )}
+                        </span>
+                        <span className="write-cover-upload-copy">
+                          <strong>
+                            {isCoverUploading
+                              ? "正在上传封面图…"
+                              : normalizedCover
+                                ? "更换本地封面图"
+                                : "选择本地图片文件"}
+                          </strong>
+                          <small>选择后会自动上传并写入文章封面</small>
+                        </span>
+                      </button>
+
+                      <div className="write-cover-upload-actions">
+                        <button
+                          type="button"
+                          onClick={() => coverFileInputRef.current?.click()}
+                          disabled={isCoverUploading}
+                          className="write-cover-upload-button"
+                        >
+                          {isCoverUploading ? "上传中…" : normalizedCover ? "重新选择" : "上传图片"}
+                        </button>
+
+                        {normalizedCover ? (
+                          <button
+                            type="button"
+                            onClick={handleRemoveCover}
+                            disabled={isCoverUploading}
+                            className="write-cover-upload-button is-secondary"
+                          >
+                            <Trash2 size={14} />
+                            移除封面
+                          </button>
+                        ) : null}
+                      </div>
+
+                      <p className="write-help">
+                        支持 JPG、PNG、WEBP 等常见图片格式，上传成功后会自动用于文章列表和详情页封面。
+                      </p>
+                    </div>
                   </label>
 
                   {hasCoverPreview ? (
                     <div
-                      className="write-cover-preview"
-                      style={{ backgroundImage: `url(${normalizedCover})` }}
+                      className={`write-cover-preview${isCoverUploading ? " is-uploading" : ""}`}
+                      style={{ backgroundImage: `url(${coverPreviewUrl})` }}
                     >
                       <div className="write-cover-preview-mask" />
-                      <span>封面预览</span>
+                      <span>{isCoverUploading ? "上传中" : "封面预览"}</span>
                     </div>
                   ) : null}
                 </div>
