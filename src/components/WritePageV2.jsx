@@ -6,7 +6,7 @@ import { Editor } from "@bytemd/react";
 import gfm from "@bytemd/plugin-gfm";
 import highlight from "@bytemd/plugin-highlight";
 import frontmatter from "@bytemd/plugin-frontmatter";
-import { CheckCircle2, CircleAlert, Home, Info, Settings } from "lucide-react";
+import { CheckCircle2, CircleAlert, Home, Info, Settings, X } from "lucide-react";
 import Link from "next/link";
 import bytemdZhHans from "bytemd/locales/zh_Hans.json";
 import gfmZhHans from "@bytemd/plugin-gfm/locales/zh_Hans.json";
@@ -14,6 +14,49 @@ import "bytemd/dist/index.css";
 import "./WritePageV2.css";
 
 const plugins = [gfm({ locale: gfmZhHans }), highlight(), frontmatter()];
+
+const CATEGORY_OPTIONS = [
+  "未分类",
+  "TeamSpeak",
+  "电脑技巧",
+  "直播",
+  "游戏",
+  "音乐",
+  "影视",
+];
+
+function parseTagsInput(raw) {
+  return String(raw ?? "")
+    .split(/[,，]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function formatTagsInput(tags) {
+  const unique = [];
+  for (const tag of tags) {
+    if (!unique.includes(tag)) unique.push(tag);
+  }
+  return unique.join(", ");
+}
+
+function getCategoryFromTags(raw) {
+  const tags = parseTagsInput(raw);
+  const match = tags.find((tag) => CATEGORY_OPTIONS.includes(tag));
+  return match || "未分类";
+}
+
+function applyCategoryToTags(rawTags, category) {
+  const tags = parseTagsInput(rawTags).filter(
+    (tag) => !CATEGORY_OPTIONS.includes(tag)
+  );
+
+  if (category && category !== "未分类") {
+    tags.unshift(category);
+  }
+
+  return formatTagsInput(tags);
+}
 
 export default function WritePageV2() {
   const router = useRouter();
@@ -147,12 +190,15 @@ export default function WritePageV2() {
         if (res.ok) {
           const data = await res.json();
           const post = data.post || data;
+          const tagText = Array.isArray(post.tags)
+            ? post.tags.join(", ")
+            : String(post.tags ?? "");
           const nextMeta = {
             slug: post.slug || "",
             title: post.title || "",
             date: post.date || new Date().toISOString().split("T")[0],
             description: post.description || "",
-            tags: post.tags || "",
+            tags: tagText,
             cover: post.cover || "",
           };
           setMetadata(nextMeta);
@@ -352,6 +398,10 @@ export default function WritePageV2() {
     return "";
   })();
 
+  const selectedCategory = getCategoryFromTags(metadata.tags);
+  const normalizedCover = String(metadata.cover ?? "").trim();
+  const hasCoverPreview = /^https?:\/\/\S+$/i.test(normalizedCover);
+
   const toastConfig = toast
     ? {
         success: {
@@ -509,46 +559,150 @@ export default function WritePageV2() {
       ) : null}
 
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setIsSettingsOpen(false)}>
-          <div className="absolute right-0 top-14 w-96 bg-white p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
-            <h2 className="mb-4 text-lg font-bold">文章设置</h2>
-            <div className="space-y-4">
-              <input
-                placeholder="Slug"
-                value={metadata.slug}
-                onChange={(e) => setMetadata({ ...metadata, slug: e.target.value })}
-                className="w-full rounded border p-2"
-              />
-              <input
-                placeholder="标题"
-                value={metadata.title}
-                onChange={(e) => setMetadata({ ...metadata, title: e.target.value })}
-                className="w-full rounded border p-2"
-              />
-              <input
-                type="date"
-                value={metadata.date}
-                onChange={(e) => setMetadata({ ...metadata, date: e.target.value })}
-                className="w-full rounded border p-2"
-              />
-              <input
-                placeholder="描述"
-                value={metadata.description}
-                onChange={(e) => setMetadata({ ...metadata, description: e.target.value })}
-                className="w-full rounded border p-2"
-              />
-              <input
-                placeholder="标签 (逗号分隔)"
-                value={metadata.tags}
-                onChange={(e) => setMetadata({ ...metadata, tags: e.target.value })}
-                className="w-full rounded border p-2"
-              />
-              <input
-                placeholder="封面图 URL"
-                value={metadata.cover}
-                onChange={(e) => setMetadata({ ...metadata, cover: e.target.value })}
-                className="w-full rounded border p-2"
-              />
+        <div
+          className="write-settings-overlay"
+          onClick={() => setIsSettingsOpen(false)}
+        >
+          <div
+            className="write-settings-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="write-settings-title"
+          >
+            <span className="write-settings-glow" aria-hidden />
+
+            <div className="write-settings-header">
+              <div className="write-settings-heading">
+                <span className="write-settings-kicker">Article Meta</span>
+                <h2 id="write-settings-title">文章设置</h2>
+                <p>
+                  保存后会影响文章列表、分类与展示样式
+                </p>
+              </div>
+              <button
+                onClick={() => setIsSettingsOpen(false)}
+                className="write-settings-close"
+                aria-label="关闭"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="write-settings-body">
+              <section className="write-settings-section">
+                <h3 className="write-section-title">基础信息</h3>
+                <div className="write-field-grid">
+                  <label className="write-field">
+                    <span>标题</span>
+                    <input
+                      placeholder="输入文章标题"
+                      value={metadata.title}
+                      onChange={(e) => setMetadata({ ...metadata, title: e.target.value })}
+                      className="write-input"
+                    />
+                  </label>
+
+                  <div className="write-field-grid write-field-grid--2">
+                    <label className="write-field">
+                      <span>Slug</span>
+                      <input
+                        placeholder="例如 ai-usage-guide"
+                        value={metadata.slug}
+                        onChange={(e) => setMetadata({ ...metadata, slug: e.target.value })}
+                        className="write-input"
+                      />
+                    </label>
+
+                    <label className="write-field">
+                      <span>日期</span>
+                      <input
+                        type="date"
+                        value={metadata.date}
+                        onChange={(e) => setMetadata({ ...metadata, date: e.target.value })}
+                        className="write-input"
+                      />
+                    </label>
+                  </div>
+
+                  <label className="write-field">
+                    <span>描述</span>
+                    <input
+                      placeholder="用于文章简介与分享摘要"
+                      value={metadata.description}
+                      onChange={(e) => setMetadata({ ...metadata, description: e.target.value })}
+                      className="write-input"
+                    />
+                  </label>
+                </div>
+              </section>
+
+              <section className="write-settings-section">
+                <h3 className="write-section-title">标签与分类</h3>
+                <div className="write-field-grid">
+                  <label className="write-field">
+                    <span>标签</span>
+                    <input
+                      placeholder="标签 (逗号分隔)"
+                      value={metadata.tags}
+                      onChange={(e) => setMetadata({ ...metadata, tags: e.target.value })}
+                      className="write-input"
+                    />
+                  </label>
+
+                  <div className="write-category-box">
+                    <label className="write-field">
+                      <span>分类</span>
+                      <select
+                        value={selectedCategory}
+                        onChange={(e) =>
+                          setMetadata((prev) => ({
+                            ...prev,
+                            tags: applyCategoryToTags(prev.tags, e.target.value),
+                          }))
+                        }
+                        className="write-input write-select"
+                      >
+                        {CATEGORY_OPTIONS.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <p className="write-help">分类会写入标签，用于博客页筛选展示。</p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="write-settings-section">
+                <h3 className="write-section-title">视觉信息</h3>
+                <div className="write-field-grid">
+                  <label className="write-field">
+                    <span>封面图 URL</span>
+                    <input
+                      placeholder="https://..."
+                      value={metadata.cover}
+                      onChange={(e) => setMetadata({ ...metadata, cover: e.target.value })}
+                      className="write-input"
+                    />
+                  </label>
+
+                  {hasCoverPreview ? (
+                    <div
+                      className="write-cover-preview"
+                      style={{ backgroundImage: `url(${normalizedCover})` }}
+                    >
+                      <div className="write-cover-preview-mask" />
+                      <span>封面预览</span>
+                    </div>
+                  ) : null}
+                </div>
+              </section>
+
+              <p className="write-settings-note">
+                建议标题控制在 20~32 字，描述控制在 80~140 字，能提升列表页与搜索展示效果。
+              </p>
             </div>
           </div>
         </div>
