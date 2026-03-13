@@ -17,11 +17,13 @@ export default function AdminHeader() {
   const title = current?.label ?? "管理后台";
 
   async function handleLogout() {
-    // Clear the cookie by setting it expired via a tiny API call
-    // or just delete client-side and redirect
-    document.cookie =
-      "erii_admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    try {
+      await fetch("/api/admin/login", {
+        method: "DELETE",
+      });
+    } catch {}
     router.push("/admin/login");
+    router.refresh();
   }
 
   return (

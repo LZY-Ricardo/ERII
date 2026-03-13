@@ -8,7 +8,12 @@ import {
   isWriteSessionValid,
   verifyWritePassword,
 } from "@/src/lib/writeAuth";
-import { ADMIN_SESSION_COOKIE, isAdminSessionValid } from "@/src/lib/adminAuth";
+import {
+  ADMIN_SESSION_COOKIE,
+  createAdminSessionValue,
+  getAdminSessionCookieOptions,
+  isAdminSessionValid,
+} from "@/src/lib/adminAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,12 +49,18 @@ export async function POST(request) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const sessionValue = createWriteSessionValue();
+  const writeSessionValue = createWriteSessionValue();
+  const adminSessionValue = createAdminSessionValue();
   const response = NextResponse.json({ ok: true });
   response.cookies.set(
     WRITE_SESSION_COOKIE,
-    sessionValue,
+    writeSessionValue,
     getWriteSessionCookieOptions()
+  );
+  response.cookies.set(
+    ADMIN_SESSION_COOKIE,
+    adminSessionValue,
+    getAdminSessionCookieOptions()
   );
   return response;
 }
@@ -58,6 +69,10 @@ export async function DELETE() {
   const response = NextResponse.json({ ok: true });
   response.cookies.set(WRITE_SESSION_COOKIE, "", {
     ...getWriteSessionCookieOptions(),
+    maxAge: 0,
+  });
+  response.cookies.set(ADMIN_SESSION_COOKIE, "", {
+    ...getAdminSessionCookieOptions(),
     maxAge: 0,
   });
   return response;

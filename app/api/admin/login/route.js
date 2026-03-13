@@ -4,6 +4,11 @@ import {
   ADMIN_SESSION_COOKIE,
   getAdminSessionCookieOptions,
 } from "@/src/lib/adminAuth";
+import {
+  WRITE_SESSION_COOKIE,
+  createWriteSessionValue,
+  getWriteSessionCookieOptions,
+} from "@/src/lib/writeAuth";
 import { cookies } from "next/headers";
 
 export async function POST(request) {
@@ -27,13 +32,19 @@ export async function POST(request) {
       );
     }
 
-    const sessionValue = createAdminSessionValue();
+    const adminSessionValue = createAdminSessionValue();
+    const writeSessionValue = createWriteSessionValue();
 
     const cookieStore = await cookies();
     cookieStore.set(
       ADMIN_SESSION_COOKIE,
-      sessionValue,
+      adminSessionValue,
       getAdminSessionCookieOptions()
+    );
+    cookieStore.set(
+      WRITE_SESSION_COOKIE,
+      writeSessionValue,
+      getWriteSessionCookieOptions()
     );
 
     return Response.json({ ok: true });
@@ -44,4 +55,17 @@ export async function POST(request) {
       { status: 500 }
     );
   }
+}
+
+export async function DELETE() {
+  const cookieStore = await cookies();
+  cookieStore.set(ADMIN_SESSION_COOKIE, "", {
+    ...getAdminSessionCookieOptions(),
+    maxAge: 0,
+  });
+  cookieStore.set(WRITE_SESSION_COOKIE, "", {
+    ...getWriteSessionCookieOptions(),
+    maxAge: 0,
+  });
+  return Response.json({ ok: true });
 }
