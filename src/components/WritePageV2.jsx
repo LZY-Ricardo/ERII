@@ -20,20 +20,15 @@ import {
 import Link from "next/link";
 import bytemdZhHans from "bytemd/locales/zh_Hans.json";
 import gfmZhHans from "@bytemd/plugin-gfm/locales/zh_Hans.json";
+import {
+  inferCategoryFromText,
+  normalizeCategoryValue,
+  POST_CATEGORY_OPTIONS,
+} from "@/src/lib/postTaxonomy";
 import "bytemd/dist/index.css";
 import "./WritePageV2.css";
 
 const plugins = [gfm({ locale: gfmZhHans }), highlight(), frontmatter()];
-
-const CATEGORY_OPTIONS = [
-  "未分类",
-  "TeamSpeak",
-  "电脑技巧",
-  "直播",
-  "游戏",
-  "音乐",
-  "影视",
-];
 
 function createEmptyMetadata() {
   return {
@@ -61,19 +56,19 @@ function formatTagsInput(tags) {
   return unique.join(", ");
 }
 
-function getCategoryFromTags(raw) {
-  const tags = parseTagsInput(raw);
-  const match = tags.find((tag) => CATEGORY_OPTIONS.includes(tag));
-  return match || "未分类";
+function getCategoryFromDraft(title, rawTags) {
+  const tags = parseTagsInput(rawTags);
+  const explicitCategory = tags.map((tag) => normalizeCategoryValue(tag)).find(Boolean);
+  if (explicitCategory) return explicitCategory;
+  return inferCategoryFromText(title, tags.join(" "));
 }
 
 function applyCategoryToTags(rawTags, category) {
-  const tags = parseTagsInput(rawTags).filter(
-    (tag) => !CATEGORY_OPTIONS.includes(tag)
-  );
+  const normalizedCategory = normalizeCategoryValue(category) || "未分类";
+  const tags = parseTagsInput(rawTags).filter((tag) => !normalizeCategoryValue(tag));
 
-  if (category && category !== "未分类") {
-    tags.unshift(category);
+  if (normalizedCategory !== "未分类") {
+    tags.unshift(normalizedCategory);
   }
 
   return formatTagsInput(tags);
@@ -507,7 +502,7 @@ export default function WritePageV2() {
     return "";
   })();
 
-  const selectedCategory = getCategoryFromTags(metadata.tags);
+  const selectedCategory = getCategoryFromDraft(metadata.title, metadata.tags);
   const normalizedCover = String(metadata.cover ?? "").trim();
   const coverPreviewUrl = coverLocalPreview || normalizedCover;
   const hasCoverPreview = Boolean(coverPreviewUrl);
@@ -773,7 +768,7 @@ export default function WritePageV2() {
                         }
                         className="write-input write-select"
                       >
-                        {CATEGORY_OPTIONS.map((option) => (
+                        {POST_CATEGORY_OPTIONS.map((option) => (
                           <option key={option} value={option}>
                             {option}
                           </option>
