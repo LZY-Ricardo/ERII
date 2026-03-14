@@ -506,6 +506,8 @@ export default function WritePageV2() {
   const normalizedCover = String(metadata.cover ?? "").trim();
   const coverPreviewUrl = coverLocalPreview || normalizedCover;
   const hasCoverPreview = Boolean(coverPreviewUrl);
+  const publishButtonLabel =
+    postStatus === "published" ? "更新文章" : "发布文章";
 
   const toastConfig = toast
     ? {
@@ -632,7 +634,7 @@ export default function WritePageV2() {
             disabled={isBusy}
             className="rounded-full bg-[#e11d48] px-5 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-[#e11d48]/40 transition hover:bg-[#be123c] hover:shadow-md disabled:opacity-60"
           >
-            发布文章
+            {publishButtonLabel}
           </button>
         </div>
       </header>
