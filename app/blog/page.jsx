@@ -3,6 +3,37 @@ import PostCard from "@/src/components/PostCard";
 import { getSortedPostsData } from "@/src/lib/posts";
 import { filterPostsByTaxonomy, getCategoryThemeLabel } from "@/src/lib/postTaxonomy";
 
+export async function generateMetadata({ searchParams }) {
+  const resolved = (await searchParams) ?? {};
+  const category = typeof resolved.category === "string" ? resolved.category : "";
+  const tag = typeof resolved.tag === "string" ? resolved.tag : "";
+  const topic = typeof resolved.topic === "string" ? resolved.topic : "";
+
+  const categoryLabel = getCategoryThemeLabel(category);
+
+  if (topic === "tech") {
+    return {
+      title: `技术分享：前端与 AI | 象龟的水坑`,
+    };
+  }
+
+  if (category) {
+    return {
+      title: `${categoryLabel} | 象龟的水坑`,
+    };
+  }
+
+  if (tag) {
+    return {
+      title: `标签：${tag} | 象龟的水坑`,
+    };
+  }
+
+  return {
+    title: `全部文章 | 象龟的水坑`,
+  };
+}
+
 export default async function BlogIndexPage({ searchParams }) {
   const posts = await getSortedPostsData();
   const resolved = (await searchParams) ?? {};

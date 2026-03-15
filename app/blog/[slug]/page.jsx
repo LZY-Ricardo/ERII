@@ -6,6 +6,22 @@ import ArgonShell from "@/src/components/argon/ArgonShell";
 import PostEditLink from "@/src/components/PostEditLink";
 import { getPostData, getSortedPostsData } from "@/src/lib/posts";
 
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const post = await getPostData(slug);
+
+  if (!post) {
+    return {
+      title: "文章不存在 | 象龟的水坑",
+    };
+  }
+
+  return {
+    title: `${post.frontmatter.title} | 象龟的水坑`,
+    description: post.frontmatter.description || "分享前端开发与 AI 实践的个人博客。",
+  };
+}
+
 function extractTocItems(content) {
   return String(content ?? "")
     .split("\n")
