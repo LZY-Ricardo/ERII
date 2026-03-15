@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { requireDb } from "@/src/lib/db";
 import { createEditToken, hashToken } from "@/src/lib/commentSecurity";
 
@@ -73,6 +74,17 @@ function escapeHtml(value) {
 
 function plainToHtml(value) {
   return escapeHtml(value).replace(/\n/g, "<br/>");
+}
+
+function toContentPreview(value, { isPrivate = false } = {}) {
+  if (isPrivate) {
+    return "此评论为私密评论，仅发送者和博主可见。";
+  }
+
+  const compact = String(value ?? "").replace(/\s+/g, " ").trim();
+  if (!compact) return "（空内容）";
+  if (compact.length <= 72) return compact;
+  return `${compact.slice(0, 72)}...`;
 }
 
 function toBoolean(value, fallback = false) {
@@ -581,6 +593,48 @@ export async function getCommentCountByPostSlug(slug) {
     if (!isMissingCommentsTableError(error)) throw error;
     return 0;
   }
+}
+
+export async function listRecentCommentSummariesByPostSlug({
+  slug,
+  limit = 4,
+} = {}) {
+  const safeSlug = normalizeSlug(slug);
+  const safeLimit = Math.min(8, Math.max(1, Number(limit) || 4));
+  if (!safeSlug) return [];
+
+  return unstable_cache(
+    async () => {
+      const db = getDbSafe();
+      if (!db) return [];
+
+      let result;
+      try {
+        result = await db.sql`
+          SELECT id, author_name, author_link, content_raw, is_private, created_at
+          FROM comments
+          WHERE post_slug = ${safeSlug}
+            AND status = ${COMMENT_STATUS_APPROVED}
+          ORDER BY created_at DESC, id DESC
+          LIMIT ${safeLimit}
+        `;
+      } catch (error) {
+        if (isMissingCommentsTableError(error)) return [];
+        throw error;
+      }
+
+      return (result.rows ?? []).map((row) => ({
+        id: Number(row.id),
+        authorName: String(row.author_name ?? "访客"),
+        authorLink: String(row.author_link ?? ""),
+        contentPreview: toContentPreview(row.content_raw, { isPrivate: Boolean(row.is_private) }),
+        isPrivate: Boolean(row.is_private),
+        createdAt: formatDateTime(row.created_at),
+      }));
+    },
+    ["comments:recent", safeSlug, String(safeLimit)],
+    { tags: [`comments:${safeSlug}`], revalidate: 60 }
+  )();
 }
 
 export function countFlattenedComments(topLevelComments) {

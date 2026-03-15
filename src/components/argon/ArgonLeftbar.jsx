@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import ArticleCatalogList from "@/src/components/argon/ArticleCatalogList";
+import { useArticleCatalogNavigation } from "@/src/components/argon/useArticleCatalogNavigation";
 import { getCategoryThemeLabel, inferCategoryFromPost } from "@/src/lib/postTaxonomy";
 
 const PANEL_ITEMS = [
@@ -145,6 +147,14 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
   const categories = useMemo(() => collectCategories(posts), [posts]);
   const tags = useMemo(() => collectTags(posts), [posts]);
   const recentPosts = useMemo(() => posts.slice(0, 5), [posts]);
+  const {
+    catalogItems,
+    visibleItems,
+    activeHeadingId,
+    expandedParentId,
+    shouldCollapseNested,
+    jumpToHeading,
+  } = useArticleCatalogNavigation(tocItems);
   const dailyQuote = useMemo(() => {
     const now = new Date();
     const quote = getDailyLongzuQuote(now);
@@ -364,12 +374,15 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
   );
 
   const renderCatalogBody = () =>
-    tocItems.length ? (
-      <ol className="nh-catalog-list">
-        {tocItems.map((item, index) => (
-          <li key={`${item}-${index}`}>{item}</li>
-        ))}
-      </ol>
+    catalogItems.length ? (
+      <ArticleCatalogList
+        items={visibleItems}
+        activeHeadingId={activeHeadingId}
+        expandedParentId={expandedParentId}
+        shouldCollapseNested={shouldCollapseNested}
+        createJumpHandler={jumpToHeading}
+        onAfterJump={() => setPanelOpen(false)}
+      />
     ) : (
       <p className="nh-muted">当前页面暂无章节目录。</p>
     );

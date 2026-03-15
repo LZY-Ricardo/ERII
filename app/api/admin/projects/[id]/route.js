@@ -1,5 +1,6 @@
 import { requireDb } from "@/src/lib/db";
 import { requireAdmin } from "@/src/lib/adminGuard";
+import { toPgJsonbLiteral, toPgTextArrayLiteral } from "@/src/lib/projectMutation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -103,11 +104,11 @@ export async function PUT(request, { params }) {
         summary = ${summary},
         status = ${status},
         state = ${state},
-        focus = ${db.array(focus)},
-        tech = ${db.array(tech)},
+        focus = ${toPgTextArrayLiteral(focus)}::text[],
+        tech = ${toPgTextArrayLiteral(tech)}::text[],
         cover = ${cover},
         featured = ${featured},
-        links = ${db.json(links)},
+        links = ${toPgJsonbLiteral(links)}::jsonb,
         sort_order = ${sortOrder},
         updated_at = NOW()
       WHERE id = ${id}

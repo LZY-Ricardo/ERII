@@ -7,6 +7,7 @@ import UnmarkFloatingPrompt from "@/src/components/argon/UnmarkFloatingPrompt";
 export default function ArgonShell({
   posts = [],
   tocItems = [],
+  articleSidebar = null,
   title = "",
   subtitle = "",
   titleMode = "card",
@@ -53,7 +54,7 @@ export default function ArgonShell({
             <ArgonFooter />
           </main>
 
-          <ArgonRightbar posts={posts} tocItems={tocItems} />
+          <ArgonRightbar posts={posts} tocItems={tocItems} articleSidebar={articleSidebar} />
         </div>
       </div>
 

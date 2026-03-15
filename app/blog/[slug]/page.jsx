@@ -4,6 +4,8 @@ import ArgonCommentShell from "@/src/components/argon/ArgonCommentShell";
 import ArgonSharePanel from "@/src/components/argon/ArgonSharePanel";
 import ArgonShell from "@/src/components/argon/ArgonShell";
 import PostEditLink from "@/src/components/PostEditLink";
+import { extractArticleHeadings } from "@/src/lib/articleToc";
+import { listRecentCommentSummariesByPostSlug } from "@/src/lib/comments";
 import { getPostData, getSortedPostsData } from "@/src/lib/posts";
 
 export async function generateMetadata({ params }) {
@@ -22,14 +24,23 @@ export async function generateMetadata({ params }) {
   };
 }
 
-function extractTocItems(content) {
-  return String(content ?? "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => /^#{1,3}\s+/.test(line))
-    .map((line) => line.replace(/^#{1,3}\s+/, "").trim())
-    .filter(Boolean)
-    .slice(0, 12);
+function createHeadingComponent(level, allHeadings, headingIndexRef) {
+  const Tag = `h${level}`;
+
+  return function HeadingWithAnchor({ children, ...props }) {
+    const currentHeading = allHeadings[headingIndexRef.current];
+    const headingId = currentHeading?.level === level ? currentHeading.id : String(props.id ?? "").trim();
+
+    if (currentHeading?.level === level) {
+      headingIndexRef.current += 1;
+    }
+
+    return (
+      <Tag {...props} id={headingId || undefined}>
+        {children}
+      </Tag>
+    );
+  };
 }
 
 export default async function BlogPostPage({ params }) {
@@ -39,10 +50,24 @@ export default async function BlogPostPage({ params }) {
 
   const posts = await getSortedPostsData();
   const articleBody = post.renderBody || post.content || "";
-  const tocItems = extractTocItems(articleBody);
+  const { allHeadings, tocItems } = extractArticleHeadings(articleBody);
+  const recentComments = await listRecentCommentSummariesByPostSlug({
+    slug: post.slug,
+    limit: 3,
+  });
+  const headingIndexRef = { current: 0 };
+  const mdxComponents = {
+    h1: createHeadingComponent(1, allHeadings, headingIndexRef),
+    h2: createHeadingComponent(2, allHeadings, headingIndexRef),
+    h3: createHeadingComponent(3, allHeadings, headingIndexRef),
+  };
 
   return (
-    <ArgonShell posts={posts} tocItems={tocItems}>
+    <ArgonShell
+      posts={posts}
+      tocItems={tocItems}
+      articleSidebar={{ recentComments }}
+    >
       <article className="nh-article nh-card">
         {post.frontmatter.cover ? (
           <div className="nh-article-cover">
@@ -63,7 +88,7 @@ export default async function BlogPostPage({ params }) {
         <div className="nh-divider" />
 
         <div className="nh-article-content prose max-w-none prose-slate prose-headings:font-serif prose-strong:text-slate-800">
-          <MDXRemote source={articleBody} />
+          <MDXRemote source={articleBody} components={mdxComponents} />
         </div>
 
         {Array.isArray(post.frontmatter.tags) && post.frontmatter.tags.length ? (
