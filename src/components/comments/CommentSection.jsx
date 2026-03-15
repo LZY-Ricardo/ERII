@@ -61,7 +61,6 @@ export default function CommentSection({ postSlug }) {
   const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [useMarkdown, setUseMarkdown] = useState(true);
   const [privateMode, setPrivateMode] = useState(false);
-  const [mailNotice, setMailNotice] = useState(false);
   const [showExtraInput, setShowExtraInput] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
   const [editingComment, setEditingComment] = useState(null);
@@ -147,7 +146,6 @@ export default function CommentSection({ postSlug }) {
     setEditingComment(null);
     setCaptchaAnswer("");
     setPrivateMode(false);
-    setMailNotice(false);
   };
 
   const onReply = (comment) => {
@@ -219,7 +217,6 @@ export default function CommentSection({ postSlug }) {
       captcha: captchaAnswer,
       captchaSeed,
       isPrivate: privateMode,
-      mailNotice,
       parentId: replyTo?.id ?? null,
     };
 
@@ -393,8 +390,6 @@ export default function CommentSection({ postSlug }) {
               setUseMarkdown={setUseMarkdown}
               privateMode={privateMode}
               setPrivateMode={setPrivateMode}
-              mailNotice={mailNotice}
-              setMailNotice={setMailNotice}
               showExtraInput={showExtraInput}
               setShowExtraInput={setShowExtraInput}
               editingComment={editingComment}
@@ -441,8 +436,6 @@ function CommentForm({
   setUseMarkdown,
   privateMode,
   setPrivateMode,
-  mailNotice,
-  setMailNotice,
   showExtraInput,
   setShowExtraInput,
   editingComment,
@@ -505,7 +498,6 @@ function CommentForm({
         <div className="col-md-12">
           <Checkbox id="comment_post_use_markdown" label="Markdown" checked={useMarkdown} onChange={setUseMarkdown} disabled={formSubmitting} className="comment-post-use-markdown" />
           <Checkbox id="comment_post_privatemode" label="私密评论" checked={privateMode} onChange={setPrivateMode} disabled={formSubmitting} className="comment-post-privatemode" />
-          <Checkbox id="comment_post_mailnotice" label="邮件提醒" checked={mailNotice} onChange={setMailNotice} disabled={formSubmitting} className="comment-post-mailnotice" />
 
           <button id="post_comment_send" className="btn btn-icon btn-primary comment-btn pull-right mr-0" type="submit" disabled={formSubmitting}>
             <span className={`btn-inner--icon ${editingComment ? "hide-on-comment-editing" : ""}`}>{formSubmitting ? <Clock3 size={15} className="spin" /> : <Send size={15} />}</span>
