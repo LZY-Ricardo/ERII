@@ -4,6 +4,7 @@ import ArgonCommentShell from "@/src/components/argon/ArgonCommentShell";
 import ArgonSharePanel from "@/src/components/argon/ArgonSharePanel";
 import ArgonShell from "@/src/components/argon/ArgonShell";
 import PostEditLink from "@/src/components/PostEditLink";
+import TeamSpeakJoinButton from "@/src/components/TeamSpeakJoinButton";
 import { extractArticleHeadings } from "@/src/lib/articleToc";
 import { listRecentCommentSummariesByPostSlug } from "@/src/lib/comments";
 import { getPostData, getSortedPostsData } from "@/src/lib/posts";
@@ -60,6 +61,7 @@ export default async function BlogPostPage({ params }) {
     h1: createHeadingComponent(1, allHeadings, headingIndexRef),
     h2: createHeadingComponent(2, allHeadings, headingIndexRef),
     h3: createHeadingComponent(3, allHeadings, headingIndexRef),
+    TeamSpeakJoinButton,
   };
 
   return (

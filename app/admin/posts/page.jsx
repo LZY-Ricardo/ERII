@@ -21,6 +21,10 @@ const STATUS_COLOR = {
   draft: "bg-gray-100 text-gray-500",
 };
 
+const DRAFT_KIND_LABEL = {
+  working: "已发布文章修改稿",
+};
+
 function fmtDate(v) {
   if (!v) return "—";
   return new Date(v).toLocaleDateString("zh-CN");
@@ -33,7 +37,10 @@ export default function AdminPostsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("published");
+  const activeTab = useMemo(() => {
+    const tab = String(searchParams.get("tab") || "").toLowerCase();
+    return tab === "draft" ? "draft" : "published";
+  }, [searchParams]);
 
   useEffect(() => {
     fetch("/api/admin/posts")
@@ -45,19 +52,6 @@ export default function AdminPostsPage() {
       .catch(() => setError("网络错误"))
       .finally(() => setLoading(false));
   }, []);
-
-  useEffect(() => {
-    const tab = String(searchParams.get("tab") || "").toLowerCase();
-    if (tab === "draft") {
-      setActiveTab("draft");
-      return;
-    }
-    if (tab === "published") {
-      setActiveTab("published");
-      return;
-    }
-    setActiveTab("published");
-  }, [searchParams]);
 
   const { publishedCount, draftCount } = useMemo(() => {
     let published = 0;
@@ -78,13 +72,13 @@ export default function AdminPostsPage() {
       return (
         post.title?.toLowerCase().includes(query) ||
         post.slug?.toLowerCase().includes(query) ||
+        post.publishedSlug?.toLowerCase().includes(query) ||
         post.tags?.some((t) => t.toLowerCase().includes(query))
       );
     });
   }, [posts, activeTab, search]);
 
   const updateTab = (nextTab) => {
-    setActiveTab(nextTab);
     const params = new URLSearchParams(searchParams.toString());
     if (nextTab === "draft") {
       params.set("tab", "draft");
@@ -185,7 +179,7 @@ export default function AdminPostsPage() {
             <tbody className="divide-y divide-gray-50">
               {filtered.map((post) => (
                 <tr
-                  key={post.slug}
+                  key={`${post.draftKind || post.status}:${post.editorLookupSlug || post.slug}:${post.slug}`}
                   className="hover:bg-gray-50/60 transition-colors"
                 >
                   <td className="px-5 py-3">
@@ -198,9 +192,14 @@ export default function AdminPostsPage() {
                         <p className="font-medium text-gray-800 truncate">
                           {post.title || "无标题"}
                         </p>
-                        <p className="text-xs text-gray-400 truncate">
-                          /{post.slug}
-                        </p>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
+                          <p className="truncate">/{post.slug}</p>
+                          {post.draftKind === "working" && post.publishedSlug ? (
+                            <p className="truncate text-amber-600">
+                              线上：/{post.publishedSlug}
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -215,6 +214,11 @@ export default function AdminPostsPage() {
                     >
                       {STATUS_LABEL[post.status] || post.status}
                     </span>
+                    {post.draftKind ? (
+                      <span className="ml-1 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                        {DRAFT_KIND_LABEL[post.draftKind] || post.draftKind}
+                      </span>
+                    ) : null}
                   </td>
                   <td className="px-3 py-3 text-center">
                     {post.commentCount > 0 ? (
@@ -229,7 +233,7 @@ export default function AdminPostsPage() {
                   <td className="px-3 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <Link
-                        href={`/write?slug=${post.slug}`}
+                        href={`/write?slug=${post.editorLookupSlug || post.slug}`}
                         className="p-1.5 rounded-md hover:bg-gray-200/60 transition-colors"
                         title="编辑"
                       >

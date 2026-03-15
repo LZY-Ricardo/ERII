@@ -6,6 +6,10 @@ import {
   toApiPost,
   upsertPostContent,
 } from "@/src/lib/content/contentService";
+import {
+  clearWorkingDraftByPostId,
+  getPostBySlug,
+} from "@/src/lib/content/workingDrafts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,6 +47,7 @@ export async function POST(request) {
   }
 
   let post;
+  const basePost = body?.originalSlug ? await getPostBySlug(body.originalSlug) : null;
   try {
     post = await upsertPostContent({
       input: normalizedInput,
@@ -58,6 +63,10 @@ export async function POST(request) {
       );
     }
     throw error;
+  }
+
+  if (basePost?.id) {
+    await clearWorkingDraftByPostId(basePost.id);
   }
 
   revalidateTag("posts");
@@ -79,8 +88,18 @@ export async function POST(request) {
     ok: true,
     slug: post.slug,
     status: "published",
+    originalSlug: post.slug,
+    editorLookupSlug: post.slug,
+    hasWorkingDraft: false,
     revisionId: post.revisionId,
     revisionNo: post.revisionNo,
-    post: toApiPost(post),
+    post: {
+      ...toApiPost(post),
+      originalSlug: post.slug,
+      baseStatus: post.status,
+      hasWorkingDraft: false,
+      editorLookupSlug: post.slug,
+      source: "db",
+    },
   });
 }

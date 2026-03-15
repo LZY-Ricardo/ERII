@@ -137,8 +137,18 @@ export async function POST(request) {
     ok: true,
     slug: post.slug,
     status: "draft",
+    originalSlug: post.slug,
+    editorLookupSlug: post.slug,
+    hasWorkingDraft: false,
     revisionId: post.revisionId,
     revisionNo: post.revisionNo,
-    post: toApiPost(post),
+    post: {
+      ...toApiPost(post),
+      originalSlug: post.slug,
+      baseStatus: post.status,
+      hasWorkingDraft: false,
+      editorLookupSlug: post.slug,
+      source: "db",
+    },
   });
 }

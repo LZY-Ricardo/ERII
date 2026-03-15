@@ -41,6 +41,19 @@ function createEmptyMetadata() {
   };
 }
 
+function createDraftSignature(payload) {
+  return JSON.stringify({
+    originalSlug: payload?.originalSlug || "",
+    slug: payload?.slug || "",
+    title: payload?.title || "",
+    date: payload?.date || "",
+    description: payload?.description || "",
+    tags: payload?.tags || "",
+    cover: payload?.cover || "",
+    content: payload?.content || "",
+  });
+}
+
 function parseTagsInput(raw) {
   return String(raw ?? "")
     .split(/[,，]/)
@@ -83,6 +96,7 @@ export default function WritePageV2() {
   const [metadata, setMetadata] = useState(createEmptyMetadata);
   const [originalSlug, setOriginalSlug] = useState("");
   const [postStatus, setPostStatus] = useState("draft");
+  const [hasWorkingDraft, setHasWorkingDraft] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [isAuthed, setIsAuthed] = useState(false);
@@ -107,6 +121,7 @@ export default function WritePageV2() {
     setMetadata(createEmptyMetadata());
     setOriginalSlug("");
     setPostStatus("draft");
+    setHasWorkingDraft(false);
     setIsCoverUploading(false);
     setCoverLocalPreview("");
     setAutoSaveState("idle");
@@ -150,18 +165,43 @@ export default function WritePageV2() {
     return Boolean(title || body);
   }, [metadata.title, content]);
 
+  const isPublishedPost = postStatus === "published";
+  const saveTargetLabel = isPublishedPost ? "修改稿" : "草稿";
+  const autoSaveHint = isPublishedPost
+    ? "修改会自动保存到草稿箱，线上文章暂不受影响"
+    : "文章将自动保存至草稿箱";
+
   const applySavedDraft = useCallback(
     (payload, data, { updateAutoSave } = {}) => {
       const savedSlug = data?.slug || data?.post?.slug || payload.slug || "";
+      const responseOriginalSlug =
+        data?.originalSlug || data?.post?.originalSlug || payload.originalSlug || savedSlug;
+      const editorLookupSlug =
+        data?.editorLookupSlug ||
+        data?.post?.editorLookupSlug ||
+        savedSlug ||
+        responseOriginalSlug;
+      const savedStatus = data?.post?.status || data?.status || "";
+      const nextHasWorkingDraft = Boolean(
+        data?.post?.hasWorkingDraft ?? data?.hasWorkingDraft ?? false
+      );
       if (savedSlug && savedSlug !== metadata.slug) {
         setMetadata((prev) => ({ ...prev, slug: savedSlug }));
       }
-      setOriginalSlug(savedSlug || "");
-      if (savedSlug && savedSlug !== urlSlug) {
-        router.replace(`/write?slug=${savedSlug}`);
+      setOriginalSlug(responseOriginalSlug || "");
+      if (savedStatus) {
+        setPostStatus(savedStatus);
       }
-      const signaturePayload = { ...payload, slug: savedSlug || payload.slug };
-      lastSavedSignatureRef.current = JSON.stringify(signaturePayload);
+      setHasWorkingDraft(nextHasWorkingDraft);
+      if (editorLookupSlug && editorLookupSlug !== urlSlug) {
+        router.replace(`/write?slug=${editorLookupSlug}`);
+      }
+      const signaturePayload = {
+        ...payload,
+        originalSlug: responseOriginalSlug || payload.originalSlug,
+        slug: savedSlug || payload.slug,
+      };
+      lastSavedSignatureRef.current = createDraftSignature(signaturePayload);
       if (updateAutoSave) {
         setAutoSaveAt(
           new Date().toLocaleTimeString("zh-CN", { hour12: false })
@@ -172,11 +212,12 @@ export default function WritePageV2() {
     [metadata.slug, router, urlSlug]
   );
 
-  const postDraft = useCallback(async (payload) => {
+  const postDraft = useCallback(async (payload, { keepalive = false } = {}) => {
     const res = await fetch("/api/write/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      keepalive,
     });
     const data = await res.json().catch(() => null);
     if (!res.ok || !data?.ok) {
@@ -184,6 +225,41 @@ export default function WritePageV2() {
     }
     return { ok: true, data };
   }, []);
+
+  const postWorkingDraft = useCallback(
+    async (payload, { keepalive = false } = {}) => {
+      const publishedSlug = payload.originalSlug || originalSlug || payload.slug;
+      if (!publishedSlug) {
+        return { ok: false, error: "缺少已发布文章 slug" };
+      }
+
+      const res = await fetch(
+        `/api/write/posts/${encodeURIComponent(publishedSlug)}/working-draft`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          keepalive,
+        }
+      );
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        return { ok: false, error: data?.error || "保存失败" };
+      }
+      return { ok: true, data };
+    },
+    [originalSlug]
+  );
+
+  const persistEditorState = useCallback(
+    async (payload, options = {}) => {
+      if (isPublishedPost) {
+        return postWorkingDraft(payload, options);
+      }
+      return postDraft(payload, options);
+    },
+    [isPublishedPost, postDraft, postWorkingDraft]
+  );
 
   const showToast = useCallback((message, tone = "info") => {
     if (toastTimerRef.current) {
@@ -242,15 +318,19 @@ export default function WritePageV2() {
             cover: post.cover || "",
           };
           setMetadata(nextMeta);
-          setOriginalSlug(post.slug || "");
+          setOriginalSlug(post.originalSlug || post.slug || "");
           const nextContent = post.content || "";
           setContent(nextContent);
           setPostStatus(post.status || "draft");
-          lastSavedSignatureRef.current = JSON.stringify({
+          setHasWorkingDraft(Boolean(post.hasWorkingDraft));
+          setAutoSaveState("idle");
+          setAutoSaveAt("");
+          lastSavedSignatureRef.current = createDraftSignature({
+            originalSlug: post.originalSlug || post.slug || "",
             ...nextMeta,
             content: nextContent,
           });
-          showToast("草稿已加载", "info");
+          showToast(post.hasWorkingDraft ? "已恢复未发布修改" : "文章已加载", "info");
         }
       } catch {
         showToast("加载失败", "error");
@@ -273,13 +353,13 @@ export default function WritePageV2() {
     setIsBusy(true);
     try {
       const payload = buildDraftPayload();
-      const result = await postDraft(payload);
+      const result = await persistEditorState(payload);
       if (!result.ok) {
         showToast(result.error || "保存失败", "error");
         return;
       }
       applySavedDraft(payload, result.data);
-      showToast("草稿已保存", "success");
+      showToast(`${saveTargetLabel}已保存`, "success");
     } catch {
       showToast("保存失败", "error");
     } finally {
@@ -338,7 +418,8 @@ export default function WritePageV2() {
       if (res.ok && data?.ok) {
         applySavedDraft(payload, data);
         setPostStatus("published");
-        showToast("发布成功", "success");
+        setHasWorkingDraft(false);
+        showToast(isPublishedPost ? "文章已更新" : "发布成功", "success");
       } else {
         showToast(data?.error || "发布失败", "error");
       }
@@ -430,7 +511,7 @@ export default function WritePageV2() {
   const performAutoSave = useCallback(async () => {
     if (!isAuthed || !hasDraftContent()) return;
     const payload = buildDraftPayload();
-    const signature = JSON.stringify(payload);
+    const signature = createDraftSignature(payload);
     if (signature === lastSavedSignatureRef.current) return;
 
     if (autoSaveInFlightRef.current) {
@@ -440,7 +521,7 @@ export default function WritePageV2() {
 
     autoSaveInFlightRef.current = true;
     setAutoSaveState("saving");
-    const result = await postDraft(payload);
+    const result = await persistEditorState(payload);
     autoSaveInFlightRef.current = false;
 
     if (result.ok) {
@@ -455,7 +536,7 @@ export default function WritePageV2() {
         performAutoSave();
       }, 0);
     }
-  }, [applySavedDraft, buildDraftPayload, hasDraftContent, isAuthed, postDraft]);
+  }, [applySavedDraft, buildDraftPayload, hasDraftContent, isAuthed, persistEditorState]);
 
   useEffect(() => {
     if (!isAuthed) {
@@ -476,7 +557,7 @@ export default function WritePageV2() {
       return;
     }
 
-    const signature = JSON.stringify(buildDraftPayload());
+    const signature = createDraftSignature(buildDraftPayload());
     if (signature === lastSavedSignatureRef.current) return;
 
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
@@ -492,13 +573,43 @@ export default function WritePageV2() {
     };
   }, [buildDraftPayload, hasDraftContent, isAuthed, performAutoSave]);
 
+  const flushUnsavedChanges = useCallback(() => {
+    if (!isAuthed || !hasDraftContent()) return;
+    const payload = buildDraftPayload();
+    const signature = createDraftSignature(payload);
+    if (signature === lastSavedSignatureRef.current) return;
+    void persistEditorState(payload, { keepalive: true });
+  }, [buildDraftPayload, hasDraftContent, isAuthed, persistEditorState]);
+
+  useEffect(() => {
+    if (!isAuthed) return undefined;
+
+    const handlePageHide = () => {
+      flushUnsavedChanges();
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        flushUnsavedChanges();
+      }
+    };
+
+    window.addEventListener("pagehide", handlePageHide);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      flushUnsavedChanges();
+    };
+  }, [flushUnsavedChanges, isAuthed]);
+
   const autoSaveLabel = (() => {
     if (!isAuthed || !hasDraftContent()) return "";
     if (autoSaveState === "saving") return "自动保存中…";
     if (autoSaveState === "saved") {
-      return autoSaveAt ? `已自动保存 ${autoSaveAt}` : "已自动保存";
+      return autoSaveAt ? `已自动保存${saveTargetLabel} ${autoSaveAt}` : `已自动保存${saveTargetLabel}`;
     }
-    if (autoSaveState === "error") return "自动保存失败";
+    if (autoSaveState === "error") return `自动保存${saveTargetLabel}失败`;
     return "";
   })();
 
@@ -612,8 +723,13 @@ export default function WritePageV2() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-wafu-sumi/45">
-            文章将自动保存至草稿箱
+            {autoSaveHint}
           </span>
+          {isPublishedPost ? (
+            <span className="rounded-full bg-amber-50 px-2 py-1 text-[11px] text-amber-700">
+              {hasWorkingDraft ? "存在未发布修改" : "线上文章保持不变"}
+            </span>
+          ) : null}
           {autoSaveLabel ? (
             <span className="text-[11px] text-wafu-sumi/55">{autoSaveLabel}</span>
           ) : null}
