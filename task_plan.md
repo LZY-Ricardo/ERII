@@ -22,3 +22,29 @@
 
 - 当前仓库存在未归档变更：`add-admin-dashboard`、`edit-published-posts`
 - 当前工作区有用户已有未提交改动，避免触碰无关文件
+
+## 2026-03-16 Current Task
+
+### Goal
+
+为“导入掘金文章到博客”创建一份 OpenSpec 提案，范围收敛为“手动导入公开文章为草稿”的 MVP。
+
+### Phases
+
+- [complete] 1. 复核现有内容平台、Notion 同步链路和 OpenSpec 约束
+- [complete] 2. 验证掘金公开文章页是否可在服务端提取结构化内容
+- [in_progress] 3. 编写 `add-juejin-import` 提案、设计与任务清单
+- [pending] 4. 运行 OpenSpec 严格校验并整理结论
+
+### Errors Encountered
+
+| Error | Attempt | Resolution |
+|-------|---------|------------|
+| `openspec list --specs` 返回 `No specs found.` | 1 | 说明当前仓库还没有归档后的正式 specs，本次直接在变更目录下新增 capability delta |
+
+### Notes
+
+- 掘金公开文章页当前可直接返回 SSR HTML，页面中存在 `window.__NUXT__`、`article_info`、`web_html_content`
+- `posts` 表已支持 `editor_source='import'`、`source_ref`、`source_updated_at`，足够承接 MVP 来源标记
+- `content_sync_jobs.provider` 当前只允许 `notion`，因此 MVP 不引入同步任务表，先走手动导入接口
+- 掘金公开作者页可见文章列表与 `?cursor=<n>` 翻页链接，因此提案应升级为“批量导入公开文章”为主流程

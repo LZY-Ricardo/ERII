@@ -11,3 +11,16 @@
 - `pnpm build` 已跑到页面预渲染阶段，失败原因是仓库内既有的 `/admin/comments` 缺少 `Suspense` 包裹 `useSearchParams()`，与本次改动无直接关系
 - Neon MCP 当前不可用，错误为 OAuth `invalid_grant: Invalid refresh token`；`codex mcp login neon` 还会返回 `No authorization support detected`
 - 已通过项目中的 Neon 连接串直连数据库执行 `db/migrations/20260315_post_working_drafts.sql`，并验证 `to_regclass('public.post_working_drafts') = post_working_drafts`
+
+## 2026-03-16
+
+- 当前仓库的内容模型已经具备外部来源字段：`editor_source`、`source_ref`、`source_updated_at`
+- `posts.editor_source` 的约束已包含 `import`，因此掘金导入 MVP 不必先增加新的来源枚举
+- `content_sync_jobs.provider` 当前仅允许 `notion`，若直接复用同步任务表会带来额外 migration；MVP 更适合走手动导入接口
+- 通过服务端请求公开掘金文章页，确认可直接拿到 SSR HTML，且页面中存在 `window.__NUXT__`、`article_info`、`web_html_content`
+- 这意味着掘金导入可以优先基于公开页面解析，不必在 MVP 中依赖账号态、Cookie 或双向同步
+- 导入后的正文仍需做 HTML -> Markdown 转换，因为当前写作入口是 ByteMD 编辑器
+- 重复导入若直接覆盖现有文章，可能误伤已发布内容；MVP 应先做 `source_ref` 去重并返回现有稿件
+- 公开掘金作者页同样可返回 SSR HTML，并且能看到作者文章列表、`article_id`、`post_article_count` 与 `?cursor=<n>` 形式的公开分页链接
+- 这使“按作者主页批量扫描全部公开文章，再逐篇导入”成为可行的 MVP 主流程
+- 对“导入自己的文章”这个场景，公开作者页已经足够，不需要把掘金登录态直接接入博客后台
