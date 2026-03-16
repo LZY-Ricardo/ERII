@@ -27,3 +27,20 @@
 - 已写入 `proposal.md`、`design.md`、`tasks.md` 与 `specs/juejin-import/spec.md`
 - 已补充验证公开作者页结构，确认存在可用于批量导入的文章列表与 `cursor` 分页线索
 - 正在把提案范围从“单篇导入”调整为“作者主页批量导入为主，单篇导入为辅”
+- 已新增依赖：`cheerio`、`turndown`、`turndown-plugin-gfm`
+- 已实现 `src/lib/content/htmlToMarkdown.js`、`src/lib/content/adapters/juejinAdapter.js`、`src/lib/content/juejinImport.js`
+- 已新增 API：`app/api/write/import/juejin/route.js`
+- 已在 `WritePageV2` 加入“导入掘金”入口、批量/单篇模式切换和导入结果面板
+- 已通过 `pnpm lint`（仅保留仓库既有的 3 条 `<img>` warning）
+- 已验证作者页扫描与单篇正文提取脚本可运行
+- 已通过 `pnpm build` 的编译阶段；构建最终仍失败于仓库既有的 `/admin/comments` Suspense 问题
+- 已完成真实单篇导入测试：`7548595210558767138` 成功导入、发布并展示
+- 已完成真实小批量测试：作者 `2936108653217451` 扫描 3 篇，初次导入成功
+- 已定位并修复“发布后丢失 Juejin 来源元数据”问题
+- 已清理重复测试草稿 `打造属于你的前端沙盒-2`
+- 已重新跑同一批量测试，结果为 `scanned=3, imported=0, skipped=3, failed=0`
+- 已对作者 `2936108653217451` 执行全量公开文章导入，首次全量结果为 `scanned=96, imported=85, skipped=3, failed=8`
+- 已针对剩余失败文章补跑导入，并定位最后 1 篇失败原因是掘金返回 JS challenge 风控页而非文章正文
+- 已在 `juejinAdapter` 中加入自动处理掘金 `_wafchallengeid` challenge 的逻辑
+- 已成功补导最后 1 篇文章 `7536319934545412139`
+- 已完成全量复核：作者 `2936108653217451` 当前结果为 `scanned=96, imported=0, skipped=96, failed=0`

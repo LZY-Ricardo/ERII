@@ -33,8 +33,12 @@
 
 - [complete] 1. 复核现有内容平台、Notion 同步链路和 OpenSpec 约束
 - [complete] 2. 验证掘金公开文章页是否可在服务端提取结构化内容
-- [in_progress] 3. 编写 `add-juejin-import` 提案、设计与任务清单
-- [pending] 4. 运行 OpenSpec 严格校验并整理结论
+- [complete] 3. 编写 `add-juejin-import` 提案、设计与任务清单
+- [complete] 4. 运行 OpenSpec 严格校验并整理结论
+- [complete] 5. 实现 Juejin adapter、导入服务、写作 API 与 `/write` 入口
+- [complete] 6. 做无副作用验证并整理剩余真实导入验证项
+- [complete] 7. 完成真实单篇导入与小批量去重验证
+- [complete] 8. 完成全量公开文章导入，并处理掘金风控挑战兼容
 
 ### Errors Encountered
 
@@ -48,3 +52,6 @@
 - `posts` 表已支持 `editor_source='import'`、`source_ref`、`source_updated_at`，足够承接 MVP 来源标记
 - `content_sync_jobs.provider` 当前只允许 `notion`，因此 MVP 不引入同步任务表，先走手动导入接口
 - 掘金公开作者页可见文章列表与 `?cursor=<n>` 翻页链接，因此提案应升级为“批量导入公开文章”为主流程
+- 当前实现已完成核心代码，但尚未对真实数据库执行导入写入，以避免在未确认前污染现有文章数据
+- 已完成真实数据库验证，并确认去重链路可用
+- 已完成作者 `2936108653217451` 的 96 篇公开文章全量导入，最终复核结果为 `skipped=96, failed=0`
