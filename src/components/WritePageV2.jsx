@@ -41,6 +41,14 @@ function createEmptyMetadata() {
   };
 }
 
+function createEmptySourceMeta() {
+  return {
+    editorSource: "",
+    sourceRef: "",
+    sourceUpdatedAt: "",
+  };
+}
+
 function createDraftSignature(payload) {
   return JSON.stringify({
     originalSlug: payload?.originalSlug || "",
@@ -87,6 +95,30 @@ function applyCategoryToTags(rawTags, category) {
   return formatTagsInput(tags);
 }
 
+function getJuejinImportStatusMeta(status) {
+  if (status === "imported") {
+    return {
+      label: "已导入",
+      pillClass: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
+      helperClass: "text-emerald-700/80",
+    };
+  }
+
+  if (status === "skipped") {
+    return {
+      label: "已跳过",
+      pillClass: "bg-amber-50 text-amber-700 border-amber-200/80",
+      helperClass: "text-amber-700/80",
+    };
+  }
+
+  return {
+    label: "失败",
+    pillClass: "bg-rose-50 text-rose-700 border-rose-200/80",
+    helperClass: "text-rose-700/80",
+  };
+}
+
 export default function WritePageV2() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -94,10 +126,17 @@ export default function WritePageV2() {
 
   const [content, setContent] = useState("");
   const [metadata, setMetadata] = useState(createEmptyMetadata);
+  const [sourceMeta, setSourceMeta] = useState(createEmptySourceMeta);
   const [originalSlug, setOriginalSlug] = useState("");
   const [postStatus, setPostStatus] = useState("draft");
   const [hasWorkingDraft, setHasWorkingDraft] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isJuejinImportOpen, setIsJuejinImportOpen] = useState(false);
+  const [juejinImportMode, setJuejinImportMode] = useState("profile");
+  const [juejinProfileInput, setJuejinProfileInput] = useState("");
+  const [juejinArticleInput, setJuejinArticleInput] = useState("");
+  const [isJuejinImporting, setIsJuejinImporting] = useState(false);
+  const [juejinImportResult, setJuejinImportResult] = useState(null);
   const [toast, setToast] = useState(null);
   const [isAuthed, setIsAuthed] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -119,6 +158,7 @@ export default function WritePageV2() {
   const resetEditor = useCallback(() => {
     setContent("");
     setMetadata(createEmptyMetadata());
+    setSourceMeta(createEmptySourceMeta());
     setOriginalSlug("");
     setPostStatus("draft");
     setHasWorkingDraft(false);
@@ -154,9 +194,12 @@ export default function WritePageV2() {
       description: metadata.description,
       tags: metadata.tags,
       cover: metadata.cover,
+      editorSource: sourceMeta.editorSource || undefined,
+      sourceRef: sourceMeta.sourceRef || undefined,
+      sourceUpdatedAt: sourceMeta.sourceUpdatedAt || undefined,
       content,
     }),
-    [content, metadata, originalSlug]
+    [content, metadata, originalSlug, sourceMeta]
   );
 
   const hasDraftContent = useCallback(() => {
@@ -188,6 +231,16 @@ export default function WritePageV2() {
       if (savedSlug && savedSlug !== metadata.slug) {
         setMetadata((prev) => ({ ...prev, slug: savedSlug }));
       }
+      setSourceMeta({
+        editorSource:
+          data?.post?.editorSource || data?.editorSource || payload.editorSource || "",
+        sourceRef: data?.post?.sourceRef || data?.sourceRef || payload.sourceRef || "",
+        sourceUpdatedAt:
+          data?.post?.sourceUpdatedAt ||
+          data?.sourceUpdatedAt ||
+          payload.sourceUpdatedAt ||
+          "",
+      });
       setOriginalSlug(responseOriginalSlug || "");
       if (savedStatus) {
         setPostStatus(savedStatus);
@@ -299,6 +352,10 @@ export default function WritePageV2() {
     resetEditor();
   }, [isAuthed, resetEditor, urlSlug]);
 
+  useEffect(() => {
+    setJuejinImportResult(null);
+  }, [juejinImportMode]);
+
   const loadDraft = useCallback(
     async (slug) => {
       try {
@@ -318,6 +375,11 @@ export default function WritePageV2() {
             cover: post.cover || "",
           };
           setMetadata(nextMeta);
+          setSourceMeta({
+            editorSource: post.editorSource || "",
+            sourceRef: post.sourceRef || "",
+            sourceUpdatedAt: post.sourceUpdatedAt || "",
+          });
           setOriginalSlug(post.originalSlug || post.slug || "");
           const nextContent = post.content || "";
           setContent(nextContent);
@@ -337,6 +399,38 @@ export default function WritePageV2() {
       }
     },
     [showToast]
+  );
+
+  const hasUnsavedChanges = useCallback(() => {
+    if (!hasDraftContent()) return false;
+
+    return createDraftSignature(buildDraftPayload()) !== lastSavedSignatureRef.current;
+  }, [buildDraftPayload, hasDraftContent]);
+
+  const confirmLeavingCurrentDraft = useCallback(
+    (message) => {
+      if (!hasUnsavedChanges()) return true;
+      return window.confirm(
+        message || "当前编辑器有未保存修改，继续会切换到另一篇草稿。确定继续吗？"
+      );
+    },
+    [hasUnsavedChanges]
+  );
+
+  const openEditorSlug = useCallback(
+    (slug, { confirmIfDirty = true } = {}) => {
+      if (!slug) return;
+      if (
+        confirmIfDirty &&
+        !confirmLeavingCurrentDraft("当前编辑器有未保存修改，继续会切换到导入草稿。确定继续吗？")
+      ) {
+        return;
+      }
+
+      setIsJuejinImportOpen(false);
+      router.replace(`/write?slug=${encodeURIComponent(slug)}`);
+    },
+    [confirmLeavingCurrentDraft, router]
   );
 
   useEffect(() => {
@@ -508,6 +602,86 @@ export default function WritePageV2() {
     showToast("已移除封面", "info");
   };
 
+  const closeJuejinImport = useCallback(() => {
+    if (isJuejinImporting) return;
+    setIsJuejinImportOpen(false);
+  }, [isJuejinImporting]);
+
+  const handleJuejinImport = useCallback(async () => {
+    const isProfileMode = juejinImportMode === "profile";
+    const rawValue = isProfileMode ? juejinProfileInput : juejinArticleInput;
+
+    if (!rawValue.trim()) {
+      showToast(isProfileMode ? "请输入作者主页链接或用户 ID" : "请输入文章链接或文章 ID", "error");
+      return;
+    }
+
+    if (
+      !isProfileMode &&
+      !confirmLeavingCurrentDraft("当前编辑器有未保存修改，继续导入并切换文章可能会打断当前编辑。确定继续吗？")
+    ) {
+      return;
+    }
+
+    setIsJuejinImporting(true);
+    setJuejinImportResult(null);
+
+    try {
+      const response = await fetch("/api/write/import/juejin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          isProfileMode
+            ? {
+                mode: "profile",
+                profileUrl: juejinProfileInput.trim(),
+              }
+            : {
+                mode: "single",
+                url: juejinArticleInput.trim(),
+              }
+        ),
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.ok) {
+        showToast(data?.error || "导入失败", "error");
+        return;
+      }
+
+      setJuejinImportResult(data);
+
+      if (!isProfileMode && data?.slug) {
+        showToast(data.skipped ? "文章已存在，正在打开已有草稿" : "掘金文章已导入", "success");
+        openEditorSlug(data.slug, { confirmIfDirty: false });
+        return;
+      }
+
+      const summary = data?.summary ?? {};
+      if (!summary.scanned) {
+        showToast("没有扫描到可导入的公开文章", "info");
+        return;
+      }
+
+      const tone = summary.failed ? "info" : "success";
+      showToast(
+        `批量导入完成：新增 ${summary.imported || 0}，跳过 ${summary.skipped || 0}，失败 ${summary.failed || 0}`,
+        tone
+      );
+    } catch {
+      showToast("导入失败", "error");
+    } finally {
+      setIsJuejinImporting(false);
+    }
+  }, [
+    confirmLeavingCurrentDraft,
+    juejinArticleInput,
+    juejinImportMode,
+    juejinProfileInput,
+    openEditorSlug,
+    showToast,
+  ]);
+
   const performAutoSave = useCallback(async () => {
     if (!isAuthed || !hasDraftContent()) return;
     const payload = buildDraftPayload();
@@ -619,6 +793,11 @@ export default function WritePageV2() {
   const hasCoverPreview = Boolean(coverPreviewUrl);
   const publishButtonLabel =
     postStatus === "published" ? "更新文章" : "发布文章";
+  const juejinImportItems = Array.isArray(juejinImportResult?.results)
+    ? juejinImportResult.results
+    : [];
+  const juejinImportSummary = juejinImportResult?.summary ?? null;
+  const isProfileImportMode = juejinImportMode === "profile";
 
   const toastConfig = toast
     ? {
@@ -740,8 +919,24 @@ export default function WritePageV2() {
             草稿箱
           </Link>
           <button
-            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            className="text-wafu-sumi/55 hover:text-erii-red"
+            type="button"
+            onClick={() => {
+              setIsSettingsOpen(false);
+              setIsJuejinImportOpen(true);
+            }}
+            disabled={isJuejinImporting}
+            className="rounded-full border border-wafu-sumi/10 bg-white/60 px-3 py-1.5 text-[11px] text-wafu-sumi/70 hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            导入掘金
+          </button>
+          <button
+            onClick={() => {
+              if (isJuejinImporting) return;
+              setIsJuejinImportOpen(false);
+              setIsSettingsOpen(!isSettingsOpen);
+            }}
+            disabled={isJuejinImporting}
+            className="text-wafu-sumi/55 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Settings size={18} />
           </button>
@@ -780,6 +975,186 @@ export default function WritePageV2() {
           </div>
         </div>
       ) : null}
+
+      {isJuejinImportOpen && (
+        <div className="write-import-overlay" onClick={closeJuejinImport}>
+          <div
+            className="write-import-modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="write-import-title"
+          >
+            <div className="write-import-header">
+              <div className="write-import-heading">
+                <span className="write-settings-kicker">Juejin Import</span>
+                <h2 id="write-import-title">导入掘金文章</h2>
+                <p>
+                  支持按作者主页批量导入公开文章，也支持用单篇链接快速补录。
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeJuejinImport}
+                className="write-settings-close"
+                disabled={isJuejinImporting}
+                aria-label="关闭掘金导入面板"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="write-import-body">
+              <div className="write-import-mode-switch" role="tablist" aria-label="掘金导入模式">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={isProfileImportMode}
+                  className={`write-import-mode-button${isProfileImportMode ? " is-active" : ""}`}
+                  onClick={() => setJuejinImportMode("profile")}
+                  disabled={isJuejinImporting}
+                >
+                  批量导入
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={!isProfileImportMode}
+                  className={`write-import-mode-button${!isProfileImportMode ? " is-active" : ""}`}
+                  onClick={() => setJuejinImportMode("single")}
+                  disabled={isJuejinImporting}
+                >
+                  单篇导入
+                </button>
+              </div>
+
+              <section className="write-import-panel">
+                <label className="write-field">
+                  <span>{isProfileImportMode ? "作者主页 / 用户 ID" : "文章链接 / 文章 ID"}</span>
+                  <input
+                    value={isProfileImportMode ? juejinProfileInput : juejinArticleInput}
+                    onChange={(event) =>
+                      isProfileImportMode
+                        ? setJuejinProfileInput(event.target.value)
+                        : setJuejinArticleInput(event.target.value)
+                    }
+                    placeholder={
+                      isProfileImportMode
+                        ? "例如 https://juejin.cn/user/312692511089736/posts"
+                        : "例如 https://juejin.cn/post/7250317954993897528"
+                    }
+                    className="write-input"
+                    disabled={isJuejinImporting}
+                  />
+                </label>
+
+                <p className="write-help">
+                  {isProfileImportMode
+                    ? "批量模式会扫描该作者的全部公开文章，自动跳过已经导入过的内容。"
+                    : "单篇模式适合补录某一篇文章；导入成功后会直接打开对应草稿。"}
+                </p>
+
+                <div className="write-import-actions">
+                  <button
+                    type="button"
+                    className="write-import-submit"
+                    onClick={handleJuejinImport}
+                    disabled={isJuejinImporting}
+                  >
+                    {isJuejinImporting ? (
+                      <>
+                        <Loader2 size={15} className="animate-spin" />
+                        {isProfileImportMode ? "正在批量导入…" : "正在导入…"}
+                      </>
+                    ) : (
+                      isProfileImportMode ? "开始批量导入" : "开始导入文章"
+                    )}
+                  </button>
+                </div>
+              </section>
+
+              {juejinImportSummary ? (
+                <section className="write-import-report">
+                  <div className="write-import-report-grid">
+                    <div className="write-import-stat">
+                      <strong>{juejinImportSummary.scanned || 0}</strong>
+                      <span>扫描文章</span>
+                    </div>
+                    <div className="write-import-stat">
+                      <strong>{juejinImportSummary.imported || 0}</strong>
+                      <span>新增草稿</span>
+                    </div>
+                    <div className="write-import-stat">
+                      <strong>{juejinImportSummary.skipped || 0}</strong>
+                      <span>已跳过</span>
+                    </div>
+                    <div className="write-import-stat">
+                      <strong>{juejinImportSummary.failed || 0}</strong>
+                      <span>失败</span>
+                    </div>
+                  </div>
+
+                  {juejinImportResult?.profile ? (
+                    <p className="write-help">
+                      已扫描 {juejinImportResult.profile.userId}，共访问{" "}
+                      {juejinImportResult.profile.pagesVisited || 0} 个分页。
+                    </p>
+                  ) : null}
+
+                  {juejinImportItems.length ? (
+                    <ul className="write-import-result-list">
+                      {juejinImportItems.map((item) => {
+                        const statusMeta = getJuejinImportStatusMeta(item.status);
+
+                        return (
+                          <li key={`${item.articleId}-${item.status}`} className="write-import-result-item">
+                            <div className="write-import-result-copy">
+                              <div className="write-import-result-head">
+                                <p className="write-import-result-title">
+                                  {item.title || item.articleId}
+                                </p>
+                                <span className={`write-import-result-pill ${statusMeta.pillClass}`}>
+                                  {statusMeta.label}
+                                </span>
+                              </div>
+                              <p className="write-import-result-meta">
+                                {item.articleId}
+                                {item.slug ? ` · ${item.slug}` : ""}
+                              </p>
+                              {item.error ? (
+                                <p className={`write-import-result-helper ${statusMeta.helperClass}`}>
+                                  {item.error}
+                                </p>
+                              ) : item.status === "skipped" ? (
+                                <p className={`write-import-result-helper ${statusMeta.helperClass}`}>
+                                  已存在相同来源，未重复创建草稿。
+                                </p>
+                              ) : (
+                                <p className={`write-import-result-helper ${statusMeta.helperClass}`}>
+                                  可直接进入编辑器继续整理。
+                                </p>
+                              )}
+                            </div>
+                            {item.slug ? (
+                              <button
+                                type="button"
+                                className="write-import-open"
+                                onClick={() => openEditorSlug(item.slug)}
+                              >
+                                打开草稿
+                              </button>
+                            ) : null}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
+                </section>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
 
       {isSettingsOpen && (
         <div

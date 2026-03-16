@@ -19,6 +19,7 @@
     "@vercel/speed-insights": "^2.0.0",
     "bytemd": "^1.22.0",
     "canvas-confetti": "^1.9.4",
+    "cheerio": "^1.2.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "gray-matter": "^4.0.3",
@@ -30,7 +31,9 @@
     "react-dom": "19.2.3",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "turndown": "^7.2.2",
+    "turndown-plugin-gfm": "^1.0.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

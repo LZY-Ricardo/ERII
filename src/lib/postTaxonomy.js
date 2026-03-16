@@ -1,5 +1,6 @@
 export const POST_CATEGORY_OPTIONS = [
   "未分类",
+  "技术分享",
   "TeamSpeak",
   "电脑技巧",
   "直播",
@@ -8,15 +9,44 @@ export const POST_CATEGORY_OPTIONS = [
   "影视",
 ];
 
+export const POST_CATEGORY_DISPLAY_ORDER = [
+  "技术分享",
+  "TeamSpeak",
+  "电脑技巧",
+  "直播",
+  "游戏",
+  "音乐",
+  "影视",
+  "未分类",
+];
+
+const TECH_TOPIC_KEYWORDS = [
+  "前端",
+  "frontend",
+  "react",
+  "vue",
+  "next",
+  "css",
+  "javascript",
+  "typescript",
+  "ai",
+  "人工智能",
+  "大模型",
+  "llm",
+  "agent",
+  "prompt",
+];
+
 const CATEGORY_RULES = [
   { category: "TeamSpeak", keywords: ["team", "teamspeak", "语音", "ts"] },
   { category: "影视", keywords: ["影视", "movie", "film", "video"] },
   { category: "直播", keywords: ["直播", "stream", "obs"] },
   { category: "音乐", keywords: ["音乐", "music"] },
   { category: "游戏", keywords: ["游戏", "game"] },
+  { category: "技术分享", keywords: TECH_TOPIC_KEYWORDS },
   {
     category: "电脑技巧",
-    keywords: ["电脑", "tech", "教程", "frontend", "javascript", "typescript"],
+    keywords: ["电脑", "教程", "系统", "软件", "效率", "工具", "windows", "mac"],
   },
 ];
 
@@ -67,25 +97,9 @@ export function inferCategoryFromPost(post) {
   return inferCategoryFromText(title, tags);
 }
 
-const TECH_TOPIC_KEYWORDS = [
-  "前端",
-  "frontend",
-  "react",
-  "vue",
-  "next",
-  "css",
-  "javascript",
-  "typescript",
-  "ai",
-  "人工智能",
-  "大模型",
-  "llm",
-  "agent",
-  "prompt",
-];
-
 function isTechPost(post) {
-  if (inferCategoryFromPost(post) === "电脑技巧") return true;
+  const category = inferCategoryFromPost(post);
+  if (category === "技术分享" || category === "电脑技巧") return true;
 
   const title = String(post?.frontmatter?.title ?? "").toLowerCase();
   const description = String(post?.frontmatter?.description ?? "").toLowerCase();
@@ -98,6 +112,7 @@ function isTechPost(post) {
 }
 
 const CATEGORY_DISPLAY_LABELS = {
+  技术分享: "技术分享",
   TeamSpeak: "TeamSpeak",
   影视: "影视",
   未分类: "未分类",

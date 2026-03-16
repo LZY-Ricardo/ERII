@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import ArticleCatalogList from "@/src/components/argon/ArticleCatalogList";
 import { useArticleCatalogNavigation } from "@/src/components/argon/useArticleCatalogNavigation";
-import { getCategoryThemeLabel, inferCategoryFromPost } from "@/src/lib/postTaxonomy";
+import {
+  getCategoryThemeLabel,
+  inferCategoryFromPost,
+  POST_CATEGORY_DISPLAY_ORDER,
+} from "@/src/lib/postTaxonomy";
 
 function isGitHubAction(action) {
   const href = String(action?.href ?? "").trim().toLowerCase();
@@ -78,8 +82,7 @@ function collectCategories(posts) {
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
 
-  const categoryOrder = ["TeamSpeak", "电脑技术", "直播", "游戏", "音乐", "影视", "未分类"];
-  return categoryOrder
+  return POST_CATEGORY_DISPLAY_ORDER
     .map((label) => ({
       label,
       count: counts.get(label) ?? 0,
