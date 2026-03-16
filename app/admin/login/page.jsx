@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Lock } from "lucide-react";
 
-export default function AdminLoginPage() {
+function AdminLoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get("from") || "/admin";
@@ -87,5 +87,21 @@ export default function AdminLoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+function AdminLoginPageFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+      <div className="text-sm text-gray-400">加载中…</div>
+    </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={<AdminLoginPageFallback />}>
+      <AdminLoginPageContent />
+    </Suspense>
   );
 }

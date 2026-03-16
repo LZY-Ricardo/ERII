@@ -1088,6 +1088,85 @@ body {
   color: rgba(54, 72, 99, 0.75);
 }
 
+.nh-search-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.nh-search-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: rgba(54, 72, 99, 0.78);
+}
+
+.nh-search-action {
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, rgba(var(--nh-theme-rgb), 0.95), rgba(242, 151, 92, 0.92));
+  color: #fff;
+  font-size: 12px;
+  font-family: var(--nh-font-ui);
+  cursor: pointer;
+  box-shadow: 0 10px 18px rgba(var(--nh-theme-rgb), 0.2);
+}
+
+.nh-search-action:hover {
+  transform: translateY(-1px);
+}
+
+.nh-search-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.nh-search-result-link {
+  display: grid;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--nh-text);
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nh-search-result-link:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--nh-theme-rgb), 0.28);
+  box-shadow: 0 10px 20px rgba(34, 18, 20, 0.08);
+}
+
+.nh-search-result-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.nh-search-result-meta {
+  font-size: 12px;
+  color: rgba(54, 72, 99, 0.7);
+}
+
+.nh-search-result-desc {
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(54, 72, 99, 0.86);
+}
+
+.nh-search-result-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .nh-daily-quote {
   display: grid;
   gap: 12px;
@@ -2149,6 +2228,17 @@ body {
 .nh-project-empty p {
   margin: 0;
   color: rgba(54, 72, 99, 0.8);
+}
+
+.nh-search-empty {
+  padding: 24px 22px;
+  display: grid;
+  gap: 8px;
+}
+
+.nh-search-empty p {
+  margin: 0;
+  color: rgba(54, 72, 99, 0.82);
 }
 
 .nh-post-grid {
@@ -3670,6 +3760,21 @@ body {
   background: rgba(22, 27, 36, 0.85);
   border-color: rgba(220, 228, 243, 0.2);
   color: var(--nh-text);
+}
+
+.nh-body.nh-dark .nh-search-result-link {
+  background: rgba(22, 27, 36, 0.82);
+  border-color: rgba(220, 228, 243, 0.14);
+}
+
+.nh-body.nh-dark .nh-search-result-meta,
+.nh-body.nh-dark .nh-search-summary,
+.nh-body.nh-dark .nh-search-empty p {
+  color: rgba(232, 224, 211, 0.76);
+}
+
+.nh-body.nh-dark .nh-search-result-desc {
+  color: rgba(232, 224, 211, 0.84);
 }
 
 .nh-body.nh-dark .nh-profile-card {

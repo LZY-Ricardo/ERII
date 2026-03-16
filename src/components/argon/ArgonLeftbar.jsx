@@ -2,9 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import ArticleCatalogList from "@/src/components/argon/ArticleCatalogList";
 import { useArticleCatalogNavigation } from "@/src/components/argon/useArticleCatalogNavigation";
+import {
+  buildBlogSearchHref,
+  normalizeSearchKeyword,
+  searchPosts,
+} from "@/src/lib/postSearch";
 import {
   getCategoryThemeLabel,
   inferCategoryFromPost,
@@ -148,7 +154,8 @@ function ProfileLinkIcon({ type }) {
   );
 }
 
-export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
+export default function ArgonLeftbar({ posts = [], tocItems = [], activeSearchQuery = "" }) {
+  const router = useRouter();
   const categories = useMemo(() => collectCategories(posts), [posts]);
   const tags = useMemo(() => collectTags(posts), [posts]);
   const recentPosts = useMemo(() => posts.slice(0, 5), [posts]);
@@ -179,6 +186,21 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
 
   const [panelOpen, setPanelOpen] = useState(false);
   const [activePanel, setActivePanel] = useState("overview");
+  const [searchKeyword, setSearchKeyword] = useState(normalizeSearchKeyword(activeSearchQuery));
+
+  useEffect(() => {
+    setSearchKeyword(normalizeSearchKeyword(activeSearchQuery));
+  }, [activeSearchQuery]);
+
+  const normalizedSearchKeyword = useMemo(
+    () => normalizeSearchKeyword(searchKeyword),
+    [searchKeyword]
+  );
+  const searchMatches = useMemo(() => {
+    if (!normalizedSearchKeyword) return [];
+    return searchPosts(posts, normalizedSearchKeyword);
+  }, [posts, normalizedSearchKeyword]);
+  const searchResults = useMemo(() => searchMatches.slice(0, 6), [searchMatches]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -256,7 +278,11 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
     const openFromNavbar = (event) => {
       const panelId = String(event?.detail?.panelId ?? "search");
       const exists = PANEL_ITEMS.some((item) => item.id === panelId);
-      setActivePanel(exists ? panelId : "search");
+      const nextPanelId = exists ? panelId : "search";
+      if (nextPanelId === "search") {
+        setSearchKeyword(normalizeSearchKeyword(event?.detail?.keyword ?? ""));
+      }
+      setActivePanel(nextPanelId);
       setPanelOpen(true);
     };
 
@@ -273,11 +299,77 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
     setPanelOpen(true);
   };
 
+  const handleSearchPanelSubmit = (event) => {
+    event.preventDefault();
+    const keyword = normalizeSearchKeyword(searchKeyword);
+    router.push(buildBlogSearchHref(keyword));
+    setPanelOpen(false);
+  };
+
   const renderSearchBody = () => (
-    <>
-      <input className="nh-search-input" placeholder="搜索文章 / 标签 / 关键词" aria-label="搜索" />
-      <p className="nh-quote">输入关键词可快速定位文章内容。</p>
-    </>
+    <form className="nh-search-panel" onSubmit={handleSearchPanelSubmit}>
+      <input
+        className="nh-search-input"
+        placeholder="搜索标题 / 标签 / slug / 关键词"
+        aria-label="搜索"
+        value={searchKeyword}
+        onChange={(event) => setSearchKeyword(event.target.value)}
+      />
+
+      {normalizedSearchKeyword ? (
+        <>
+          <div className="nh-search-summary">
+            <span>当前找到 {searchMatches.length} 篇匹配文章</span>
+            <button type="submit" className="nh-search-action">
+              查看全部结果
+            </button>
+          </div>
+
+          {searchResults.length ? (
+            <ul className="nh-search-results">
+              {searchResults.map((item) => {
+                const title = String(item?.post?.frontmatter?.title ?? item?.post?.slug ?? "");
+                const description = String(item?.post?.frontmatter?.description ?? "").trim();
+                const date = String(item?.post?.frontmatter?.date ?? "");
+                const categoryLabel = item?.categoryLabel ?? getCategoryThemeLabel(inferCategoryFromPost(item.post));
+
+                return (
+                  <li key={item.post.slug}>
+                    <Link
+                      href={`/blog/${encodeURIComponent(item.post.slug)}`}
+                      className="nh-search-result-link"
+                      onClick={() => setPanelOpen(false)}
+                    >
+                      <span className="nh-search-result-title">{title}</span>
+                      <span className="nh-search-result-meta">
+                        {categoryLabel}
+                        {date ? ` · ${date}` : ""}
+                      </span>
+                      {description ? (
+                        <span className="nh-search-result-desc">{description}</span>
+                      ) : null}
+                      {item.matchedTags.length ? (
+                        <span className="nh-search-result-tags">
+                          {item.matchedTags.slice(0, 3).map((tag) => (
+                            <span key={tag} className="nh-chip">
+                              {tag}
+                            </span>
+                          ))}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="nh-muted">没有找到匹配文章，可以试试标题关键词、英文 slug 或标签名。</p>
+          )}
+        </>
+      ) : (
+        <p className="nh-quote">支持按标题、slug、简介和标签即时搜索，回车可进入完整结果页。</p>
+      )}
+    </form>
   );
 
   const renderDailyQuoteBody = () => (

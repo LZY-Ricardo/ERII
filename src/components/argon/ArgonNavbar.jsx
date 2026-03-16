@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { buildBlogSearchHref, normalizeSearchKeyword } from "@/src/lib/postSearch";
 
 const navItems = [
   { label: "首页", href: "/", type: "home", title: "查看全部文章与最新更新" },
@@ -83,8 +84,14 @@ function isItemActive(item, pathname, currentCategory, currentTag, currentTopic)
   return false;
 }
 
-export default function ArgonNavbar({ activeCategory = "", activeTag = "", activeTopic = "" }) {
+export default function ArgonNavbar({
+  activeCategory = "",
+  activeTag = "",
+  activeTopic = "",
+  activeSearchQuery = "",
+}) {
   const pathname = usePathname();
+  const router = useRouter();
   const currentCategory = String(activeCategory ?? "").trim();
   const currentTag = String(activeTag ?? "").trim();
   const currentTopic = String(activeTopic ?? "").trim().toLowerCase();
@@ -92,9 +99,13 @@ export default function ArgonNavbar({ activeCategory = "", activeTag = "", activ
   const [isScrolled, setIsScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState(normalizeSearchKeyword(activeSearchQuery));
   const searchInputRef = useRef(null);
   const searchShellRef = useRef(null);
+
+  useEffect(() => {
+    setSearchKeyword(normalizeSearchKeyword(activeSearchQuery));
+  }, [activeSearchQuery]);
 
   useEffect(() => {
     let frame = 0;
@@ -151,9 +162,19 @@ export default function ArgonNavbar({ activeCategory = "", activeTag = "", activ
     );
   };
 
+  const submitSearch = () => {
+    const keyword = normalizeSearchKeyword(searchKeyword);
+    if (!keyword) return false;
+
+    router.push(buildBlogSearchHref(keyword));
+    setIsSearchOpen(false);
+    return true;
+  };
+
   const handleSearchSubmit = (event) => {
     event.preventDefault();
-    openSearchPanel(searchKeyword.trim());
+    if (submitSearch()) return;
+    openSearchPanel("");
   };
 
   const handleSearchToggle = () => {
@@ -161,10 +182,10 @@ export default function ArgonNavbar({ activeCategory = "", activeTag = "", activ
       setIsSearchOpen(true);
       return;
     }
-    if (searchKeyword.trim()) {
-      openSearchPanel(searchKeyword.trim());
+    if (submitSearch()) {
       return;
     }
+    openSearchPanel("");
     setIsSearchOpen(false);
   };
 

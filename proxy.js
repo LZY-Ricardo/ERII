@@ -10,7 +10,7 @@ const PUBLIC_ADMIN_PATHS = new Set(["/admin/login", "/api/admin/login"]);
 /**
  * Lightweight cookie format check for Edge Runtime (no node:crypto).
  * Full HMAC verification happens in API route guards (requireAdmin).
- * Middleware only does: cookie exists + looks like "payload.sig".
+ * Proxy only does: cookie exists + looks like "payload.sig".
  */
 function hasValidCookieFormat(value) {
   if (!value || typeof value !== "string") return false;
@@ -18,7 +18,7 @@ function hasValidCookieFormat(value) {
   return dot > 0 && dot < value.length - 1;
 }
 
-export function middleware(request) {
+export function proxy(request) {
   const { pathname } = request.nextUrl;
 
   // Only protect /admin/* and /api/admin/*

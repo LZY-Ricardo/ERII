@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useToast } from "@/src/components/Toast";
 import { useSearchParams } from "next/navigation";
 import { Trash2, Check, AlertCircle, Eye, RefreshCw } from "lucide-react";
@@ -34,7 +34,7 @@ function formatDate(dateString) {
   return date.toLocaleDateString("zh-CN");
 }
 
-export default function AdminCommentsPage() {
+function AdminCommentsPageContent() {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get("status") || "all";
 
@@ -230,6 +230,22 @@ export default function AdminCommentsPage() {
         />
       )}
     </div>
+  );
+}
+
+function AdminCommentsPageFallback() {
+  return (
+    <div className="flex h-64 items-center justify-center text-gray-400 text-sm">
+      加载中…
+    </div>
+  );
+}
+
+export default function AdminCommentsPage() {
+  return (
+    <Suspense fallback={<AdminCommentsPageFallback />}>
+      <AdminCommentsPageContent />
+    </Suspense>
   );
 }
 

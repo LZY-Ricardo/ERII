@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -152,9 +153,12 @@ export default function AdminProjectsPage() {
                     <div className="flex items-start gap-3">
                       {/* Cover */}
                       {project.cover ? (
-                        <img
+                        <Image
                           src={project.cover}
-                          alt=""
+                          alt={`${project.name} 封面`}
+                          width={48}
+                          height={48}
+                          unoptimized
                           className="w-12 h-12 rounded-lg object-cover bg-gray-100"
                         />
                       ) : (

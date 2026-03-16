@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -30,7 +30,7 @@ function fmtDate(v) {
   return new Date(v).toLocaleDateString("zh-CN");
 }
 
-export default function AdminPostsPage() {
+function AdminPostsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [posts, setPosts] = useState([]);
@@ -261,5 +261,21 @@ export default function AdminPostsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function AdminPostsPageFallback() {
+  return (
+    <div className="flex h-64 items-center justify-center text-gray-400 text-sm">
+      加载中…
+    </div>
+  );
+}
+
+export default function AdminPostsPage() {
+  return (
+    <Suspense fallback={<AdminPostsPageFallback />}>
+      <AdminPostsPageContent />
+    </Suspense>
   );
 }

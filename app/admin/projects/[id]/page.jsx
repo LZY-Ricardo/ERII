@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import Image from "next/image";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -10,7 +11,6 @@ import {
   Plus,
   X,
   Star,
-  Image as ImageIcon,
   Upload,
   Loader2,
 } from "lucide-react";
@@ -55,6 +55,7 @@ export default function AdminProjectEditPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [showCoverPreview, setShowCoverPreview] = useState(false);
   const [techInput, setTechInput] = useState("");
   const fileInputRef = useRef(null);
 
@@ -77,6 +78,10 @@ export default function AdminProjectEditPage() {
       .catch(() => setError("网络错误"))
       .finally(() => setLoading(false));
   }, [projectId, isNew]);
+
+  useEffect(() => {
+    setShowCoverPreview(Boolean(project.cover));
+  }, [project.cover]);
 
   const handleChange = (field, value) => {
     setProject((p) => ({ ...p, [field]: value }));
@@ -342,15 +347,16 @@ export default function AdminProjectEditPage() {
                 className="hidden"
               />
             </div>
-            {project.cover && (
+            {project.cover && showCoverPreview && (
               <div className="flex gap-3">
-                <img
+                <Image
                   src={project.cover}
                   alt="封面预览"
+                  width={192}
+                  height={108}
+                  unoptimized
                   className="w-48 h-27 rounded-lg object-cover bg-gray-100"
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                  }}
+                  onError={() => setShowCoverPreview(false)}
                 />
               </div>
             )}

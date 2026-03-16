@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { notFound } from "next/navigation";
 import ArgonCommentShell from "@/src/components/argon/ArgonCommentShell";
@@ -73,7 +74,16 @@ export default async function BlogPostPage({ params }) {
       <article className="nh-article nh-card">
         {post.frontmatter.cover ? (
           <div className="nh-article-cover">
-            <img src={post.frontmatter.cover} alt={post.frontmatter.title} />
+            <Image
+              src={post.frontmatter.cover}
+              alt={post.frontmatter.title}
+              width={1200}
+              height={675}
+              sizes="(max-width: 768px) 100vw, 940px"
+              priority
+              unoptimized
+              className="w-full h-auto"
+            />
           </div>
         ) : null}
         <header className="nh-article-head">

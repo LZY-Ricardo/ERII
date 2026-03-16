@@ -14,6 +14,7 @@ export default function ArgonShell({
   activeCategory = "",
   activeTag = "",
   activeTopic = "",
+  activeSearchQuery = "",
   children,
 }) {
   const isHeroTitle = titleMode === "hero";
@@ -28,6 +29,7 @@ export default function ArgonShell({
         activeCategory={activeCategory}
         activeTag={activeTag}
         activeTopic={activeTopic}
+        activeSearchQuery={activeSearchQuery}
       />
 
       <div className="nh-container">
@@ -39,7 +41,7 @@ export default function ArgonShell({
             </section>
           ) : null}
 
-          <ArgonLeftbar posts={posts} tocItems={tocItems} />
+          <ArgonLeftbar posts={posts} tocItems={tocItems} activeSearchQuery={activeSearchQuery} />
 
           <main id="nh-main" className="nh-main" tabIndex={-1}>
             {!isHeroTitle && title ? (
