@@ -13,7 +13,7 @@ export async function generateMetadata({ searchParams }) {
 
   if (topic === "tech") {
     return {
-      title: `技术分享：前端与 AI | 象龟的水坑`,
+      title: `技术内容：前端 / AI / 后端 / 算法 | 象龟的水坑`,
     };
   }
 
@@ -45,7 +45,7 @@ export default async function BlogIndexPage({ searchParams }) {
   const categoryLabel = getCategoryThemeLabel(category);
 
   const title = topic === "tech"
-    ? "技术分享：前端与 AI"
+    ? "技术内容：前端 / AI / 后端 / 算法"
     : category
       ? `分类：${categoryLabel}${category && category !== categoryLabel ? `（${category}）` : ""}`
       : tag
@@ -53,7 +53,7 @@ export default async function BlogIndexPage({ searchParams }) {
         : "全部文章";
 
   const subtitle = topic === "tech"
-    ? `已筛选前端与 AI 相关内容，共 ${filteredPosts.length} 篇`
+    ? `已筛选技术向内容，共 ${filteredPosts.length} 篇`
     : category || tag
       ? `共找到 ${filteredPosts.length} 篇文章`
       : `共收录 ${filteredPosts.length} 篇文章，按分类和标签可快速筛选。`;

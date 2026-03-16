@@ -20,7 +20,7 @@ export default async function HomePage() {
         <header className="nh-section-head">
           <div>
             <h2>项目精选</h2>
-            <p>展示我最近重点投入的前端与 AI 项目。</p>
+            <p>展示我最近重点投入的前端、AI 与开发实践项目。</p>
           </div>
           <Link href="/projects" className="nh-section-link">
             查看全部

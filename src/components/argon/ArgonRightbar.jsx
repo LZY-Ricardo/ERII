@@ -269,7 +269,7 @@ export default function ArgonRightbar({ posts = [], tocItems = [], articleSideba
   const renderOverviewBody = () => (
     <div className="nh-profile">
       <p className="nh-profile-name">Ricardo</p>
-      <p className="nh-profile-status">前端与 AI 学习记录</p>
+      <p className="nh-profile-status">前端、AI 与开发学习记录</p>
       <div className="nh-profile-stats">
         <span>{posts.length} 篇文章</span>
         <span>{categories.length} 个分类</span>

@@ -49,11 +49,13 @@ function collectCategories(posts) {
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
 
-  return POST_CATEGORY_DISPLAY_ORDER.map((label) => ({
-    label,
-    count: counts.get(label) ?? 0,
-    displayLabel: getCategoryThemeLabel(label),
-  }));
+  return POST_CATEGORY_DISPLAY_ORDER
+    .map((label) => ({
+      label,
+      count: counts.get(label) ?? 0,
+      displayLabel: getCategoryThemeLabel(label),
+    }))
+    .filter((item) => item.count > 0);
 }
 
 function collectTags(posts) {
@@ -164,10 +166,7 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
     const dateText = new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit" }).format(now);
     return { quote, dateText };
   }, []);
-  const activeCategoryCount = useMemo(
-    () => categories.filter((item) => item.count > 0).length,
-    [categories]
-  );
+  const activeCategoryCount = categories.length;
   const [avatarSrc, setAvatarSrc] = useState("/images/avatar-ricardo.jpg");
 
   const [darkMode, setDarkMode] = useState(false);
@@ -305,11 +304,11 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
           />
         </div>
         <p className="nh-profile-card-name">Ricardo</p>
-        <p className="nh-profile-card-role">前端 · AI 技术探索者</p>
+        <p className="nh-profile-card-role">前端 · AI · 开发实践记录</p>
         <p className="nh-profile-card-status">持续更新中</p>
       </div>
 
-      <p className="nh-profile-card-bio">这里主要分享前端开发与 AI 实践过程中的笔记、踩坑与项目复盘。</p>
+      <p className="nh-profile-card-bio">这里主要分享前端、AI、后端与算法方向的笔记、踩坑与项目复盘。</p>
 
       <div className="nh-profile-card-stats">
         <span>
@@ -331,7 +330,7 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
           关于我
         </Link>
         <Link href="/blog?topic=tech" className="nh-profile-card-link">
-          技术分享
+          技术内容
         </Link>
         <a
           href="https://wpa.qq.com/msgrd?v=3&uin=3239468786&site=qq&menu=yes"
@@ -367,7 +366,7 @@ export default function ArgonLeftbar({ posts = [], tocItems = [] }) {
   const renderOverviewBody = () => (
     <div className="nh-profile">
       <p className="nh-profile-name">Ricardo</p>
-      <p className="nh-profile-status">前端与 AI 学习记录</p>
+      <p className="nh-profile-status">前端、AI 与开发学习记录</p>
       <div className="nh-profile-stats">
         <span>{posts.length} 篇文章</span>
         <span>{categories.length} 个分类</span>
