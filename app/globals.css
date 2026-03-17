@@ -2452,21 +2452,26 @@ body {
   padding: 30px 30px 35px;
 }
 
+.nh-article-head {
+  display: grid;
+  gap: 10px;
+}
+
 .nh-article-head h1 {
   margin: 0;
   font-size: 38px;
-  line-height: 1.2;
+  line-height: 1.16;
   color: #2b3d58;
   font-family: var(--nh-font-heading);
+  text-wrap: balance;
 }
 
 .nh-article-meta {
-  margin-top: 8px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 12px;
   color: rgba(54, 72, 99, 0.78);
   font-size: 14px;
 }
@@ -2476,13 +2481,15 @@ body {
 }
 
 .nh-article-desc {
-  margin: 12px 0 0;
+  margin: 0;
+  max-width: 68ch;
+  line-height: 1.72;
   color: rgba(54, 72, 99, 0.84);
 }
 
 .nh-divider {
   border-top: 1px dashed rgba(54, 72, 99, 0.2);
-  margin: 22px 0;
+  margin: 20px 0 24px;
 }
 
 .nh-article-content {
@@ -4504,18 +4511,3 @@ body {
   color: rgba(244, 228, 214, 0.8);
 }
 
-
-/* 文章封面图片样式 */
-.nh-article-cover {
-  width: 100%;
-  margin: -1.5rem -1.5rem 1.5rem -1.5rem;
-  overflow: hidden;
-  border-radius: 12px 12px 0 0;
-}
-
-.nh-article-cover img {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover;
-}
