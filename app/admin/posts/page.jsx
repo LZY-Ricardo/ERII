@@ -3,11 +3,18 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useToast } from "@/src/components/Toast";
+import {
+  inferCategoryFromText,
+  normalizeCategoryValue,
+  POST_CATEGORY_OPTIONS,
+} from "@/src/lib/postTaxonomy";
 import {
   FileText,
   ExternalLink,
   MessageSquare,
   Pencil,
+  Loader2,
   Search,
 } from "lucide-react";
 
@@ -30,13 +37,51 @@ function fmtDate(v) {
   return new Date(v).toLocaleDateString("zh-CN");
 }
 
+function normalizeTagsArray(tags) {
+  if (!Array.isArray(tags)) return [];
+  const result = [];
+  for (const raw of tags) {
+    const value = String(raw ?? "").trim();
+    if (!value) continue;
+    if (!result.includes(value)) result.push(value);
+  }
+  return result;
+}
+
+function getCategoryFromPost(post) {
+  const title = String(post?.title ?? "").trim();
+  const tags = normalizeTagsArray(post?.tags);
+  const explicit = tags.map((tag) => normalizeCategoryValue(tag)).find(Boolean);
+  if (explicit) return explicit;
+  return inferCategoryFromText(title, tags.join(" "));
+}
+
+function applyCategoryToTags(tags, category) {
+  const normalizedCategory = normalizeCategoryValue(category) || "未分类";
+  const baseTags = normalizeTagsArray(tags).filter(
+    (tag) => !normalizeCategoryValue(tag)
+  );
+
+  if (normalizedCategory !== "未分类") {
+    baseTags.unshift(normalizedCategory);
+  }
+
+  return baseTags;
+}
+
+function getRowKey(post) {
+  return `${post.draftKind || post.status}:${post.editorLookupSlug || post.slug}:${post.slug}`;
+}
+
 function AdminPostsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const toast = useToast();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [savingMap, setSavingMap] = useState({});
   const activeTab = useMemo(() => {
     const tab = String(searchParams.get("tab") || "").toLowerCase();
     return tab === "draft" ? "draft" : "published";
@@ -52,6 +97,62 @@ function AdminPostsPageContent() {
       .catch(() => setError("网络错误"))
       .finally(() => setLoading(false));
   }, []);
+
+  const saveCategory = async (post, nextCategory) => {
+    const rowKey = getRowKey(post);
+    if (savingMap[rowKey]) return;
+
+    const requestSlug = post.editorLookupSlug || post.slug;
+    const nextTags = applyCategoryToTags(post.tags, nextCategory);
+    const prevTags = normalizeTagsArray(post.tags);
+
+    // Optimistic update.
+    setPosts((prev) =>
+      prev.map((item) => (getRowKey(item) === rowKey ? { ...item, tags: nextTags } : item))
+    );
+    setSavingMap((prev) => ({ ...prev, [rowKey]: true }));
+
+    try {
+      const res = await fetch("/api/admin/posts/category", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug: requestSlug,
+          draftKind: post.draftKind || null,
+          category: nextCategory,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.ok) {
+        // Rollback.
+        setPosts((prev) =>
+          prev.map((item) => (getRowKey(item) === rowKey ? { ...item, tags: prevTags } : item))
+        );
+        toast.error(data?.error || "更新分类失败");
+        return;
+      }
+
+      // Trust the server's normalized tags if provided.
+      if (Array.isArray(data.tags)) {
+        setPosts((prev) =>
+          prev.map((item) => (getRowKey(item) === rowKey ? { ...item, tags: data.tags } : item))
+        );
+      }
+    } catch (e) {
+      // Rollback.
+      setPosts((prev) =>
+        prev.map((item) => (getRowKey(item) === rowKey ? { ...item, tags: prevTags } : item))
+      );
+      toast.error("更新分类失败");
+    } finally {
+      setSavingMap((prev) => {
+        const next = { ...prev };
+        delete next[rowKey];
+        return next;
+      });
+    }
+  };
 
   const { publishedCount, draftCount } = useMemo(() => {
     let published = 0;
@@ -165,6 +266,9 @@ function AdminPostsPageContent() {
               <tr className="border-b border-gray-100 text-left text-xs text-gray-400">
                 <th className="px-5 py-3 font-medium">标题</th>
                 <th className="px-3 py-3 font-medium w-24">日期</th>
+                <th className="px-3 py-3 font-medium w-32 text-center">
+                  分类
+                </th>
                 <th className="px-3 py-3 font-medium w-20 text-center">
                   状态
                 </th>
@@ -179,7 +283,7 @@ function AdminPostsPageContent() {
             <tbody className="divide-y divide-gray-50">
               {filtered.map((post) => (
                 <tr
-                  key={`${post.draftKind || post.status}:${post.editorLookupSlug || post.slug}:${post.slug}`}
+                  key={getRowKey(post)}
                   className="hover:bg-gray-50/60 transition-colors"
                 >
                   <td className="px-5 py-3">
@@ -205,6 +309,27 @@ function AdminPostsPageContent() {
                   </td>
                   <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
                     {fmtDate(post.updatedAt || post.date)}
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <select
+                        value={getCategoryFromPost(post)}
+                        onChange={(e) => saveCategory(post, e.target.value)}
+                        disabled={Boolean(savingMap[getRowKey(post)])}
+                        className="h-8 w-28 rounded-lg border border-gray-200 bg-gray-50 px-2 text-xs
+                          text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100
+                          disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {POST_CATEGORY_OPTIONS.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      {savingMap[getRowKey(post)] ? (
+                        <Loader2 size={14} className="animate-spin text-gray-300" />
+                      ) : null}
+                    </div>
                   </td>
                   <td className="px-3 py-3 text-center">
                     <span
