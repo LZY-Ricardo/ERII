@@ -1,0 +1,27 @@
+repo: LZY-Ricardo/ERII
+baseBranch: main
+baseLanguage: zh-CN
+targetLanguages:
+  - en
+include:
+  - README.md
+  - docs/Comment-System-Replica-Implementation-Plan.md
+  - docs/ContentPlatform-Implementation-Plan.md
+  - docs/ContentPlatform-Runbook.md
+  - docs/ERIIEditorFeatureDevelopmentGuide.md
+  - docs/EditingPublishedPosts.md
+  - docs/Nighthaven-Replica-Plan.md
+  - docs/Project-Feature-and-Progress-Report.md
+  - docs/README.md
+  - docs/Toast-Component-Usage.md
+  - docs/WafuEditor.md
+ignoreFile: .github-global-ignore
+outputRoot: translations
+model:
+  provider: openrouter
+  id: openai/gpt-5.2
+readmeNavigation:
+  enabled: true
+pullRequest:
+  branch: gittrans/main
+  titleTemplate: "docs: update translations"

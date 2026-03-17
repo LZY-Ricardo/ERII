@@ -1,5 +1,10 @@
 # ERII Blog
 
+<!-- gittrans:lang-switch:start -->
+## 🌐 Translations
+[English](./translations/en/README.md)
+<!-- gittrans:lang-switch:end -->
+
 个人博客项目，当前为 **DB-only 内容架构**：
 
 - 公开内容来源：Postgres `posts(status='published')`
