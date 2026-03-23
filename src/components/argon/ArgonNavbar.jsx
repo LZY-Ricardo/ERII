@@ -51,6 +51,12 @@ const navItems = [
     title: "查看系统、软件和效率技巧",
   },
   {
+    label: "音乐",
+    href: "/music",
+    type: "music",
+    title: "精选音乐歌单分享",
+  },
+  {
     label: "直播",
     href: "/blog?category=直播",
     type: "category",
@@ -71,12 +77,19 @@ const navItems = [
     title: "查看我的项目简介、技术栈与链接",
   },
   { label: "关于本站", href: "/about", type: "about", title: "了解站点定位与更新计划" },
+  {
+    label: "Cassell",
+    href: "https://cassellcollege.com/",
+    type: "external",
+    title: "卡塞尔学院守夜人论坛 — 哪怕是普通人，也有想守护的东西",
+  },
 ];
 
 function isItemActive(item, pathname, currentCategory, currentTag, currentTopic) {
   if (item.type === "home") return pathname === "/";
   if (item.type === "projects") return pathname === "/projects";
   if (item.type === "about") return pathname === "/about";
+  if (item.type === "music") return pathname === "/music";
   if (item.type === "blog") return pathname === "/blog" && !currentCategory;
   if (item.type === "category") return pathname === "/blog" && currentCategory === item.category;
   if (item.type === "tag") return pathname === "/blog" && currentTag === item.tag;
@@ -209,20 +222,33 @@ export default function ArgonNavbar({
             <ul className="nh-nav-list">
               {navItems.map((item) => (
                 <li key={`${item.label}:${item.href}`}>
-                  <Link
-                    href={item.href}
-                    className={`nh-nav-link ${isItemActive(
-                      item,
-                      pathname,
-                      currentCategory,
-                      currentTag,
-                      currentTopic
-                    ) ? "is-active" : ""}`}
-                    title={item.title}
-                    onClick={() => setIsSearchOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
+                  {item.type === "external" ? (
+                    <a
+                      href={item.href}
+                      className="nh-nav-link is-external"
+                      title={item.title}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <img src="/cassel-crest.png" alt="" className="nh-nav-cassel-icon" />
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className={`nh-nav-link ${isItemActive(
+                        item,
+                        pathname,
+                        currentCategory,
+                        currentTag,
+                        currentTopic
+                      ) ? "is-active" : ""}`}
+                      title={item.title}
+                      onClick={() => setIsSearchOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

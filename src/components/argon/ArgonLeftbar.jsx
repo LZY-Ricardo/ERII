@@ -139,16 +139,23 @@ function ProfileLinkIcon({ type }) {
       label: "稀土掘金",
       path: "m12 14.316 7.454-5.88-2.022-1.625L12 11.1l-.004.003-5.432-4.288-2.02 1.624 7.452 5.88Zm0-7.247 2.89-2.298L12 2.453l-.004-.005-2.884 2.318 2.884 2.3Zm0 11.266-.005.002-9.975-7.87L0 12.088l.194.156 11.803 9.308 7.463-5.885L24 12.085l-2.023-1.624Z",
     },
+    npm: {
+      label: "npm",
+      path: "M2.744 21.241V2.744h18.512v18.497zM6.226 6.226v11.541h5.833V8.613h3.398v9.133h2.311V6.226z",
+      fill: "#d81e06",
+    },
   };
 
   const icon = iconMap[type];
   if (!icon) return null;
 
+  const pathStyle = icon.fill ? { fill: `${icon.fill} !important` } : undefined;
+
   return (
     <span className={`nh-profile-card-link-icon is-${type}`} aria-hidden="true">
       <svg viewBox="0 0 24 24" role="img" focusable="false">
         <title>{icon.label}</title>
-        <path d={icon.path} />
+        <path d={icon.path} style={pathStyle} fill={icon.fill || "currentColor"} />
       </svg>
     </span>
   );
@@ -421,9 +428,6 @@ export default function ArgonLeftbar({ posts = [], tocItems = [], activeSearchQu
         <Link href="/about" className="nh-profile-card-link">
           关于我
         </Link>
-        <Link href="/blog?topic=tech" className="nh-profile-card-link">
-          技术内容
-        </Link>
         <a
           href="https://wpa.qq.com/msgrd?v=3&uin=3239468786&site=qq&menu=yes"
           target="_blank"
@@ -450,6 +454,15 @@ export default function ArgonLeftbar({ posts = [], tocItems = [], activeSearchQu
         >
           <ProfileLinkIcon type="juejin" />
           <span>稀土掘金</span>
+        </a>
+        <a
+          href="https://www.npmjs.com/~ricardolzy"
+          target="_blank"
+          rel="noreferrer"
+          className="nh-profile-card-link"
+        >
+          <ProfileLinkIcon type="npm" />
+          <span>npm</span>
         </a>
       </div>
     </section>
@@ -588,9 +601,25 @@ export default function ArgonLeftbar({ posts = [], tocItems = [], activeSearchQu
 
   const renderActivePanel = panelRenderer[activePanel] ?? panelRenderer.overview;
 
+  const renderCasselBanner = () => (
+    <a
+      href="https://cassellcollege.com/"
+      target="_blank"
+      rel="noreferrer"
+      className="nh-cassel-banner"
+    >
+      <img src="/cassel-crest.png" alt="" className="nh-cassel-banner-bg" />
+      <span className="nh-cassel-banner-content">
+        <span className="nh-cassel-banner-title">卡塞尔学院</span>
+        <span className="nh-cassel-banner-subtitle">守夜人论坛</span>
+      </span>
+    </a>
+  );
+
   return (
     <div className="nh-leftbar-wrap">
       <aside className="nh-leftbar nh-leftbar-desktop" aria-label="左侧信息栏">
+        {renderCasselBanner()}
         <WidgetFrame title="每日一言" className="nh-daily-quote-card">
           {renderDailyQuoteBody()}
         </WidgetFrame>
