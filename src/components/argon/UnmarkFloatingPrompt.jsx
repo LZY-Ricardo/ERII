@@ -6,7 +6,7 @@ const UNMARK_BASE_URL = "https://unmark.ricardoiyu.top/";
 const AUTO_HIDE_MS = 5000;
 const FADE_OUT_MS = 420;
 const SHOW_DELAY_MS = 700;
-const COOLDOWN_MS = 0;
+const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 一天内不再展示
 
 const STORAGE_KEYS = {
   closeAt: "nh:unmark:floating:close-at",
