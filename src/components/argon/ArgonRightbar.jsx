@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import ArticleCatalogList from "@/src/components/argon/ArticleCatalogList";
 import { useArticleCatalogNavigation } from "@/src/components/argon/useArticleCatalogNavigation";
+import { TrendingSidebar } from "@/src/components/TrendingSidebar";
 import {
   getCategoryThemeLabel,
   inferCategoryFromPost,
@@ -504,6 +505,10 @@ export default function ArgonRightbar({ posts = [], tocItems = [], articleSideba
               <p className="nh-muted">暂无已部署项目</p>
             )}
           </div>
+        </WidgetFrame>
+
+        <WidgetFrame title="GitHub 热点">
+          <TrendingSidebar limit={3} />
         </WidgetFrame>
 
         {catalogItems.length ? (
