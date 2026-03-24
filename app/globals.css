@@ -2287,18 +2287,28 @@ body {
   border: 1px solid rgba(255, 214, 138, 0.45);
   background: linear-gradient(115deg, rgba(247, 118, 95, 0.95), rgba(243, 168, 77, 0.95));
   box-shadow: 0 6px 16px rgba(114, 42, 31, 0.28);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.nh-project-live-badge:hover {
+  background: linear-gradient(115deg, rgba(255, 128, 100, 0.98), rgba(255, 178, 90, 0.98));
+  border-color: rgba(255, 230, 160, 0.6);
+  box-shadow: 0 8px 20px rgba(114, 42, 31, 0.38);
+  transform: translateY(-1px);
 }
 
 .nh-project-body {
   display: grid;
-  gap: 10px;
-  padding: 18px 18px 20px;
+  gap: 8px;
+  padding: 14px 16px 16px;
 }
 
 .nh-project-title {
   margin: 0;
-  font-size: 24px;
-  line-height: 1.24;
+  font-size: 20px;
+  line-height: 1.2;
   color: #45363c;
   font-family: var(--nh-font-heading);
 }
@@ -2313,8 +2323,8 @@ body {
 .nh-project-summary {
   margin: 0;
   color: rgba(54, 72, 99, 0.84);
-  line-height: 1.72;
-  font-size: 14px;
+  line-height: 1.6;
+  font-size: 13px;
 }
 
 .nh-project-tech {
@@ -2323,14 +2333,11 @@ body {
   gap: 8px;
 }
 
-.nh-project-links {
+.nh-project-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
-  margin-top: 2px;
-}
-
-.nh-project-live-cta {
   margin-top: 2px;
 }
 
@@ -2338,8 +2345,8 @@ body {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 7px 12px;
-  font-size: 12.5px;
+  padding: 5px 10px;
+  font-size: 12px;
   color: rgba(66, 50, 57, 0.68);
   background: rgba(255, 255, 255, 0.62);
   border: 1px dashed rgba(0, 0, 0, 0.16);
@@ -2348,10 +2355,10 @@ body {
 .nh-project-link {
   text-decoration: none;
   color: var(--nh-text);
-  font-size: 12.5px;
+  font-size: 12px;
   font-family: var(--nh-font-ui);
   border-radius: 999px;
-  padding: 6px 10px;
+  padding: 5px 10px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   background: rgba(255, 255, 255, 0.8);
   transition: all 0.2s ease;
@@ -2366,9 +2373,9 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 34px;
-  padding: 0 14px;
-  font-size: 13px;
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.01em;
   color: #fff8f2;
@@ -2385,6 +2392,43 @@ body {
 
 .nh-project-link.is-secondary {
   background: rgba(255, 255, 255, 0.68);
+}
+
+.nh-project-link.is-github {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+  border-color: rgba(150, 130, 255, 0.4);
+  background: linear-gradient(135deg, rgba(48, 43, 99, 0.94), rgba(30, 30, 60, 0.96));
+  box-shadow: 0 6px 16px rgba(30, 30, 60, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.nh-project-link.is-github::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(100, 90, 200, 0.15), rgba(60, 60, 120, 0.2));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.nh-project-link.is-github:hover {
+  background: linear-gradient(135deg, rgba(65, 60, 120, 0.96), rgba(45, 45, 85, 0.98));
+  border-color: rgba(170, 150, 255, 0.55);
+  box-shadow: 0 8px 20px rgba(30, 30, 60, 0.35);
+}
+
+.nh-project-link.is-github:hover::before {
+  opacity: 1;
 }
 
 .nh-project-empty {
@@ -4019,6 +4063,12 @@ body {
   background: linear-gradient(115deg, rgba(215, 95, 80, 0.9), rgba(212, 140, 63, 0.92));
 }
 
+.nh-body.nh-dark .nh-project-live-badge:hover {
+  border-color: rgba(255, 220, 145, 0.65);
+  background: linear-gradient(115deg, rgba(235, 110, 95, 0.96), rgba(232, 155, 80, 0.96));
+  box-shadow: 0 8px 20px rgba(114, 42, 31, 0.45);
+}
+
 .nh-body.nh-dark .nh-project-live-muted {
   color: rgba(236, 224, 210, 0.84);
   background: rgba(22, 27, 36, 0.6);
@@ -4034,6 +4084,19 @@ body {
 .nh-body.nh-dark .nh-project-link.is-live:hover {
   border-color: rgba(255, 206, 132, 0.56);
   background: linear-gradient(115deg, rgba(185, 74, 82, 0.96), rgba(198, 122, 64, 0.98));
+}
+
+.nh-body.nh-dark .nh-project-link.is-github {
+  color: #f0f0f5;
+  border-color: rgba(140, 120, 220, 0.45);
+  background: linear-gradient(135deg, rgba(55, 50, 95, 0.92), rgba(35, 35, 70, 0.94));
+  box-shadow: 0 6px 16px rgba(20, 20, 40, 0.4);
+}
+
+.nh-body.nh-dark .nh-project-link.is-github:hover {
+  background: linear-gradient(135deg, rgba(75, 70, 115, 0.94), rgba(50, 50, 90, 0.96));
+  border-color: rgba(165, 145, 235, 0.5);
+  box-shadow: 0 8px 20px rgba(20, 20, 40, 0.5);
 }
 
 .nh-body.nh-dark .nh-project-status[data-state="building"] {
@@ -4898,14 +4961,16 @@ body {
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: var(--platform-color, #31c27c);
-  color: #fff;
+  overflow: hidden;
   border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: #fff;
+}
+
+.nh-music-platform-badge svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .nh-music-body {
@@ -5033,6 +5098,260 @@ body {
 
   .nh-music-player-name {
     font-size: 16px;
+  }
+}
+
+/* GitHub Trending 样式 */
+.nh-trending-section {
+  display: grid;
+  gap: 16px;
+}
+
+.nh-trending-list {
+  display: grid;
+  gap: 12px;
+}
+
+.nh-trending-card {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nh-trending-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(42, 22, 24, 0.16);
+}
+
+.nh-trending-header {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.nh-trending-rank {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--nh-font-heading);
+  color: var(--nh-theme);
+  background: rgba(var(--nh-theme-rgb), 0.12);
+  border-radius: 8px;
+}
+
+.nh-trending-rank[data-rank="1"] {
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #8b4513;
+}
+
+.nh-trending-rank[data-rank="2"] {
+  background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+  color: #4a4a4a;
+}
+
+.nh-trending-rank[data-rank="3"] {
+  background: linear-gradient(135deg, #cd7f32, #e5a158);
+  color: #5c3317;
+}
+
+.nh-trending-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(var(--nh-theme-rgb), 0.08);
+}
+
+.nh-trending-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nh-trending-avatar-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(var(--nh-theme-rgb), 0.16), rgba(var(--nh-accent-rgb), 0.1));
+}
+
+.nh-trending-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.nh-trending-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nh-trending-title {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.nh-trending-title a {
+  text-decoration: none;
+  color: var(--nh-theme-deep);
+  transition: color 0.18s ease;
+}
+
+.nh-trending-title a:hover {
+  color: var(--nh-theme);
+}
+
+.nh-trending-title strong {
+  font-weight: 600;
+}
+
+.nh-trending-description {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(56, 74, 101, 0.75);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.nh-trending-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(var(--nh-theme-rgb), 0.1);
+  font-size: 13px;
+}
+
+.nh-trending-language {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(var(--nh-theme-deep-rgb), 0.85);
+}
+
+.nh-lang-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ccc;
+}
+
+.nh-lang-dot[data-lang="JavaScript"] { background: #f1e05a; }
+.nh-lang-dot[data-lang="TypeScript"] { background: #3178c6; }
+.nh-lang-dot[data-lang="Python"] { background: #3572A5; }
+.nh-lang-dot[data-lang="Java"] { background: #b07219; }
+.nh-lang-dot[data-lang="Go"] { background: #00ADD8; }
+.nh-lang-dot[data-lang="Rust"] { background: #dea584; }
+.nh-lang-dot[data-lang="C++"] { background: #f34b7d; }
+.nh-lang-dot[data-lang="C"] { background: #555555; }
+.nh-lang-dot[data-lang="Ruby"] { background: #701516; }
+.nh-lang-dot[data-lang="PHP"] { background: #4F5D95; }
+.nh-lang-dot[data-lang="Swift"] { background: #F05138; }
+.nh-lang-dot[data-lang="Kotlin"] { background: #A97BFF; }
+.nh-lang-dot[data-lang="Dart"] { background: #00B4AB; }
+.nh-lang-dot[data-lang="Vue"] { background: #41b883; }
+.nh-lang-dot[data-lang="HTML"] { background: #e34c26; }
+.nh-lang-dot[data-lang="CSS"] { background: #563d7c; }
+.nh-lang-dot[data-lang="Shell"] { background: #89e051; }
+
+.nh-trending-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(var(--nh-theme-deep-rgb), 0.7);
+}
+
+.nh-trending-stat svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.7;
+}
+
+.nh-trending-period-stars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--nh-theme);
+  font-weight: 500;
+}
+
+.nh-trending-period-stars svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 暗色主题支持 */
+.nh-body.nh-dark .nh-trending-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.nh-body.nh-dark .nh-trending-card:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.nh-body.nh-dark .nh-trending-title a {
+  color: rgba(244, 228, 214, 0.95);
+}
+
+.nh-body.nh-dark .nh-trending-title a:hover {
+  color: var(--nh-theme);
+}
+
+.nh-body.nh-dark .nh-trending-description {
+  color: rgba(244, 228, 214, 0.6);
+}
+
+.nh-body.nh-dark .nh-trending-meta {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.nh-body.nh-dark .nh-trending-language,
+.nh-body.nh-dark .nh-trending-stat {
+  color: rgba(244, 228, 214, 0.7);
+}
+
+/* 响应式调整 */
+@media (max-width: 670px) {
+  .nh-trending-header {
+    gap: 10px;
+  }
+
+  .nh-trending-rank {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .nh-trending-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .nh-trending-title {
+    font-size: 14px;
+  }
+
+  .nh-trending-description {
+    font-size: 12px;
+  }
+
+  .nh-trending-meta {
+    gap: 12px;
+    font-size: 12px;
   }
 }
 

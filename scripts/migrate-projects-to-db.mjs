@@ -3,7 +3,21 @@
  * 用法: node scripts/migrate-projects-to-db.mjs
  */
 
-import { db } from "../src/lib/db.js";
+import { requireDb } from "../src/lib/db.js";
+
+function toPgTextArrayLiteral(value) {
+  if (!Array.isArray(value) || value.length === 0) {
+    return "{}";
+  }
+  const escaped = value.map((item) =>
+    String(item).replace(/\\/g, "\\\\").replace(/"/g, '\\"')
+  );
+  return `{${escaped.map((item) => `"${item}"`).join(",")}}`;
+}
+
+function toPgJsonbLiteral(value) {
+  return JSON.stringify(Array.isArray(value) ? value : []);
+}
 
 const PROJECTS = [
   {
@@ -242,9 +256,49 @@ const PROJECTS = [
       { label: "GitHub", href: "https://github.com/LZY-Ricardo/DragonGame", external: true },
     ],
   },
+  {
+    id: "aidevhub",
+    name: "AIDevHub",
+    tagline: "MCP Server 配置管理桌面应用",
+    summary: "用于集中管理 Claude Code 与 OpenAI Codex 的 MCP server 配置，支持查看、启用/禁用、新增、编辑、Profile 切换，并提供写入前 diff 预览与自动备份/回滚。",
+    status: "开发中",
+    state: "building",
+    focus: ["tooling", "ai"],
+    tech: ["Tauri", "Rust", "React", "TypeScript"],
+    cover: "/images/projects/aidevhub.png",
+    featured: true,
+    links: [{ label: "GitHub", href: "https://github.com/LZY-Ricardo/AIDevHub", external: true }],
+  },
+  {
+    id: "claude-wsl-bridge",
+    name: "claude-wsl-bridge",
+    tagline: "Claude Code 的 WSL/Windows 剪贴板桥接工具",
+    summary: "在 WSL 环境中为 Claude Code 提供 Windows 剪贴板图片桥接能力，解决跨平台的图片粘贴问题。",
+    status: "维护中",
+    state: "active",
+    focus: ["tooling"],
+    tech: ["Shell", "Node.js", "CLI", "WSL"],
+    cover: "/images/projects/claude-wsl-bridge.png",
+    featured: false,
+    links: [{ label: "GitHub", href: "https://github.com/LZY-Ricardo/claude-wsl-bridge", external: true }],
+  },
+  {
+    id: "gittrans",
+    name: "GitTrans",
+    tagline: "GitHub 数据同步与转换工具",
+    summary: "基于 Next.js 构建的 GitHub 数据同步工具，集成 Prisma 与 Octokit，提供仓库数据管理和转换能力。",
+    status: "开发中",
+    state: "building",
+    focus: ["tooling", "frontend"],
+    tech: ["Next.js", "Prisma", "TypeScript", "Octokit"],
+    cover: "/images/projects/gittrans.png",
+    featured: false,
+    links: [{ label: "GitHub", href: "https://github.com/LZY-Ricardo/GitTrans", external: true }],
+  },
 ];
 
 async function migrateProjects() {
+  const db = requireDb();
   console.log("开始迁移项目数据...\n");
 
   for (let i = 0; i < PROJECTS.length; i++) {
@@ -252,15 +306,16 @@ async function migrateProjects() {
     const sortOrder = i + 1;
 
     try {
-      await db`
+      await db.sql`
         INSERT INTO projects (
           id, name, tagline, summary, status, state,
           focus, tech, cover, featured, links, sort_order
         ) VALUES (
           ${project.id}, ${project.name}, ${project.tagline}, ${project.summary},
           ${project.status}, ${project.state},
-          ${project.focus}, ${project.tech}, ${project.cover},
-          ${project.featured}, ${db.json(project.links)}, ${sortOrder}
+          ${toPgTextArrayLiteral(project.focus)}, ${toPgTextArrayLiteral(project.tech)},
+          ${project.cover}, ${project.featured},
+          ${toPgJsonbLiteral(project.links)}, ${sortOrder}
         )
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name,

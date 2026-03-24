@@ -4,10 +4,28 @@ import PostCard from "@/src/components/PostCard";
 import { getSortedPostsData } from "@/src/lib/posts";
 import ProjectCard from "@/src/components/ProjectCard";
 import { getFeaturedProjects } from "@/src/lib/projects";
+import { TrendingList } from "@/src/components/TrendingCard";
+
+async function getTrendingRepos() {
+  try {
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3239";
+    const res = await fetch(`${baseUrl}/api/trending?period=weekly`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.repos || [];
+  } catch {
+    return [];
+  }
+}
 
 export default async function HomePage() {
   const posts = await getSortedPostsData();
   const featuredProjects = await getFeaturedProjects(3);
+  const trendingRepos = await getTrendingRepos();
 
   return (
     <ArgonShell
@@ -33,6 +51,27 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {trendingRepos.length > 0 && (
+        <section className="nh-trending-section" aria-label="GitHub 热点项目">
+          <header className="nh-section-head">
+            <div>
+              <h2>GitHub 热点项目</h2>
+              <p>本周 GitHub 上最受欢迎的开源项目 TOP 5。</p>
+            </div>
+            <a
+              href="https://github.com/trending"
+              target="_blank"
+              rel="noreferrer"
+              className="nh-section-link"
+            >
+              查看更多
+            </a>
+          </header>
+
+          <TrendingList repos={trendingRepos} period="weekly" />
+        </section>
+      )}
 
       <section className="nh-post-masonry" aria-label="全部文章列表">
         {posts.map((post) => (

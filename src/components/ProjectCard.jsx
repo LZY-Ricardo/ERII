@@ -39,7 +39,8 @@ function ProjectAction({ action, className = "" }) {
 export default function ProjectCard({ project }) {
   const links = Array.isArray(project?.links) ? project.links.slice(0, 3) : [];
   const liveAction = links.find((item) => isLiveAction(item)) ?? null;
-  const secondaryActions = links.filter((item) => item !== liveAction);
+  const githubAction = links.find((item) => isGitHubAction(item)) ?? null;
+  const otherActions = links.filter((item) => item !== liveAction && item !== githubAction);
 
   return (
     <article className="nh-project-card nh-card">
@@ -60,7 +61,17 @@ export default function ProjectCard({ project }) {
           {project?.status ?? "更新中"}
         </span>
 
-        {liveAction ? <span className="nh-project-live-badge">LIVE</span> : null}
+        {liveAction ? (
+          liveAction.external ? (
+            <a href={liveAction.href} target="_blank" rel="noreferrer" className="nh-project-live-badge">
+              LIVE
+            </a>
+          ) : (
+            <Link href={liveAction.href} className="nh-project-live-badge">
+              LIVE
+            </Link>
+          )
+        ) : null}
       </div>
 
       <div className="nh-project-body">
@@ -76,25 +87,23 @@ export default function ProjectCard({ project }) {
           ))}
         </div>
 
-        <div className="nh-project-live-cta">
+        <div className="nh-project-actions">
           {liveAction ? (
             <ProjectAction action={{ ...liveAction, label: "在线体验" }} className="is-live" />
           ) : (
             <span className="nh-project-live-muted">暂未开放在线体验</span>
           )}
+          {githubAction ? (
+            <ProjectAction action={{ ...githubAction, label: "GitHub" }} className="is-github" />
+          ) : null}
+          {otherActions.map((action) => (
+            <ProjectAction
+              key={`${project.id}:${action.label}:${action.href}`}
+              action={action}
+              className="is-secondary"
+            />
+          ))}
         </div>
-
-        {secondaryActions.length ? (
-          <div className="nh-project-links">
-            {secondaryActions.map((action) => (
-              <ProjectAction
-                key={`${project.id}:${action.label}:${action.href}`}
-                action={action}
-                className="is-secondary"
-              />
-            ))}
-          </div>
-        ) : null}
       </div>
     </article>
   );
