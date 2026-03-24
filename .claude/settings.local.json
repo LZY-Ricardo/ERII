@@ -10,7 +10,13 @@
       "Bash(curl:*)",
       "WebSearch",
       "Bash(node:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "mcp__brightdata__scrape_as_markdown",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__chrome-devtools__press_key",
+      "Bash(npx tsx:*)"
     ]
   }
 }
