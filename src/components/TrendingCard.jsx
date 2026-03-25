@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getTrendingDescription } from "@/src/lib/trendingDescriptions.mjs";
 
 const formatNumber = (num) => {
   if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -26,6 +27,8 @@ export function TrendingList({ repos, period = "weekly" }) {
 }
 
 function TrendingCard({ repo, rank, period }) {
+  const description = getTrendingDescription(repo);
+
   return (
     <article className="nh-trending-card nh-card">
       <div className="nh-trending-header">
@@ -47,7 +50,7 @@ function TrendingCard({ repo, rank, period }) {
               </Link>
             </h3>
           </div>
-          <p className="nh-trending-description">{repo.description}</p>
+          {description ? <p className="nh-trending-description">{description}</p> : null}
         </div>
       </div>
 

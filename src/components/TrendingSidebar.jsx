@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { getTrendingDescription } from "@/src/lib/trendingDescriptions.mjs";
 
 const formatNumber = (num) => {
   if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -66,51 +67,39 @@ export function TrendingSidebar({ limit = 3 }) {
   return (
     <div className="nh-trending-sidebar">
       <ul className="nh-trending-sidebar-list">
-        {repos.map((repo, index) => (
-          <li key={repo.id} className="nh-trending-sidebar-item">
-            <Link
-              href={repo.url}
-              target="_blank"
-              rel="noreferrer"
-              className="nh-trending-sidebar-link"
-            >
-              <div className="nh-trending-sidebar-header">
-                <span className="nh-trending-sidebar-rank" data-rank={index + 1}>
-                  {index + 1}
-                </span>
-                <div className="nh-trending-sidebar-info">
-                  <span className="nh-trending-sidebar-name">
-                    {repo.owner}/<strong>{repo.name}</strong>
+        {repos.map((repo, index) => {
+          const description = getTrendingDescription(repo);
+
+          return (
+            <li key={repo.id} className="nh-trending-sidebar-item">
+              <Link
+                href={repo.url}
+                target="_blank"
+                rel="noreferrer"
+                className="nh-trending-sidebar-link"
+              >
+                <div className="nh-trending-sidebar-header">
+                  <span className="nh-trending-sidebar-rank" data-rank={index + 1}>
+                    {index + 1}
                   </span>
-                  {repo.language && (
-                    <span className="nh-trending-sidebar-lang">
-                      <span
-                        className="nh-lang-dot"
-                        style={{ background: getLangColor(repo.language) }}
-                      />
-                      {repo.language}
+                  <div className="nh-trending-sidebar-info">
+                    <span className="nh-trending-sidebar-name">
+                      {repo.owner}/<strong>{repo.name}</strong>
                     </span>
-                  )}
+                    {repo.language && (
+                      <span className="nh-trending-sidebar-lang">
+                        <span
+                          className="nh-lang-dot"
+                          style={{ background: getLangColor(repo.language) }}
+                        />
+                        {repo.language}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              {repo.description && (
-                <p className="nh-trending-sidebar-desc">{repo.description}</p>
-              )}
-              <div className="nh-trending-sidebar-stats">
-                <span className="nh-trending-sidebar-stat" title="总 stars">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 16 16"
-                    fill="currentColor"
-                  >
-                    <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z" />
-                  </svg>
-                  {formatNumber(repo.stars)}
-                </span>
-                {repo.periodStars > 0 && (
-                  <span className="nh-trending-sidebar-period" title="本周新增">
+                {description && <p className="nh-trending-sidebar-desc">{description}</p>}
+                <div className="nh-trending-sidebar-stats">
+                  <span className="nh-trending-sidebar-stat" title="总 stars">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="12"
@@ -118,15 +107,29 @@ export function TrendingSidebar({ limit = 3 }) {
                       viewBox="0 0 16 16"
                       fill="currentColor"
                     >
-                      <path d="M8 12a.75.75 0 01-.75-.75V4.56L4.03 7.78a.75.75 0 11-1.06-1.06l4.5-4.5a.75.75 0 011.06 0l4.5 4.5a.75.75 0 11-1.06 1.06L8.75 4.56v6.69A.75.75 0 018 12z" />
+                      <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z" />
                     </svg>
-                    +{formatNumber(repo.periodStars)}
+                    {formatNumber(repo.stars)}
                   </span>
-                )}
-              </div>
-            </Link>
-          </li>
-        ))}
+                  {repo.periodStars > 0 && (
+                    <span className="nh-trending-sidebar-period" title="本周新增">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 16 16"
+                        fill="currentColor"
+                      >
+                        <path d="M8 12a.75.75 0 01-.75-.75V4.56L4.03 7.78a.75.75 0 11-1.06-1.06l4.5-4.5a.75.75 0 011.06 0l4.5 4.5a.75.75 0 11-1.06 1.06L8.75 4.56v6.69A.75.75 0 018 12z" />
+                      </svg>
+                      +{formatNumber(repo.periodStars)}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
       <a
         href="https://github.com/trending"

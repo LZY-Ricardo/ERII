@@ -71,6 +71,12 @@ const navItems = [
     title: "查看游戏相关内容",
   },
   {
+    label: "资源库",
+    href: "/resources",
+    type: "resources",
+    title: "查看我常用的 AI、开发、网络与效率资源",
+  },
+  {
     label: "项目",
     href: "/projects",
     type: "projects",
@@ -88,6 +94,7 @@ const navItems = [
 function isItemActive(item, pathname, currentCategory, currentTag, currentTopic) {
   if (item.type === "home") return pathname === "/";
   if (item.type === "projects") return pathname === "/projects";
+  if (item.type === "resources") return pathname === "/resources";
   if (item.type === "about") return pathname === "/about";
   if (item.type === "music") return pathname === "/music";
   if (item.type === "blog") return pathname === "/blog" && !currentCategory;
