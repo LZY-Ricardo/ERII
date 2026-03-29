@@ -129,10 +129,25 @@ function Tabs({ value, onChange, items }) {
   );
 }
 
-function WidgetFrame({ title, children, className = "" }) {
+function formatRelativeTime(isoString) {
+  if (!isoString) return "";
+  const diff = Date.now() - new Date(isoString).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "刚刚";
+  if (minutes < 60) return `${minutes}分钟前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}小时前`;
+  const d = new Date(isoString);
+  return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+function WidgetFrame({ title, children, className = "", titleExtra = null }) {
   return (
     <section className={`nh-widget nh-card ${className}`.trim()}>
-      <h3 className="nh-widget-title">{title}</h3>
+      <div className="nh-widget-title-row">
+        <h3 className="nh-widget-title">{title}</h3>
+        {titleExtra && <span className="nh-widget-title-extra">{titleExtra}</span>}
+      </div>
       {children}
     </section>
   );
@@ -154,6 +169,7 @@ export default function ArgonRightbar({ posts = [], tocItems = [], articleSideba
   const recentComments = articleSidebar?.recentComments ?? [];
 
   const [projects, setProjects] = useState([]);
+  const [trendingFetchedAt, setTrendingFetchedAt] = useState(null);
 
   useEffect(() => {
     if (isArticleSidebar) return undefined;
@@ -507,8 +523,8 @@ export default function ArgonRightbar({ posts = [], tocItems = [], articleSideba
           </div>
         </WidgetFrame>
 
-        <WidgetFrame title="GitHub 热点">
-          <TrendingSidebar limit={3} />
+        <WidgetFrame title="GitHub 热点" titleExtra={formatRelativeTime(trendingFetchedAt)}>
+          <TrendingSidebar limit={3} onDataLoaded={setTrendingFetchedAt} />
         </WidgetFrame>
 
         {catalogItems.length ? (

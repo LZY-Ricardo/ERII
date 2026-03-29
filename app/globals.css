@@ -1183,6 +1183,10 @@ body {
   color: rgba(244, 228, 214, 0.6);
 }
 
+.nh-body.nh-dark .nh-widget-title-extra {
+  color: rgba(244, 228, 214, 0.4);
+}
+
 .nh-recent-comments-block,
 .nh-recent-comments-empty {
   display: grid;
@@ -1424,6 +1428,24 @@ body {
   font-size: 15px;
   letter-spacing: 0.05em;
   font-family: var(--nh-font-ui);
+}
+
+.nh-widget-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 10px;
+}
+
+.nh-widget-title-row .nh-widget-title {
+  margin: 0;
+}
+
+.nh-widget-title-extra {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+  margin-left: 8px;
 }
 
 .nh-search-input {
@@ -4287,6 +4309,22 @@ body {
   --nh-card-bg: rgba(38, 28, 31, var(--nh-card-alpha));
   --nh-card-bg-solid: rgba(44, 30, 34, var(--nh-card-alpha-solid));
   color-scheme: dark;
+}
+
+.nh-body.nh-dark .nh-post-title a {
+  color: #f0e4d5;
+}
+
+.nh-body.nh-dark .nh-post-title a:hover {
+  color: rgba(var(--nh-accent-rgb), 0.92);
+}
+
+.nh-body.nh-dark .nh-post-excerpt {
+  color: rgba(232, 224, 211, 0.84);
+}
+
+.nh-body.nh-dark .nh-post-meta {
+  color: rgba(232, 224, 211, 0.72);
 }
 
 .nh-body.nh-dark .nh-search-input,

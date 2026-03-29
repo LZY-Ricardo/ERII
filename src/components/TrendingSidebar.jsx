@@ -34,7 +34,7 @@ function getLangColor(lang) {
   return LANGUAGE_COLORS[lang] || "#888";
 }
 
-export function TrendingSidebar({ limit = 3 }) {
+export function TrendingSidebar({ limit = 3, onDataLoaded }) {
   const [repos, setRepos] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,6 +44,9 @@ export function TrendingSidebar({ limit = 3 }) {
       .then((data) => {
         setRepos((data.repos || []).slice(0, limit));
         setLoading(false);
+        if (onDataLoaded && data.fetchedAt) {
+          onDataLoaded(data.fetchedAt);
+        }
       })
       .catch(() => {
         setLoading(false);
