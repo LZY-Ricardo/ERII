@@ -3,6 +3,7 @@ import ArgonLeftbar from "@/src/components/argon/ArgonLeftbar";
 import ArgonNavbar from "@/src/components/argon/ArgonNavbar";
 import ArgonRightbar from "@/src/components/argon/ArgonRightbar";
 import UnmarkFloatingPrompt from "@/src/components/argon/UnmarkFloatingPrompt";
+import TimeThemePrompt from "@/src/components/argon/TimeThemePrompt";
 
 export default function ArgonShell({
   posts = [],
@@ -61,6 +62,7 @@ export default function ArgonShell({
       </div>
 
       <UnmarkFloatingPrompt />
+      <TimeThemePrompt />
     </div>
   );
 }

@@ -15,7 +15,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="zh-CN">
-      <body className="nh-body antialiased">
+      <body className="nh-body antialiased" suppressHydrationWarning>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem("nh:theme:dark-mode")==="dark")document.body.classList.add("nh-dark")}catch(e){}`,
+          }}
+        />
         <ToastProvider>{children}</ToastProvider>
         <Analytics />
         <SpeedInsights />

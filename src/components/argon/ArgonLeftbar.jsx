@@ -183,7 +183,9 @@ export default function ArgonLeftbar({ posts = [], tocItems = [], activeSearchQu
   const activeCategoryCount = categories.length;
   const [avatarSrc, setAvatarSrc] = useState("/images/avatar-ricardo.jpg");
 
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() =>
+    typeof window !== "undefined" && window.localStorage.getItem("nh:theme:dark-mode") === "dark"
+  );
   const [serifMode, setSerifMode] = useState(true);
   const [deepShadow, setDeepShadow] = useState(false);
   const [filterMode, setFilterMode] = useState("none");
@@ -232,6 +234,8 @@ export default function ArgonLeftbar({ posts = [], tocItems = [], activeSearchQu
     body.classList.toggle("nh-dark", darkMode);
     body.classList.toggle("nh-font-serif", serifMode);
     body.dataset.nhFilter = filterMode;
+
+    window.localStorage.setItem("nh:theme:dark-mode", darkMode ? "dark" : "light");
     body.classList.toggle("nh-panel-open", panelOpen);
 
     window.dispatchEvent(

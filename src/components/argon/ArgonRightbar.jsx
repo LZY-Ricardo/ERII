@@ -205,7 +205,9 @@ export default function ArgonRightbar({ posts = [], tocItems = [], articleSideba
 
   const [switcherTab, setSwitcherTab] = useState("overview");
   const [contentTab, setContentTab] = useState("recent");
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() =>
+    typeof window !== "undefined" && window.localStorage.getItem("nh:theme:dark-mode") === "dark"
+  );
   const [serifMode, setSerifMode] = useState(true);
   const [deepShadow, setDeepShadow] = useState(false);
   const [filterMode, setFilterMode] = useState("none");
