@@ -9,19 +9,38 @@ import { extractArticleHeadings } from "@/src/lib/articleToc";
 import { listRecentCommentSummariesByPostSlug } from "@/src/lib/comments";
 import { getPostData, getSortedPostsData } from "@/src/lib/posts";
 
+const SITE_URL = "https://blog.sunandyu.top";
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const post = await getPostData(slug);
 
   if (!post) {
     return {
-      title: "文章不存在 | 象龟的水坑",
+      title: "文章不存在",
+      robots: { index: false },
     };
   }
 
+  const url = `${SITE_URL}/blog/${slug}`;
+  const description =
+    post.frontmatter.description ||
+    "象龟的水坑 - Ricardo 的个人博客，分享前端开发、AI 应用与开发实践。";
+
   return {
-    title: `${post.frontmatter.title} | 象龟的水坑`,
-    description: post.frontmatter.description || "分享前端开发与 AI 实践的个人博客。",
+    title: post.frontmatter.title,
+    description,
+    keywords: Array.isArray(post.frontmatter.tags) ? post.frontmatter.tags : [],
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      url,
+      title: post.frontmatter.title,
+      description,
+      publishedTime: post.frontmatter.date,
+      authors: ["Ricardo"],
+      tags: Array.isArray(post.frontmatter.tags) ? post.frontmatter.tags : [],
+    },
   };
 }
 
@@ -64,12 +83,40 @@ export default async function BlogPostPage({ params }) {
     TeamSpeakJoinButton,
   };
 
+  const articleUrl = `${SITE_URL}/blog/${slug}`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.frontmatter.title,
+    description: post.frontmatter.description || "",
+    url: articleUrl,
+    datePublished: post.frontmatter.date,
+    dateModified: post.frontmatter.updatedAt || post.frontmatter.date,
+    author: {
+      "@type": "Person",
+      name: "Ricardo",
+      url: SITE_URL,
+    },
+    publisher: {
+      "@type": "Person",
+      name: "Ricardo",
+      url: SITE_URL,
+    },
+    mainEntityOfPage: { "@type": "WebPage", "@id": articleUrl },
+    keywords: Array.isArray(post.frontmatter.tags) ? post.frontmatter.tags.join(", ") : "",
+  };
+
   return (
-    <ArgonShell
-      posts={posts}
-      tocItems={tocItems}
-      articleSidebar={{ recentComments }}
-    >
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ArgonShell
+        posts={posts}
+        tocItems={tocItems}
+        articleSidebar={{ recentComments }}
+      >
       <article className="nh-article nh-card">
         <header className="nh-article-head">
           <h1>{post.frontmatter.title}</h1>
@@ -101,6 +148,7 @@ export default async function BlogPostPage({ params }) {
 
       <ArgonCommentShell postSlug={post.slug} />
       <ArgonSharePanel post={post} />
-    </ArgonShell>
+      </ArgonShell>
+    </>
   );
 }

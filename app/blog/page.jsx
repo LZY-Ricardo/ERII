@@ -4,6 +4,8 @@ import { normalizeSearchKeyword, searchPosts } from "@/src/lib/postSearch";
 import { getSortedPostsData } from "@/src/lib/posts";
 import { filterPostsByTaxonomy, getCategoryThemeLabel } from "@/src/lib/postTaxonomy";
 
+const SITE_URL = "https://blog.sunandyu.top";
+
 export async function generateMetadata({ searchParams }) {
   const resolved = (await searchParams) ?? {};
   const category = typeof resolved.category === "string" ? resolved.category : "";
@@ -12,33 +14,51 @@ export async function generateMetadata({ searchParams }) {
   const keyword = normalizeSearchKeyword(typeof resolved.q === "string" ? resolved.q : "");
 
   const categoryLabel = getCategoryThemeLabel(category);
+  const canonicalUrl = `${SITE_URL}/blog`;
 
   if (keyword) {
     return {
-      title: `搜索：${keyword} | 象龟的水坑`,
+      title: `搜索：${keyword}`,
+      robots: { index: false },
     };
   }
 
   if (topic === "tech") {
     return {
-      title: `技术内容：前端 / AI / 后端 / 算法 | 象龟的水坑`,
+      title: "技术内容：前端 / AI / 后端 / 算法",
+      description: "浏览象龟的水坑全部技术向文章，涵盖前端、AI、后端与算法方向，持续更新。",
+      alternates: { canonical: `${canonicalUrl}?topic=tech` },
     };
   }
 
   if (category) {
     return {
-      title: `${categoryLabel} | 象龟的水坑`,
+      title: categoryLabel,
+      description: `浏览象龟的水坑「${categoryLabel}」分类下的全部文章。`,
+      alternates: { canonical: `${canonicalUrl}?category=${encodeURIComponent(category)}` },
     };
   }
 
   if (tag) {
     return {
-      title: `标签：${tag} | 象龟的水坑`,
+      title: `标签：${tag}`,
+      description: `浏览象龟的水坑标签「${tag}」下的全部文章。`,
+      alternates: { canonical: `${canonicalUrl}?tag=${encodeURIComponent(tag)}` },
     };
   }
 
   return {
-    title: `全部文章 | 象龟的水坑`,
+    title: "全部文章",
+    description:
+      "浏览象龟的水坑全部文章，涵盖前端开发、AI 应用、后端实践与工具推荐，按分类和标签快速筛选。",
+    keywords: ["前端博客", "技术文章", "AI 实践", "开发笔记", "工具推荐"],
+    alternates: { canonical: canonicalUrl },
+    openGraph: {
+      type: "website",
+      url: canonicalUrl,
+      title: "全部文章 | 象龟的水坑",
+      description: "浏览 Ricardo 的全部技术博客文章，涵盖前端、AI、后端与工具推荐。",
+    },
   };
 }
 

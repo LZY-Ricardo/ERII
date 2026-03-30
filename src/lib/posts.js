@@ -61,6 +61,7 @@ function mapDetailRow(row) {
     frontmatter: {
       title: row.title,
       date: formatDate(row.date),
+      updatedAt: formatDate(row.updated_at),
       description: row.description ?? "",
       cover: row.cover ?? "",
       tags: row.tags ?? [],
@@ -135,6 +136,7 @@ function getPublishedPostFromDb(slug) {
             p.slug,
             p.title,
             p.date,
+            p.updated_at,
             p.description,
             p.cover,
             p.tags,

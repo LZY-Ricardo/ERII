@@ -72,9 +72,19 @@ async function getSpotifyCover(id) {
   }
 }
 
+const SITE_URL = "https://blog.sunandyu.top";
+
 export const metadata = {
-  title: "音乐收藏 | 象龟的水坑",
-  description: "精选音乐歌单分享，涵盖多种风格。",
+  title: "音乐收藏",
+  description: "Ricardo 的精选音乐歌单分享，来自网易云、QQ 音乐与 Spotify，涵盖多种风格。",
+  keywords: ["音乐推荐", "歌单分享", "精选音乐"],
+  alternates: { canonical: `${SITE_URL}/music` },
+  openGraph: {
+    type: "website",
+    url: `${SITE_URL}/music`,
+    title: "音乐收藏 | 象龟的水坑",
+    description: "Ricardo 的精选音乐歌单分享，来自网易云、QQ 音乐与 Spotify。",
+  },
 };
 
 export default async function MusicPage() {

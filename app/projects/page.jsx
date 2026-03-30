@@ -4,6 +4,22 @@ import ProjectCard from "@/src/components/ProjectCard";
 import { getSortedPostsData } from "@/src/lib/posts";
 import { PROJECT_FOCUS, getProjects } from "@/src/lib/projects";
 
+const SITE_URL = "https://blog.sunandyu.top";
+
+export const metadata = {
+  title: "项目仓库",
+  description:
+    "浏览 Ricardo 开发的个人项目，涵盖前端、AI、工具类应用，附技术栈介绍与在线访问链接。",
+  keywords: ["个人项目", "前端项目", "AI 项目", "开源项目", "Ricardo"],
+  alternates: { canonical: `${SITE_URL}/projects` },
+  openGraph: {
+    type: "website",
+    url: `${SITE_URL}/projects`,
+    title: "项目仓库 | 象龟的水坑",
+    description: "浏览 Ricardo 开发的个人项目，涵盖前端、AI 与工具类应用。",
+  },
+};
+
 export default async function ProjectsPage({ searchParams }) {
   const posts = await getSortedPostsData();
   const resolved = (await searchParams) ?? {};
