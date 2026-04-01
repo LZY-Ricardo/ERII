@@ -4,7 +4,13 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Folder,
+  applyQuickProjectPatch,
+  buildQuickProjectPayload,
+  moveFeaturedProject,
+} from "@/src/components/admin/adminProjectsQuickEdit";
+import {
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   Pencil,
   Search,
@@ -41,6 +47,7 @@ export default function AdminProjectsPage() {
   const [error, setError] = useState("");
   const [stateFilter, setStateFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [savingMap, setSavingMap] = useState({});
 
   useEffect(() => {
     fetch("/api/admin/projects")
@@ -52,6 +59,85 @@ export default function AdminProjectsPage() {
       .catch(() => setError("网络错误"))
       .finally(() => setLoading(false));
   }, []);
+
+  const setProjectSaving = (projectId, saving) => {
+    setSavingMap((current) => {
+      if (saving) return { ...current, [projectId]: true };
+      const next = { ...current };
+      delete next[projectId];
+      return next;
+    });
+  };
+
+  const updateProjectLocally = (projectId, patch) => {
+    setProjects((current) => applyQuickProjectPatch(current, projectId, patch));
+  };
+
+  const persistProjectsState = async (previousProjects, nextProjects, changedIds) => {
+    if (!changedIds.length) return;
+    setError("");
+    setProjects(nextProjects);
+    changedIds.forEach((projectId) => setProjectSaving(projectId, true));
+
+    try {
+      for (const projectId of changedIds) {
+        const nextProject = nextProjects.find((item) => item.id === projectId);
+        if (!nextProject) continue;
+
+        const res = await fetch(`/api/admin/projects/${projectId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(buildQuickProjectPayload(nextProject)),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || "保存失败");
+      }
+    } catch (err) {
+      setProjects(previousProjects);
+      setError(err.message || "保存失败");
+    } finally {
+      changedIds.forEach((projectId) => setProjectSaving(projectId, false));
+    }
+  };
+
+  const persistProjectPatch = async (projectId, patch) => {
+    const currentProject = projects.find((item) => item.id === projectId);
+    if (!currentProject) return;
+
+    const previousProjects = projects;
+    const nextProjects = applyQuickProjectPatch(previousProjects, projectId, patch);
+    await persistProjectsState(previousProjects, nextProjects, [projectId]);
+  };
+
+  const handleFeaturedToggle = async (project) => {
+    await persistProjectPatch(project.id, {
+      featured: !project.featured,
+    });
+  };
+
+  const handleSortOrderChange = (projectId, rawValue) => {
+    const nextValue = Number.parseInt(rawValue, 10);
+    updateProjectLocally(projectId, {
+      sortOrder: Number.isNaN(nextValue) ? 0 : Math.max(0, nextValue),
+    });
+  };
+
+  const handleSortOrderCommit = async (project) => {
+    await persistProjectPatch(project.id, {
+      sortOrder: Number.isFinite(project.sortOrder) ? Math.max(0, project.sortOrder) : 0,
+    });
+  };
+
+  const handleMoveFeatured = async (projectId, direction) => {
+    const previousProjects = projects;
+    const result = moveFeaturedProject(previousProjects, projectId, direction);
+    await persistProjectsState(previousProjects, result.projects, result.changedIds);
+  };
+
+  const featuredIdsByOrder = filtered
+    .filter((project) => project.featured)
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    .map((project) => project.id);
 
   const filtered = projects.filter((p) => {
     if (stateFilter !== "all" && p.state !== stateFilter) return false;
@@ -171,9 +257,23 @@ export default function AdminProjectsPage() {
                           <p className="font-medium text-gray-800 truncate">
                             {project.name}
                           </p>
-                          {project.featured && (
-                            <Star size={12} className="fill-amber-400 text-amber-400" />
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleFeaturedToggle(project)}
+                            disabled={Boolean(savingMap[project.id])}
+                            className={`rounded p-0.5 transition-colors ${
+                              project.featured
+                                ? "text-amber-500 hover:text-amber-600"
+                                : "text-gray-300 hover:text-gray-500"
+                            } disabled:cursor-not-allowed disabled:opacity-50`}
+                            title={project.featured ? "取消精选" : "设为精选"}
+                            aria-label={project.featured ? "取消精选" : "设为精选"}
+                          >
+                            <Star
+                              size={12}
+                              className={project.featured ? "fill-amber-400 text-amber-400" : ""}
+                            />
+                          </button>
                         </div>
                         <p className="text-xs text-gray-400 truncate">
                           {project.id}
@@ -181,6 +281,57 @@ export default function AdminProjectsPage() {
                         <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
                           {project.summary}
                         </p>
+                        {project.featured && (
+                          <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                            <span>首页顺序</span>
+                            <input
+                              type="number"
+                              min="0"
+                              value={project.sortOrder ?? 0}
+                              onChange={(e) => handleSortOrderChange(project.id, e.target.value)}
+                              onBlur={() => handleSortOrderCommit(project)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.currentTarget.blur();
+                                }
+                              }}
+                              disabled={Boolean(savingMap[project.id])}
+                              className="w-16 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100 disabled:bg-gray-100"
+                            />
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleMoveFeatured(project.id, "up")}
+                                disabled={
+                                  Boolean(savingMap[project.id]) ||
+                                  featuredIdsByOrder.indexOf(project.id) <= 0
+                                }
+                                className="rounded border border-gray-200 bg-white p-1 text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                title="上移"
+                                aria-label="上移"
+                              >
+                                <ChevronUp size={12} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveFeatured(project.id, "down")}
+                                disabled={
+                                  Boolean(savingMap[project.id]) ||
+                                  featuredIdsByOrder.indexOf(project.id) === -1 ||
+                                  featuredIdsByOrder.indexOf(project.id) >= featuredIdsByOrder.length - 1
+                                }
+                                className="rounded border border-gray-200 bg-white p-1 text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                title="下移"
+                                aria-label="下移"
+                              >
+                                <ChevronDown size={12} />
+                              </button>
+                            </div>
+                            <span className="text-[11px] text-gray-400">
+                              首页按顺序取前 3 个
+                            </span>
+                          </div>
+                        )}
                         {/* Focus tags */}
                         <div className="flex gap-1 mt-1">
                           {(project.focus ?? []).map((f) => (
