@@ -68,16 +68,20 @@ const PROJECTS = [
   },
   {
     id: "free-video-download",
-    name: "free-video-download",
-    tagline: "多平台视频下载实践",
-    summary: "聚焦下载流程、任务反馈与稳定性的工具型项目，降低多平台素材获取成本。",
-    status: "维护中",
-    state: "active",
+    name: "VidGrab",
+    tagline: "Vue 3 + FastAPI 多平台视频下载器",
+    summary:
+      "基于 Vue 3、FastAPI 与 yt-dlp 的多平台视频下载项目，支持 YouTube、Bilibili、TikTok 等平台，持续迭代下载流程、格式选择与任务反馈体验。",
+    status: "持续开发",
+    state: "building",
     focus: ["tooling"],
-    tech: ["Node.js", "CLI", "Automation"],
+    tech: ["Vue 3", "FastAPI", "yt-dlp"],
     cover: "/images/projects/free-video-download.png",
     featured: false,
-    links: [{ label: "GitHub", href: "https://github.com/LZY-Ricardo/free-video-download", external: true }],
+    links: [
+      { label: "在线体验", href: "https://vidgrab.sunandyu.top/", external: true },
+      { label: "GitHub", href: "https://github.com/LZY-Ricardo/free-video-download", external: true },
+    ],
   },
   {
     id: "ai-chat-notify",

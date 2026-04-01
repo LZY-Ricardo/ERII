@@ -4552,6 +4552,14 @@ body {
   color: rgba(var(--nh-accent-rgb), 0.7);
 }
 
+.nh-body.nh-dark .nh-page-head h1 {
+  color: #f0e4d5;
+}
+
+.nh-body.nh-dark .nh-page-head p {
+  color: rgba(232, 224, 211, 0.82);
+}
+
 .nh-body.nh-dark .nh-section-head h2,
 .nh-body.nh-dark .nh-project-title {
   color: #f0e4d5;

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <rect width="1600" height="900" fill="#0f172a"/>
+  <text x="90" y="110" fill="#f8fafc" font-size="50" font-family="Segoe UI, Arial">工业级 AI Coding Agent 参考结构</text>
+  <rect x="120" y="180" width="1360" height="580" rx="24" fill="#111827" stroke="#334155" stroke-width="3"/>
+  <rect x="180" y="250" width="240" height="420" rx="16" fill="#1d4ed8"/>
+  <text x="220" y="320" fill="#eff6ff" font-size="34" font-family="Segoe UI, Arial">交互层</text>
+  <text x="205" y="380" fill="#dbeafe" font-size="24" font-family="Segoe UI, Arial">CLI / IDE</text>
+  <text x="200" y="420" fill="#dbeafe" font-size="24" font-family="Segoe UI, Arial">日志可回放</text>
+  <rect x="470" y="250" width="240" height="420" rx="16" fill="#7c3aed"/>
+  <text x="510" y="320" fill="#f5f3ff" font-size="34" font-family="Segoe UI, Arial">编排层</text>
+  <text x="500" y="380" fill="#ede9fe" font-size="24" font-family="Segoe UI, Arial">任务状态机</text>
+  <text x="500" y="420" fill="#ede9fe" font-size="24" font-family="Segoe UI, Arial">重试与恢复</text>
+  <rect x="760" y="250" width="240" height="420" rx="16" fill="#be123c"/>
+  <text x="800" y="320" fill="#fff1f2" font-size="34" font-family="Segoe UI, Arial">工具层</text>
+  <text x="790" y="380" fill="#ffe4e6" font-size="24" font-family="Segoe UI, Arial">白名单工具</text>
+  <text x="790" y="420" fill="#ffe4e6" font-size="24" font-family="Segoe UI, Arial">输入校验</text>
+  <rect x="1050" y="250" width="180" height="420" rx="16" fill="#059669"/>
+  <text x="1088" y="320" fill="#ecfdf5" font-size="34" font-family="Segoe UI, Arial">安全</text>
+  <text x="1075" y="380" fill="#d1fae5" font-size="24" font-family="Segoe UI, Arial">deny</text>
+  <text x="1075" y="420" fill="#d1fae5" font-size="24" font-family="Segoe UI, Arial">ask</text>
+  <text x="1075" y="460" fill="#d1fae5" font-size="24" font-family="Segoe UI, Arial">allow</text>
+  <rect x="1270" y="250" width="160" height="420" rx="16" fill="#ea580c"/>
+  <text x="1298" y="320" fill="#fff7ed" font-size="34" font-family="Segoe UI, Arial">记忆</text>
+  <text x="1285" y="380" fill="#ffedd5" font-size="24" font-family="Segoe UI, Arial">会话</text>
+  <text x="1285" y="420" fill="#ffedd5" font-size="24" font-family="Segoe UI, Arial">长期</text>
+  <text x="90" y="835" fill="#94a3b8" font-size="24" font-family="Segoe UI, Arial">关键点：先做可控执行，再做更强智能。</text>
+</svg>

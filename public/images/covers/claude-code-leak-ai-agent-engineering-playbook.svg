@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1020"/>
+      <stop offset="55%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="badge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <circle cx="1010" cy="130" r="170" fill="#0ea5e9" opacity="0.12"/>
+  <circle cx="1140" cy="520" r="210" fill="#6366f1" opacity="0.14"/>
+  <circle cx="130" cy="80" r="120" fill="#22d3ee" opacity="0.1"/>
+
+  <rect x="70" y="64" width="184" height="46" rx="23" fill="url(#badge)"/>
+  <text x="106" y="95" fill="#0f172a" font-size="24" font-weight="700" font-family="Segoe UI, PingFang SC, Microsoft YaHei, Arial">AI 分类</text>
+
+  <text x="70" y="210" fill="#f8fafc" font-size="62" font-weight="700" font-family="Segoe UI, PingFang SC, Microsoft YaHei, Arial">
+    Claude Code 源码事件之后
+  </text>
+  <text x="70" y="292" fill="#e2e8f0" font-size="54" font-weight="700" font-family="Segoe UI, PingFang SC, Microsoft YaHei, Arial">
+    如何构建可控的 AI 编程 Agent
+  </text>
+
+  <text x="70" y="375" fill="#94a3b8" font-size="30" font-family="Segoe UI, PingFang SC, Microsoft YaHei, Arial">
+    从“模型调用”走向“工程系统”：权限、编排、上下文、可观测
+  </text>
+
+  <rect x="70" y="430" width="1060" height="2" fill="#334155"/>
+
+  <text x="70" y="505" fill="#67e8f9" font-size="34" font-weight="600" font-family="Segoe UI, PingFang SC, Microsoft YaHei, Arial">
+    工业级落地框架 · 两周实践路线图
+  </text>
+  <text x="70" y="558" fill="#64748b" font-size="24" font-family="Segoe UI, PingFang SC, Microsoft YaHei, Arial">
+    erii-blog · 2026
+  </text>
+</svg>

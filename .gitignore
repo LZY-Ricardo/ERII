@@ -43,6 +43,10 @@ next-env.d.ts
 .vercel
 .env*.local
 
+# local one-off publish scripts
+scripts/update-cover.mjs
+scripts/update-published-post-content.mjs
+
 # python cache (e.g. local tools under .shared)
 __pycache__/
 *.pyc
