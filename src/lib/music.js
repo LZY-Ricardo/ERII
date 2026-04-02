@@ -173,6 +173,50 @@ export function getAllPlaylists() {
   return MUSIC_PLAYLISTS;
 }
 
+function normalizePlaylistList(playlists) {
+  return Array.isArray(playlists) ? playlists.filter(Boolean) : [];
+}
+
+function getDayOffset(date = new Date()) {
+  const safeDate = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(safeDate.getTime())) return 0;
+
+  const anchor = new Date("2026-04-02T00:00:00.000Z");
+  const currentUtc = Date.UTC(
+    safeDate.getUTCFullYear(),
+    safeDate.getUTCMonth(),
+    safeDate.getUTCDate()
+  );
+  const anchorUtc = Date.UTC(
+    anchor.getUTCFullYear(),
+    anchor.getUTCMonth(),
+    anchor.getUTCDate()
+  );
+
+  return Math.max(0, Math.floor((currentUtc - anchorUtc) / 86400000));
+}
+
+export function getEmbeddablePlaylists(playlists = MUSIC_PLAYLISTS) {
+  return normalizePlaylistList(playlists).filter((playlist) => Boolean(getMusicEmbedUrl(playlist)));
+}
+
+export function getMusicDockPlaylists({
+  playlists = MUSIC_PLAYLISTS,
+  date = new Date(),
+  limit = 3,
+} = {}) {
+  const normalized = normalizePlaylistList(playlists);
+  const source = getEmbeddablePlaylists(normalized);
+  const candidates = source.length ? source : normalized;
+
+  if (!candidates.length) return [];
+
+  const safeLimit = Math.max(1, Math.min(Number(limit) || 3, candidates.length));
+  const offset = getDayOffset(date) % candidates.length;
+
+  return Array.from({ length: safeLimit }, (_, index) => candidates[(offset + index) % candidates.length]);
+}
+
 /**
  * 根据ID获取单个歌单
  */

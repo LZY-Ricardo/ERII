@@ -45,6 +45,7 @@ next-env.d.ts
 
 # local codex environment metadata
 .codex/environments/
+.superpowers/
 
 # local one-off publish scripts
 scripts/update-cover.mjs

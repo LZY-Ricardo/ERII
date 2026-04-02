@@ -1,5 +1,6 @@
 import ArgonFooter from "@/src/components/argon/ArgonFooter";
 import ArgonLeftbar from "@/src/components/argon/ArgonLeftbar";
+import MusicDock from "@/src/components/argon/MusicDock";
 import ArgonNavbar from "@/src/components/argon/ArgonNavbar";
 import ArgonRightbar from "@/src/components/argon/ArgonRightbar";
 import UnmarkFloatingPrompt from "@/src/components/argon/UnmarkFloatingPrompt";
@@ -63,6 +64,7 @@ export default function ArgonShell({
 
       <UnmarkFloatingPrompt />
       <TimeThemePrompt />
+      <MusicDock />
     </div>
   );
 }
