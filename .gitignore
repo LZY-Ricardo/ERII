@@ -43,6 +43,9 @@ next-env.d.ts
 .vercel
 .env*.local
 
+# local codex environment metadata
+.codex/environments/
+
 # local one-off publish scripts
 scripts/update-cover.mjs
 scripts/update-published-post-content.mjs
