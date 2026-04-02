@@ -5,12 +5,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   applyQuickProjectPatch,
+  assignFeaturedProjectSlot,
   buildQuickProjectPayload,
-  moveFeaturedProject,
 } from "@/src/components/admin/adminProjectsQuickEdit";
 import {
-  ChevronDown,
-  ChevronUp,
+  FEATURED_PROJECT_LIMIT_ERROR,
+  MAX_FEATURED_PROJECTS,
+} from "@/src/lib/projectFeaturedLimit";
+import {
   ExternalLink,
   Pencil,
   Search,
@@ -44,6 +46,7 @@ function fmtDate(v) {
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [error, setError] = useState("");
   const [stateFilter, setStateFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -54,9 +57,9 @@ export default function AdminProjectsPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.ok) setProjects(data.projects ?? []);
-        else setError(data.error || "加载失败");
+        else setLoadError(data.error || "加载失败");
       })
-      .catch(() => setError("网络错误"))
+      .catch(() => setLoadError("网络错误"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -67,10 +70,6 @@ export default function AdminProjectsPage() {
       delete next[projectId];
       return next;
     });
-  };
-
-  const updateProjectLocally = (projectId, patch) => {
-    setProjects((current) => applyQuickProjectPatch(current, projectId, patch));
   };
 
   const persistProjectsState = async (previousProjects, nextProjects, changedIds) => {
@@ -110,34 +109,21 @@ export default function AdminProjectsPage() {
   };
 
   const handleFeaturedToggle = async (project) => {
+    const featuredCount = projects.filter((item) => item.featured).length;
+    if (!project.featured && featuredCount >= MAX_FEATURED_PROJECTS) {
+      setError(FEATURED_PROJECT_LIMIT_ERROR);
+      return;
+    }
     await persistProjectPatch(project.id, {
       featured: !project.featured,
     });
   };
 
-  const handleSortOrderChange = (projectId, rawValue) => {
-    const nextValue = Number.parseInt(rawValue, 10);
-    updateProjectLocally(projectId, {
-      sortOrder: Number.isNaN(nextValue) ? 0 : Math.max(0, nextValue),
-    });
-  };
-
-  const handleSortOrderCommit = async (project) => {
-    await persistProjectPatch(project.id, {
-      sortOrder: Number.isFinite(project.sortOrder) ? Math.max(0, project.sortOrder) : 0,
-    });
-  };
-
-  const handleMoveFeatured = async (projectId, direction) => {
+  const handleAssignFeaturedSlot = async (projectId, slot) => {
     const previousProjects = projects;
-    const result = moveFeaturedProject(previousProjects, projectId, direction);
+    const result = assignFeaturedProjectSlot(previousProjects, projectId, slot);
     await persistProjectsState(previousProjects, result.projects, result.changedIds);
   };
-
-  const featuredIdsByOrder = filtered
-    .filter((project) => project.featured)
-    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-    .map((project) => project.id);
 
   const filtered = projects.filter((p) => {
     if (stateFilter !== "all" && p.state !== stateFilter) return false;
@@ -153,6 +139,12 @@ export default function AdminProjectsPage() {
     return true;
   });
 
+  const featuredIdsByOrder = filtered
+    .filter((project) => project.featured)
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    .map((project) => project.id);
+  const featuredCount = projects.filter((project) => project.featured).length;
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center text-gray-400 text-sm">
@@ -161,18 +153,28 @@ export default function AdminProjectsPage() {
     );
   }
 
-  if (error) {
+  if (loadError) {
     return (
       <div className="flex h-64 items-center justify-center text-red-500 text-sm">
-        {error}
+        {loadError}
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-5xl space-y-4">
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-5 py-3">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm text-amber-700">
+          精选名额 {featuredCount}/{MAX_FEATURED_PROJECTS}
+        </div>
+
         {/* Search */}
         <div className="relative flex-1 min-w-45">
           <Search
@@ -260,7 +262,10 @@ export default function AdminProjectsPage() {
                           <button
                             type="button"
                             onClick={() => handleFeaturedToggle(project)}
-                            disabled={Boolean(savingMap[project.id])}
+                            disabled={
+                              Boolean(savingMap[project.id]) ||
+                              (!project.featured && featuredCount >= MAX_FEATURED_PROJECTS)
+                            }
                             className={`rounded p-0.5 transition-colors ${
                               project.featured
                                 ? "text-amber-500 hover:text-amber-600"
@@ -284,51 +289,34 @@ export default function AdminProjectsPage() {
                         {project.featured && (
                           <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
                             <span>首页顺序</span>
-                            <input
-                              type="number"
-                              min="0"
-                              value={project.sortOrder ?? 0}
-                              onChange={(e) => handleSortOrderChange(project.id, e.target.value)}
-                              onBlur={() => handleSortOrderCommit(project)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.currentTarget.blur();
-                                }
-                              }}
-                              disabled={Boolean(savingMap[project.id])}
-                              className="w-16 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100 disabled:bg-gray-100"
-                            />
                             <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => handleMoveFeatured(project.id, "up")}
-                                disabled={
-                                  Boolean(savingMap[project.id]) ||
-                                  featuredIdsByOrder.indexOf(project.id) <= 0
-                                }
-                                className="rounded border border-gray-200 bg-white p-1 text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-                                title="上移"
-                                aria-label="上移"
-                              >
-                                <ChevronUp size={12} />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleMoveFeatured(project.id, "down")}
-                                disabled={
-                                  Boolean(savingMap[project.id]) ||
-                                  featuredIdsByOrder.indexOf(project.id) === -1 ||
-                                  featuredIdsByOrder.indexOf(project.id) >= featuredIdsByOrder.length - 1
-                                }
-                                className="rounded border border-gray-200 bg-white p-1 text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-                                title="下移"
-                                aria-label="下移"
-                              >
-                                <ChevronDown size={12} />
-                              </button>
+                              {[1, 2, 3].map((slot) => {
+                                const currentSlot =
+                                  featuredIdsByOrder.indexOf(project.id) + 1;
+                                const isActive = currentSlot === slot;
+                                return (
+                                  <button
+                                    key={`${project.id}:slot:${slot}`}
+                                    type="button"
+                                    onClick={() => handleAssignFeaturedSlot(project.id, slot)}
+                                    disabled={
+                                      Boolean(savingMap[project.id]) ||
+                                      isActive ||
+                                      featuredIdsByOrder.length < slot
+                                    }
+                                    className={`rounded-md border px-2 py-1 text-[11px] transition-colors ${
+                                      isActive
+                                        ? "border-rose-300 bg-rose-50 text-rose-600"
+                                        : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800"
+                                    } disabled:cursor-not-allowed disabled:opacity-50`}
+                                  >
+                                    第{slot}位
+                                  </button>
+                                );
+                              })}
                             </div>
                             <span className="text-[11px] text-gray-400">
-                              首页按顺序取前 3 个
+                              最多 {MAX_FEATURED_PROJECTS} 个，仅首页展示
                             </span>
                           </div>
                         )}

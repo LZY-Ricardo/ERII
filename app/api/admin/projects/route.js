@@ -1,6 +1,7 @@
 import { requireDb } from "@/src/lib/db";
 import { requireAdmin } from "@/src/lib/adminGuard";
 import { toPgJsonbLiteral, toPgTextArrayLiteral } from "@/src/lib/projectMutation";
+import { getFeaturedProjectLimitError } from "@/src/lib/projectFeaturedLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -123,6 +124,16 @@ export async function POST(request) {
       );
     }
 
+    const featuredLimitError = await getFeaturedProjectLimitError(db, {
+      nextFeatured: featured,
+    });
+    if (featuredLimitError) {
+      return Response.json(
+        { ok: false, error: featuredLimitError },
+        { status: 400 }
+      );
+    }
+
     // 获取当前最大 sort_order
     const maxOrder = await db.sql`
       SELECT COALESCE(MAX(sort_order), 0) as max_order FROM projects
@@ -184,6 +195,17 @@ export async function PUT(request) {
     if (!id || !name) {
       return Response.json(
         { ok: false, error: "项目 ID 和名称不能为空" },
+        { status: 400 }
+      );
+    }
+
+    const featuredLimitError = await getFeaturedProjectLimitError(db, {
+      projectId: id,
+      nextFeatured: featured,
+    });
+    if (featuredLimitError) {
+      return Response.json(
+        { ok: false, error: featuredLimitError },
         { status: 400 }
       );
     }

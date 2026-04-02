@@ -5,6 +5,10 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
+  FEATURED_PROJECT_LIMIT_ERROR,
+  MAX_FEATURED_PROJECTS,
+} from "@/src/lib/projectFeaturedLimit";
+import {
   ArrowLeft,
   Save,
   Trash2,
@@ -57,12 +61,27 @@ export default function AdminProjectEditPage() {
   const [error, setError] = useState("");
   const [showCoverPreview, setShowCoverPreview] = useState(false);
   const [techInput, setTechInput] = useState("");
+  const [featuredCount, setFeaturedCount] = useState(0);
   const fileInputRef = useRef(null);
 
   // 加载项目数据
   useEffect(() => {
     if (isNew) {
       setLoading(false);
+    }
+
+    fetch("/api/admin/projects")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok) {
+          setFeaturedCount(
+            (data.projects ?? []).filter((item) => item.featured).length
+          );
+        }
+      })
+      .catch(() => {});
+
+    if (isNew) {
       return;
     }
 
@@ -84,6 +103,19 @@ export default function AdminProjectEditPage() {
   }, [project.cover]);
 
   const handleChange = (field, value) => {
+    if (
+      field === "featured" &&
+      value === true &&
+      !project.featured &&
+      featuredCount >= MAX_FEATURED_PROJECTS
+    ) {
+      setError(FEATURED_PROJECT_LIMIT_ERROR);
+      return;
+    }
+
+    if (field === "featured") {
+      setError("");
+    }
     setProject((p) => ({ ...p, [field]: value }));
   };
 
@@ -394,20 +426,28 @@ export default function AdminProjectEditPage() {
           <label className="text-sm font-medium text-gray-700">
             精选项目
           </label>
-          <button
-            onClick={() => handleChange("featured", !project.featured)}
-            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
-              project.featured
-                ? "border-amber-300 bg-amber-50 text-amber-700"
-                : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
-            }`}
-          >
-            <Star
-              size={15}
-              className={project.featured ? "fill-amber-400 text-amber-400" : ""}
-            />
-            {project.featured ? "已精选" : "设为精选"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => handleChange("featured", !project.featured)}
+              disabled={
+                !project.featured && featuredCount >= MAX_FEATURED_PROJECTS
+              }
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                project.featured
+                  ? "border-amber-300 bg-amber-50 text-amber-700"
+                  : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
+              } disabled:cursor-not-allowed disabled:opacity-50`}
+            >
+              <Star
+                size={15}
+                className={project.featured ? "fill-amber-400 text-amber-400" : ""}
+              />
+              {project.featured ? "已精选" : "设为精选"}
+            </button>
+            <span className="text-xs text-gray-400">
+              精选名额 {featuredCount}/{MAX_FEATURED_PROJECTS}
+            </span>
+          </div>
         </div>
 
         {/* Focus */}

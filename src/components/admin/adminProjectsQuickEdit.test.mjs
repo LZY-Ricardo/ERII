@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   applyQuickProjectPatch,
+  assignFeaturedProjectSlot,
   buildQuickProjectPayload,
   moveFeaturedProject,
 } from "./adminProjectsQuickEdit.js";
@@ -91,4 +92,50 @@ test("moveFeaturedProject keeps state unchanged when target is already first", (
 
   assert.deepEqual(result.changedIds, []);
   assert.deepEqual(result.projects, projects);
+});
+
+test("assignFeaturedProjectSlot swaps sort order with the project occupying the selected slot", () => {
+  const projects = [
+    { id: "wardrobe", featured: true, sortOrder: 1, name: "Wardrobe" },
+    { id: "unmark", featured: true, sortOrder: 2, name: "Unmark" },
+    { id: "react-playground", featured: true, sortOrder: 3, name: "React Playground" },
+  ];
+
+  const result = assignFeaturedProjectSlot(projects, "react-playground", 1);
+
+  assert.deepEqual(result.changedIds, ["react-playground", "wardrobe"]);
+  assert.deepEqual(result.projects, [
+    { id: "wardrobe", featured: true, sortOrder: 3, name: "Wardrobe" },
+    { id: "unmark", featured: true, sortOrder: 2, name: "Unmark" },
+    { id: "react-playground", featured: true, sortOrder: 1, name: "React Playground" },
+  ]);
+});
+
+test("assignFeaturedProjectSlot keeps state unchanged when the selected slot is current", () => {
+  const projects = [
+    { id: "wardrobe", featured: true, sortOrder: 1, name: "Wardrobe" },
+    { id: "unmark", featured: true, sortOrder: 2, name: "Unmark" },
+  ];
+
+  const result = assignFeaturedProjectSlot(projects, "unmark", 2);
+
+  assert.deepEqual(result.changedIds, []);
+  assert.deepEqual(result.projects, projects);
+});
+
+test("assignFeaturedProjectSlot uses featured ranking instead of literal sortOrder values", () => {
+  const projects = [
+    { id: "draft", featured: false, sortOrder: 1, name: "Draft" },
+    { id: "wardrobe", featured: true, sortOrder: 2, name: "Wardrobe" },
+    { id: "unmark", featured: true, sortOrder: 4, name: "Unmark" },
+  ];
+
+  const result = assignFeaturedProjectSlot(projects, "unmark", 1);
+
+  assert.deepEqual(result.changedIds, ["unmark", "wardrobe"]);
+  assert.deepEqual(result.projects, [
+    { id: "draft", featured: false, sortOrder: 1, name: "Draft" },
+    { id: "wardrobe", featured: true, sortOrder: 4, name: "Wardrobe" },
+    { id: "unmark", featured: true, sortOrder: 2, name: "Unmark" },
+  ]);
 });

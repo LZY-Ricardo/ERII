@@ -22,6 +22,21 @@ export function applyQuickProjectPatch(projects, projectId, patch = {}) {
   );
 }
 
+function swapFeaturedProjectSortOrder(projects, currentProject, swappedProject) {
+  return {
+    changedIds: [currentProject.id, swappedProject.id],
+    projects: projects.map((project) => {
+      if (project.id === currentProject.id) {
+        return { ...project, sortOrder: swappedProject.sortOrder ?? 0 };
+      }
+      if (project.id === swappedProject.id) {
+        return { ...project, sortOrder: currentProject.sortOrder ?? 0 };
+      }
+      return project;
+    }),
+  };
+}
+
 export function moveFeaturedProject(projects, projectId, direction) {
   const featuredProjects = projects
     .filter((project) => project.featured)
@@ -38,16 +53,20 @@ export function moveFeaturedProject(projects, projectId, direction) {
   const currentProject = featuredProjects[currentIndex];
   const swappedProject = featuredProjects[targetIndex];
 
-  return {
-    changedIds: [projectId, swappedProject.id],
-    projects: projects.map((project) => {
-      if (project.id === currentProject.id) {
-        return { ...project, sortOrder: swappedProject.sortOrder ?? 0 };
-      }
-      if (project.id === swappedProject.id) {
-        return { ...project, sortOrder: currentProject.sortOrder ?? 0 };
-      }
-      return project;
-    }),
-  };
+  return swapFeaturedProjectSortOrder(projects, currentProject, swappedProject);
+}
+
+export function assignFeaturedProjectSlot(projects, projectId, slot) {
+  const featuredProjects = projects
+    .filter((project) => project.featured)
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+  const currentProject = featuredProjects.find((project) => project.id === projectId);
+  const swappedProject = featuredProjects[slot - 1] ?? null;
+
+  if (!currentProject || !swappedProject || currentProject.id === swappedProject.id) {
+    return { projects, changedIds: [] };
+  }
+
+  return swapFeaturedProjectSortOrder(projects, currentProject, swappedProject);
 }

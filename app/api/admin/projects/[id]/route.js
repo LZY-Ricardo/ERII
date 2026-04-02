@@ -1,6 +1,7 @@
 import { requireDb } from "@/src/lib/db";
 import { requireAdmin } from "@/src/lib/adminGuard";
 import { toPgJsonbLiteral, toPgTextArrayLiteral } from "@/src/lib/projectMutation";
+import { getFeaturedProjectLimitError } from "@/src/lib/projectFeaturedLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -92,6 +93,17 @@ export async function PUT(request, { params }) {
     if (!name) {
       return Response.json(
         { ok: false, error: "项目名称不能为空" },
+        { status: 400 }
+      );
+    }
+
+    const featuredLimitError = await getFeaturedProjectLimitError(db, {
+      projectId: id,
+      nextFeatured: featured,
+    });
+    if (featuredLimitError) {
+      return Response.json(
+        { ok: false, error: featuredLimitError },
         { status: 400 }
       );
     }
