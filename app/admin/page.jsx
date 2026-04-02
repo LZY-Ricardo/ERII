@@ -12,34 +12,48 @@ import {
 } from "lucide-react";
 
 function StatCard({ icon: Icon, label, value, color, href }) {
-  const colorMap = {
-    rose: "bg-rose-50 text-rose-600",
-    blue: "bg-blue-50 text-blue-600",
-    amber: "bg-amber-50 text-amber-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    red: "bg-red-50 text-red-600",
-    gray: "bg-gray-100 text-gray-500",
-  };
-
   const inner = (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-sm">
-      <div className="flex items-center gap-3">
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-lg ${colorMap[color] || colorMap.gray}`}
-        >
-          <Icon size={20} />
-        </div>
-        <div>
-          <p className="text-sm text-gray-500">{label}</p>
-          <p className="text-2xl font-semibold text-gray-800">
-            {value ?? "—"}
-          </p>
-        </div>
+    <div className="admin-stat-card">
+      <div className="admin-stat-card__icon">
+        <Icon size={20} />
       </div>
+      <span className="admin-stat-card__value">{value ?? "—"}</span>
+      <span className="admin-stat-card__label">{label}</span>
+      <span className="mt-4 inline-flex text-xs font-medium text-[var(--admin-text-soft)]">
+        {color === "amber"
+          ? "需要优先关注"
+          : color === "red"
+            ? "建议及时清理"
+            : "进入对应工作区"}
+      </span>
     </div>
   );
 
   return href ? <Link href={href}>{inner}</Link> : inner;
+}
+
+function PendingItem({ icon: Icon, title, description, href, tone = "neutral" }) {
+  const toneClass =
+    tone === "warning"
+      ? "bg-amber-50 text-amber-700"
+      : tone === "danger"
+        ? "bg-rose-50 text-rose-700"
+        : "bg-stone-100 text-stone-700";
+
+  return (
+    <Link href={href} className="admin-list-item">
+      <div className="flex min-w-0 items-start gap-3">
+        <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${toneClass}`}>
+          <Icon size={18} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[var(--admin-text)]">{title}</p>
+          <p className="mt-1 text-sm text-[var(--admin-text-soft)]">{description}</p>
+        </div>
+      </div>
+      <span className="text-xs font-medium text-[var(--admin-accent)]">查看</span>
+    </Link>
+  );
 }
 
 const STATUS_LABELS = {
@@ -103,19 +117,35 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      {/* Stat cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="admin-page">
+      <div className="admin-page-heading">
+        <div>
+          <p className="admin-kicker">Overview</p>
+          <h1>控制台概览</h1>
+          <p>先处理待审核内容，再继续草稿与项目维护。后台首页现在更偏“工作台”，而不是单纯的数据看板。</p>
+        </div>
+        <div className="admin-panel">
+          <div className="admin-panel__body flex items-center gap-3">
+            <CheckCircle2 size={18} className="text-emerald-600" />
+            <div>
+              <p className="text-sm font-semibold text-[var(--admin-text)]">系统状态正常</p>
+              <p className="text-xs text-[var(--admin-text-soft)]">统计接口已连接，最近评论可直接进入审核流程。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="admin-stat-grid">
         <StatCard
           icon={FileText}
-          label="文章总数"
+          label="内容总量"
           value={stats?.totalPosts}
           color="blue"
           href="/admin/posts"
         />
         <StatCard
           icon={MessageSquare}
-          label="评论总数"
+          label="公开评论"
           value={stats?.totalComments}
           color="rose"
           href="/admin/comments"
@@ -136,49 +166,100 @@ export default function AdminDashboardPage() {
         />
       </div>
 
-      {/* Recent comments */}
-      <div className="rounded-xl border border-gray-200 bg-white">
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <h2 className="text-sm font-semibold text-gray-700">最近评论</h2>
-          <Link
-            href="/admin/comments"
-            className="text-xs text-rose-600 hover:underline"
-          >
-            查看全部 →
-          </Link>
-        </div>
+      <div className="admin-section-grid">
+        <section className="admin-panel is-strong">
+          <div className="admin-panel__body">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="admin-kicker">Pending</p>
+                <h2 className="m-0 text-xl font-semibold text-[var(--admin-text)]">待处理事项</h2>
+              </div>
+              <span className="admin-badge bg-stone-100 text-stone-700">今日工作流</span>
+            </div>
 
-        {recent.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-gray-400">
-            暂无评论
-          </p>
-        ) : (
-          <ul className="divide-y divide-gray-50">
-            {recent.map((c) => (
-              <li key={c.id} className="flex items-start gap-3 px-5 py-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm font-medium text-gray-700 truncate">
-                      {c.authorName}
-                    </span>
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_COLORS[c.status] || "bg-gray-100 text-gray-500"}`}
-                    >
-                      {STATUS_LABELS[c.status] || c.status}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-500 truncate">
-                    {c.contentPreview}
-                  </p>
-                  <p className="mt-0.5 text-xs text-gray-300">
-                    {c.postSlug} · {timeAgo(c.createdAt)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+            <div className="admin-list">
+              <PendingItem
+                icon={Clock}
+                title={`待审核评论 ${stats?.pendingComments ?? 0} 条`}
+                description="优先处理新评论，减少公开区延迟。"
+                href="/admin/comments?status=pending"
+                tone="warning"
+              />
+              <PendingItem
+                icon={AlertCircle}
+                title={`垃圾评论 ${stats?.spamComments ?? 0} 条`}
+                description="清理可疑内容，避免评论区噪声积累。"
+                href="/admin/comments?status=spam"
+                tone="danger"
+              />
+              <PendingItem
+                icon={FileText}
+                title="继续处理文章草稿"
+                description="进入文章管理页，继续分类调整或恢复草稿编辑。"
+                href="/admin/posts?tab=draft"
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className="admin-panel">
+          <div className="admin-panel__body">
+            <div className="mb-4">
+              <p className="admin-kicker">Shortcuts</p>
+              <h2 className="m-0 text-xl font-semibold text-[var(--admin-text)]">快捷入口</h2>
+            </div>
+            <div className="grid gap-3">
+              <Link href="/write" className="admin-button-primary">进入写作台</Link>
+              <Link href="/admin/projects" className="admin-button-subtle">检查项目展示与精选位</Link>
+              <Link href="/admin/settings" className="admin-button-subtle">调整站点配置</Link>
+            </div>
+          </div>
+        </section>
       </div>
+
+      <section className="admin-panel is-strong">
+        <div className="admin-panel__body">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="admin-kicker">Activity</p>
+              <h2 className="m-0 text-xl font-semibold text-[var(--admin-text)]">最近评论动态</h2>
+            </div>
+            <Link href="/admin/comments" className="admin-button-subtle">
+              查看全部
+            </Link>
+          </div>
+
+          {recent.length === 0 ? (
+            <div className="admin-empty">暂无评论动态</div>
+          ) : (
+            <div className="admin-list">
+              {recent.map((c) => (
+                <div key={c.id} className="admin-list-item">
+                  <div className="min-w-0">
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="text-sm font-semibold text-[var(--admin-text)] truncate">
+                        {c.authorName}
+                      </span>
+                      <span
+                        className={`admin-badge ${STATUS_COLORS[c.status] || "bg-gray-100 text-gray-500"}`}
+                      >
+                        {STATUS_LABELS[c.status] || c.status}
+                      </span>
+                    </div>
+                    <p className="truncate text-sm text-[var(--admin-text-soft)]">{c.contentPreview}</p>
+                    <p className="mt-1 text-xs text-[var(--admin-text-soft)]">
+                      {c.postSlug} · {timeAgo(c.createdAt)}
+                    </p>
+                  </div>
+                  <Link href="/admin/comments" className="admin-button-subtle">
+                    处理
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

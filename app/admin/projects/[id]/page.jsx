@@ -249,38 +249,35 @@ export default function AdminProjectEditPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center text-gray-400 text-sm">
-        加载中…
-      </div>
-    );
+    return <div className="admin-loading">加载中…</div>;
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
+    <div className="admin-page">
+      <div className="admin-page-heading">
+        <div className="flex items-center gap-3">
         <Link
           href="/admin/projects"
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="admin-icon-button h-10 w-10"
         >
           <ArrowLeft size={18} className="text-gray-500" />
         </Link>
-        <h1 className="text-xl font-semibold text-gray-900">
-          {isNew ? "新建项目" : "编辑项目"}
-        </h1>
+          <div>
+            <p className="admin-kicker">Project Editor</p>
+            <h1>{isNew ? "新建项目" : "编辑项目"}</h1>
+            <p>把项目卡片内容、封面、精选位和外部链接整理为统一的展示资产。</p>
+          </div>
+        </div>
       </div>
 
-      {/* Error */}
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error}
+        <div className="admin-panel">
+          <div className="admin-panel__body text-sm text-red-600">{error}</div>
         </div>
       )}
 
-      {/* Form */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 space-y-6">
-        {/* ID */}
+      <div className="admin-panel is-strong">
+        <div className="admin-panel__body space-y-6">
         <div className="grid grid-cols-[120px_1fr] items-start gap-4">
           <label className="text-sm font-medium text-gray-700 pt-2">
             项目 ID
@@ -290,13 +287,11 @@ export default function AdminProjectEditPage() {
             onChange={(e) => handleChange("id", e.target.value)}
             placeholder="project-id"
             disabled={!isNew}
-            className={`w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-              outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100
+            className={`admin-input
               ${!isNew ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}`}
           />
         </div>
 
-        {/* Name */}
         <div className="grid grid-cols-[120px_1fr] items-start gap-4">
           <label className="text-sm font-medium text-gray-700 pt-2">
             项目名称
@@ -305,12 +300,10 @@ export default function AdminProjectEditPage() {
             value={project.name}
             onChange={(e) => handleChange("name", e.target.value)}
             placeholder="项目名称"
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-              outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+            className="admin-input"
           />
         </div>
 
-        {/* Tagline */}
         <div className="grid grid-cols-[120px_1fr] items-start gap-4">
           <label className="text-sm font-medium text-gray-700 pt-2">
             一句话描述
@@ -319,12 +312,10 @@ export default function AdminProjectEditPage() {
             value={project.tagline}
             onChange={(e) => handleChange("tagline", e.target.value)}
             placeholder="简短描述"
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-              outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+            className="admin-input"
           />
         </div>
 
-        {/* Summary */}
         <div className="grid grid-cols-[120px_1fr] items-start gap-4">
           <label className="text-sm font-medium text-gray-700 pt-2">
             详细介绍
@@ -334,12 +325,10 @@ export default function AdminProjectEditPage() {
             onChange={(e) => handleChange("summary", e.target.value)}
             placeholder="项目详细介绍"
             rows={3}
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-              outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100 resize-none"
+            className="admin-textarea resize-none"
           />
         </div>
 
-        {/* Cover */}
         <div className="grid grid-cols-[120px_1fr] items-start gap-4">
           <label className="text-sm font-medium text-gray-700 pt-2">
             封面图片
@@ -350,14 +339,12 @@ export default function AdminProjectEditPage() {
                 value={project.cover}
                 onChange={(e) => handleChange("cover", e.target.value)}
                 placeholder="/images/projects/xxx.png"
-                className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-                  outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+                className="admin-input flex-1"
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-2 text-sm
-                  text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="admin-button-subtle disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {uploading ? (
                   <>
@@ -404,14 +391,12 @@ export default function AdminProjectEditPage() {
             value={project.status}
             onChange={(e) => handleChange("status", e.target.value)}
             placeholder="如：持续更新、维护中"
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-              outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+            className="admin-input"
           />
           <select
             value={project.state}
             onChange={(e) => handleChange("state", e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-              outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+            className="admin-select"
           >
             {STATE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -432,7 +417,7 @@ export default function AdminProjectEditPage() {
               disabled={
                 !project.featured && featuredCount >= MAX_FEATURED_PROJECTS
               }
-              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+              className={`inline-flex min-h-10 items-center gap-2 rounded-2xl border px-4 text-sm transition-colors ${
                 project.featured
                   ? "border-amber-300 bg-amber-50 text-amber-700"
                   : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
@@ -484,13 +469,11 @@ export default function AdminProjectEditPage() {
                 onChange={(e) => setTechInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTech())}
                 placeholder="输入技术栈后回车"
-                className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-                  outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+                className="admin-input flex-1"
               />
               <button
                 onClick={addTech}
-                className="flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-2 text-sm
-                  text-gray-700 hover:bg-gray-200 transition-colors"
+                className="admin-button-subtle"
               >
                 <Plus size={15} />
                 添加
@@ -528,19 +511,17 @@ export default function AdminProjectEditPage() {
                   value={link.label}
                   onChange={(e) => updateLink(index, "label", e.target.value)}
                   placeholder="链接名称"
-                  className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-                    outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+                  className="admin-input flex-1"
                 />
                 <input
                   value={link.href}
                   onChange={(e) => updateLink(index, "href", e.target.value)}
                   placeholder="https://..."
-                  className="flex-[2] rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-                    outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+                  className="admin-input flex-[2]"
                 />
                 <button
                   onClick={() => removeLink(index)}
-                  className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                  className="admin-icon-button h-10 w-10"
                 >
                   <X size={16} />
                 </button>
@@ -548,7 +529,7 @@ export default function AdminProjectEditPage() {
             ))}
             <button
               onClick={addLink}
-              className="flex items-center gap-1 text-sm text-gray-600 hover:text-rose-500 transition-colors"
+              className="inline-flex items-center gap-1 text-sm text-gray-600 transition-colors hover:text-rose-500"
             >
               <Plus size={15} />
               添加链接
@@ -565,18 +546,17 @@ export default function AdminProjectEditPage() {
             type="number"
             value={project.sortOrder}
             onChange={(e) => handleChange("sortOrder", parseInt(e.target.value) || 0)}
-            className="w-32 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-              outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+            className="admin-input w-32"
           />
         </div>
       </div>
+      </div>
 
-      {/* Actions */}
       <div className="flex items-center justify-between">
         <button
           onClick={handleDelete}
           disabled={isNew}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-colors ${
+          className={`inline-flex min-h-10 items-center gap-1.5 rounded-2xl px-4 text-sm transition-colors ${
             isNew
               ? "bg-gray-100 text-gray-400 cursor-not-allowed"
               : "bg-red-50 text-red-600 hover:bg-red-100"
@@ -589,18 +569,17 @@ export default function AdminProjectEditPage() {
         <div className="flex gap-3">
           <Link
             href="/admin/projects"
-            className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700
-              hover:bg-gray-50 transition-colors"
+            className="admin-button-subtle"
           >
             取消
           </Link>
           <button
             onClick={handleSave}
             disabled={saving || !project.id || !project.name}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-colors ${
+            className={`inline-flex min-h-10 items-center gap-1.5 rounded-2xl px-4 text-sm transition-colors ${
               saving || !project.id || !project.name
                 ? "bg-gray-300 text-white cursor-not-allowed"
-                : "bg-rose-500 text-white hover:bg-rose-600"
+                : "bg-[var(--admin-accent)] text-white hover:bg-[var(--admin-accent-strong)]"
             }`}
           >
             <Save size={15} />

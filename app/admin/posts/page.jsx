@@ -192,32 +192,40 @@ function AdminPostsPageContent() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center text-gray-400 text-sm">
-        加载中…
-      </div>
+      <div className="admin-loading">加载中…</div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex h-64 items-center justify-center text-red-500 text-sm">
-        {error}
-      </div>
+      <div className="admin-loading text-rose-600">{error}</div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-5 py-3">
-        <div className="flex items-center gap-2">
+    <div className="admin-page">
+      <div className="admin-page-heading">
+        <div>
+          <p className="admin-kicker">Posts</p>
+          <h1>文章管理</h1>
+          <p>这里统一处理已发布文章、草稿和修改稿。高频动作是继续编辑、快速切换分类和定位当前发布状态。</p>
+        </div>
+        <Link href="/write" className="admin-button-primary">
+          <Pencil size={15} />
+          新建或继续写作
+        </Link>
+      </div>
+
+      <div className="admin-panel is-strong">
+        <div className="admin-toolbar">
+          <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => updateTab("published")}
-            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`admin-badge min-h-10 px-4 text-sm transition-colors ${
               activeTab === "published"
-                ? "bg-rose-50 text-rose-600"
-                : "text-gray-500 hover:text-gray-700"
+                ? "bg-rose-50 text-rose-700"
+                : "bg-white text-[var(--admin-text-soft)]"
             }`}
           >
             文章 ({publishedCount})
@@ -225,68 +233,58 @@ function AdminPostsPageContent() {
           <button
             type="button"
             onClick={() => updateTab("draft")}
-            className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`admin-badge min-h-10 px-4 text-sm transition-colors ${
               activeTab === "draft"
-                ? "bg-rose-50 text-rose-600"
-                : "text-gray-500 hover:text-gray-700"
+                ? "bg-rose-50 text-rose-700"
+                : "bg-white text-[var(--admin-text-soft)]"
             }`}
           >
             草稿箱 ({draftCount})
           </button>
         </div>
-        {/* Search */}
-        <div className="relative flex-1 min-w-45">
-          <Search
-            size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-          />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="搜索标题、slug 或标签…"
-            className="w-full rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-sm
-              text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
-          />
-        </div>
 
-        <span className="text-xs text-gray-400 ml-auto">
-          共 {filtered.length} 篇
-        </span>
+          <label className="admin-search">
+            <Search size={16} />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="搜索标题、slug 或标签…"
+            />
+          </label>
+
+          <span className="ml-auto text-xs text-[var(--admin-text-soft)]">
+            当前视图 {filtered.length} 篇
+          </span>
+        </div>
       </div>
 
-      {/* Posts table */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <div className="admin-panel is-strong admin-table-wrap">
         {filtered.length === 0 ? (
-          <p className="py-16 text-center text-sm text-gray-400">
-            未找到文章
-          </p>
+          <div className="admin-empty">未找到文章</div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="admin-table">
             <thead>
-              <tr className="border-b border-gray-100 text-left text-xs text-gray-400">
-                <th className="px-5 py-3 font-medium">标题</th>
-                <th className="px-3 py-3 font-medium w-24">日期</th>
-                <th className="px-3 py-3 font-medium w-32 text-center">
+              <tr>
+                <th>标题</th>
+                <th className="w-28">日期</th>
+                <th className="w-44 text-center">
                   分类
                 </th>
-                <th className="px-3 py-3 font-medium w-20 text-center">
+                <th className="w-32 text-center">
                   状态
                 </th>
-                <th className="px-3 py-3 font-medium w-16 text-center">
+                <th className="w-14 text-center">
                   评论
                 </th>
-                <th className="px-3 py-3 font-medium w-24 text-right">
+                <th className="w-32 text-right">
                   操作
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody>
               {filtered.map((post) => (
-                <tr
-                  key={getRowKey(post)}
-                  className="hover:bg-gray-50/60 transition-colors"
-                >
-                  <td className="px-5 py-3">
+                <tr key={getRowKey(post)}>
+                  <td className="min-w-[420px]">
                     <div className="flex items-center gap-2">
                       <FileText
                         size={15}
@@ -296,7 +294,7 @@ function AdminPostsPageContent() {
                         <p className="font-medium text-gray-800 truncate">
                           {post.title || "无标题"}
                         </p>
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[var(--admin-text-soft)]">
                           <p className="truncate">/{post.slug}</p>
                           {post.draftKind === "working" && post.publishedSlug ? (
                             <p className="truncate text-amber-600">
@@ -307,18 +305,16 @@ function AdminPostsPageContent() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
+                  <td className="text-xs whitespace-nowrap text-[var(--admin-text-soft)]">
                     {fmtDate(post.updatedAt || post.date)}
                   </td>
-                  <td className="px-3 py-3">
+                  <td>
                     <div className="flex items-center justify-center gap-2">
                       <select
                         value={getCategoryFromPost(post)}
                         onChange={(e) => saveCategory(post, e.target.value)}
                         disabled={Boolean(savingMap[getRowKey(post)])}
-                        className="h-8 w-28 rounded-lg border border-gray-200 bg-gray-50 px-2 text-xs
-                          text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100
-                          disabled:cursor-not-allowed disabled:opacity-60"
+                        className="admin-select w-36 min-w-[9rem] px-3 text-sm leading-5 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {POST_CATEGORY_OPTIONS.map((option) => (
                           <option key={option} value={option}>
@@ -331,23 +327,23 @@ function AdminPostsPageContent() {
                       ) : null}
                     </div>
                   </td>
-                  <td className="px-3 py-3 text-center">
+                  <td className="text-center">
                     <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                      className={`admin-badge ${
                         STATUS_COLOR[post.status] || "bg-gray-100 text-gray-500"
                       }`}
                     >
                       {STATUS_LABEL[post.status] || post.status}
                     </span>
                     {post.draftKind ? (
-                      <span className="ml-1 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                      <span className="admin-badge ml-1 bg-amber-50 text-amber-700">
                         {DRAFT_KIND_LABEL[post.draftKind] || post.draftKind}
                       </span>
                     ) : null}
                   </td>
-                  <td className="px-3 py-3 text-center">
+                  <td className="text-center">
                     {post.commentCount > 0 ? (
-                      <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                      <span className="inline-flex items-center gap-1 text-xs text-[var(--admin-text-soft)]">
                         <MessageSquare size={13} />
                         {post.commentCount}
                       </span>
@@ -355,11 +351,11 @@ function AdminPostsPageContent() {
                       <span className="text-gray-300">—</span>
                     )}
                   </td>
-                  <td className="px-3 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
+                  <td className="text-right">
+                    <div className="flex items-center justify-end gap-2">
                       <Link
                         href={`/write?slug=${post.editorLookupSlug || post.slug}`}
-                        className="p-1.5 rounded-md hover:bg-gray-200/60 transition-colors"
+                        className="admin-icon-button h-9 w-9"
                         title="编辑"
                       >
                         <Pencil size={14} className="text-gray-400" />
@@ -368,7 +364,7 @@ function AdminPostsPageContent() {
                         <Link
                           href={`/blog/${post.slug}`}
                           target="_blank"
-                          className="p-1.5 rounded-md hover:bg-gray-200/60 transition-colors"
+                          className="admin-icon-button h-9 w-9"
                           title="查看"
                         >
                           <ExternalLink

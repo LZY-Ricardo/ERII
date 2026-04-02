@@ -152,24 +152,30 @@ function AdminCommentsPageContent() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center text-gray-400 text-sm">
-        加载中…
-      </div>
-    );
+    return <div className="admin-loading">加载中…</div>;
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
-      {/* 筛选栏 */}
-      <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-5 py-3">
-        <div className="flex items-center gap-3">
-          <label className="text-sm text-gray-600">状态:</label>
+    <div className="admin-page">
+      <div className="admin-page-heading">
+        <div>
+          <p className="admin-kicker">Comments</p>
+          <h1>评论管理</h1>
+          <p>把审核、详情查看和垃圾标记收敛到同一条决策流中，避免在列表和弹窗之间来回跳转。</p>
+        </div>
+        <button onClick={loadComments} className="admin-button-subtle">
+          <RefreshCw size={15} />
+          刷新列表
+        </button>
+      </div>
+
+      <div className="admin-panel is-strong">
+        <div className="admin-toolbar">
+          <label className="text-sm text-[var(--admin-text-soft)]">状态</label>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm
-              text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+            className="admin-select max-w-[180px]"
           >
             <option value="all">全部</option>
             <option value="approved">已批准</option>
@@ -178,7 +184,7 @@ function AdminCommentsPageContent() {
           </select>
 
           {newCount > 0 && (
-            <span className="flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
+            <span className="admin-badge bg-blue-50 text-blue-700">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
@@ -186,16 +192,13 @@ function AdminCommentsPageContent() {
               {newCount} 条新评论
             </span>
           )}
-        </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400">
+          <span className="ml-auto text-xs text-[var(--admin-text-soft)]">
             共 {filteredComments.length} 条
           </span>
           <button
             onClick={loadComments}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400
-              hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            className="admin-icon-button h-10 w-10"
             title="刷新"
           >
             <RefreshCw size={15} />
@@ -203,22 +206,23 @@ function AdminCommentsPageContent() {
         </div>
       </div>
 
-      {/* 评论列表 */}
-      <div className="rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
+      <div className="admin-panel is-strong">
         {filteredComments.length === 0 ? (
-          <p className="py-16 text-center text-sm text-gray-400">暂无评论</p>
+          <div className="admin-empty">暂无评论</div>
         ) : (
-          filteredComments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              isDeleting={isDeleting === comment.id}
-              onDelete={() => handleDelete(comment.id)}
-              onApprove={() => handleApprove(comment.id)}
-              onSpam={() => handleSpam(comment.id)}
-              onView={() => setSelectedComment(comment)}
-            />
-          ))
+          <div className="admin-list">
+            {filteredComments.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                isDeleting={isDeleting === comment.id}
+                onDelete={() => handleDelete(comment.id)}
+                onApprove={() => handleApprove(comment.id)}
+                onSpam={() => handleSpam(comment.id)}
+                onView={() => setSelectedComment(comment)}
+              />
+            ))}
+          </div>
         )}
       </div>
 
@@ -235,9 +239,7 @@ function AdminCommentsPageContent() {
 
 function AdminCommentsPageFallback() {
   return (
-    <div className="flex h-64 items-center justify-center text-gray-400 text-sm">
-      加载中…
-    </div>
+    <div className="admin-loading">加载中…</div>
   );
 }
 
@@ -251,11 +253,7 @@ export default function AdminCommentsPage() {
 
 function CommentItem({ comment, isDeleting, onDelete, onApprove, onSpam, onView }) {
   return (
-    <div
-      className={`px-5 py-4 hover:bg-gray-50/60 transition-colors ${
-        comment.isNew ? "bg-blue-50/40" : ""
-      }`}
-    >
+    <div className={`admin-list-item ${comment.isNew ? "bg-blue-50/40" : ""}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -269,12 +267,12 @@ function CommentItem({ comment, isDeleting, onDelete, onApprove, onSpam, onView 
               {comment.authorName}
             </span>
             {comment.isPrivate && (
-              <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[11px] text-purple-600">
+              <span className="admin-badge bg-purple-50 text-purple-600">
                 私密
               </span>
             )}
             <span
-              className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+              className={`admin-badge ${
                 STATUS_COLORS[comment.status]
               }`}
             >
@@ -294,7 +292,7 @@ function CommentItem({ comment, isDeleting, onDelete, onApprove, onSpam, onView 
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={onView}
-            className="p-1.5 rounded-md hover:bg-gray-200/60 transition-colors"
+            className="admin-icon-button h-9 w-9"
             title="查看详情"
           >
             <Eye size={16} className="text-gray-400" />
@@ -302,7 +300,7 @@ function CommentItem({ comment, isDeleting, onDelete, onApprove, onSpam, onView 
           {comment.status !== "approved" && (
             <button
               onClick={onApprove}
-              className="p-1.5 rounded-md hover:bg-green-100 transition-colors"
+              className="admin-icon-button h-9 w-9"
               title="批准"
             >
               <Check size={16} className="text-green-600" />
@@ -310,7 +308,7 @@ function CommentItem({ comment, isDeleting, onDelete, onApprove, onSpam, onView 
           )}
           <button
             onClick={onSpam}
-            className="p-1.5 rounded-md hover:bg-yellow-100 transition-colors"
+            className="admin-icon-button h-9 w-9"
             title="标记垃圾"
           >
             <AlertCircle size={16} className="text-yellow-600" />
@@ -318,7 +316,7 @@ function CommentItem({ comment, isDeleting, onDelete, onApprove, onSpam, onView 
           <button
             onClick={onDelete}
             disabled={isDeleting}
-            className="p-1.5 rounded-md hover:bg-red-100 transition-colors disabled:opacity-50"
+            className="admin-icon-button h-9 w-9 disabled:opacity-50"
             title="删除"
           >
             <Trash2 size={16} className="text-red-600" />
@@ -336,7 +334,7 @@ function CommentDetailModal({ comment, onClose }) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-xl bg-white shadow-xl max-h-[80vh] overflow-y-auto"
+        className="w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-[28px] border border-[var(--admin-border)] bg-[rgba(255,252,248,0.96)] shadow-[var(--admin-shadow)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
@@ -397,7 +395,7 @@ function CommentDetailModal({ comment, onClose }) {
               <dt className="text-gray-400 mb-0.5">状态</dt>
               <dd>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                  className={`admin-badge ${
                     STATUS_COLORS[comment.status]
                   }`}
                 >

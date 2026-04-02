@@ -901,7 +901,7 @@ export default function WritePageV2() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-wafu-sumi/45">
+          <span className="hidden text-[11px] text-wafu-sumi/45 xl:inline">
             {autoSaveHint}
           </span>
           {isPublishedPost ? (
@@ -912,6 +912,12 @@ export default function WritePageV2() {
           {autoSaveLabel ? (
             <span className="text-[11px] text-wafu-sumi/55">{autoSaveLabel}</span>
           ) : null}
+          <Link
+            href="/admin"
+            className="rounded-full border border-wafu-sumi/10 bg-white/60 px-3 py-1.5 text-[11px] text-wafu-sumi/70 hover:bg-white/80"
+          >
+            后台工作台
+          </Link>
           <Link
             href="/admin/posts?tab=draft"
             className="rounded-full border border-wafu-sumi/10 bg-white/60 px-3 py-1.5 text-[11px] text-wafu-sumi/70 hover:bg-white/80"

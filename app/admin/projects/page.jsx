@@ -146,98 +146,81 @@ export default function AdminProjectsPage() {
   const featuredCount = projects.filter((project) => project.featured).length;
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center text-gray-400 text-sm">
-        加载中…
-      </div>
-    );
+    return <div className="admin-loading">加载中…</div>;
   }
 
   if (loadError) {
-    return (
-      <div className="flex h-64 items-center justify-center text-red-500 text-sm">
-        {loadError}
-      </div>
-    );
+    return <div className="admin-loading text-rose-600">{loadError}</div>;
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
+    <div className="admin-page">
+      <div className="admin-page-heading">
+        <div>
+          <p className="admin-kicker">Projects</p>
+          <h1>项目管理</h1>
+          <p>这里主要处理项目展示顺序、精选位和卡片基础信息，让公开项目页维护更直接。</p>
+        </div>
+        <Link href="/admin/projects/new" className="admin-button-primary">
+          <Plus size={15} />
+          新建项目
+        </Link>
+      </div>
+
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error}
+        <div className="admin-panel">
+          <div className="admin-panel__body text-sm text-red-600">{error}</div>
         </div>
       )}
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-5 py-3">
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm text-amber-700">
+      <div className="admin-panel is-strong">
+        <div className="admin-toolbar">
+        <div className="admin-badge bg-amber-50 px-3 text-sm text-amber-700">
           精选名额 {featuredCount}/{MAX_FEATURED_PROJECTS}
         </div>
 
-        {/* Search */}
-        <div className="relative flex-1 min-w-45">
-          <Search
-            size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-          />
+        <label className="admin-search">
+          <Search size={16} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="搜索项目名称、ID、简介或技术栈…"
-            className="w-full rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-sm
-              text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
           />
-        </div>
+        </label>
 
-        {/* State filter */}
         <select
           value={stateFilter}
           onChange={(e) => setStateFilter(e.target.value)}
-          className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm
-            text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+          className="admin-select max-w-[180px]"
         >
           <option value="all">全部状态</option>
           <option value="active">进行中</option>
           <option value="building">开发中</option>
           <option value="research">研究中</option>
         </select>
-
-        {/* New project button */}
-        <Link
-          href="/admin/projects/new"
-          className="ml-auto flex items-center gap-1.5 rounded-lg bg-rose-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-rose-600 transition-colors"
-        >
-          <Plus size={15} />
-          新建项目
-        </Link>
+        <span className="ml-auto text-xs text-[var(--admin-text-soft)]">共 {filtered.length} 个项目</span>
+        </div>
       </div>
 
-      {/* Projects table */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <div className="admin-panel is-strong admin-table-wrap">
         {filtered.length === 0 ? (
-          <p className="py-16 text-center text-sm text-gray-400">
-            未找到项目
-          </p>
+          <div className="admin-empty">未找到项目</div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="admin-table">
             <thead>
-              <tr className="border-b border-gray-100 text-left text-xs text-gray-400">
-                <th className="px-5 py-3 font-medium">项目</th>
-                <th className="px-3 py-3 font-medium w-20">状态</th>
-                <th className="px-3 py-3 font-medium w-24">更新</th>
-                <th className="px-3 py-3 font-medium w-24 text-right">
+              <tr>
+                <th>项目</th>
+                <th className="w-20">状态</th>
+                <th className="w-24">更新</th>
+                <th className="w-24 text-right">
                   操作
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody>
               {filtered.map((project) => (
-                <tr
-                  key={project.id}
-                  className="hover:bg-gray-50/60 transition-colors"
-                >
-                  <td className="px-5 py-3">
+                <tr key={project.id}>
+                  <td>
                     <div className="flex items-start gap-3">
                       {/* Cover */}
                       {project.cover ? (
@@ -335,23 +318,23 @@ export default function AdminProjectsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-3">
+                  <td>
                     <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                      className={`admin-badge ${
                         STATE_COLOR[project.state] || "bg-gray-100 text-gray-500"
                       }`}
                     >
                       {STATE_LABEL[project.state] || project.state}
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-gray-500 text-xs whitespace-nowrap">
+                  <td className="text-xs whitespace-nowrap text-[var(--admin-text-soft)]">
                     {fmtDate(project.updatedAt)}
                   </td>
-                  <td className="px-3 py-3 text-right">
+                  <td className="text-right">
                     <div className="flex items-center justify-end gap-1">
                       <Link
                         href={`/admin/projects/${project.id}`}
-                        className="p-1.5 rounded-md hover:bg-gray-200/60 transition-colors"
+                        className="admin-icon-button h-9 w-9"
                         title="编辑"
                       >
                         <Pencil size={14} className="text-gray-400" />
@@ -361,7 +344,7 @@ export default function AdminProjectsPage() {
                           href={project.links[0].href}
                           target="_blank"
                           rel="noreferrer"
-                          className="p-1.5 rounded-md hover:bg-gray-200/60 transition-colors"
+                          className="admin-icon-button h-9 w-9"
                           title="查看项目"
                         >
                           <ExternalLink

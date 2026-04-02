@@ -2,9 +2,9 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { adminNav } from "./adminNav";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu, Search, BellDot } from "lucide-react";
 
-export default function AdminHeader() {
+export default function AdminHeader({ onOpenSidebar }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -27,17 +27,35 @@ export default function AdminHeader() {
   }
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-6">
-      <h1 className="text-base font-semibold text-gray-800">{title}</h1>
+    <header className="admin-header">
+      <div className="admin-header__title">
+        <button
+          type="button"
+          className="admin-icon-button admin-header__menu"
+          onClick={onOpenSidebar}
+          aria-label="打开侧边导航"
+        >
+          <Menu size={18} />
+        </button>
+        <div>
+          <p className="admin-kicker">Admin Workspace</p>
+          <h1>{title}</h1>
+        </div>
+      </div>
 
-      <button
-        onClick={handleLogout}
-        className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-gray-500
-          hover:bg-gray-100 hover:text-gray-700 transition-colors"
-      >
-        <LogOut size={15} />
-        <span>登出</span>
-      </button>
+      <div className="admin-header__actions">
+        <div className="admin-header__search">
+          <Search size={16} />
+          <span>内容、评论、项目</span>
+        </div>
+        <button type="button" className="admin-icon-button" aria-label="通知">
+          <BellDot size={17} />
+        </button>
+        <button onClick={handleLogout} className="admin-button-subtle">
+          <LogOut size={15} />
+          <span>登出</span>
+        </button>
+      </div>
     </header>
   );
 }

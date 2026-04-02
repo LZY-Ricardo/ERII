@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from "react";
 import {
-  User,
   Globe,
   Mail,
   Palette,
   Save,
   Bell,
   Shield,
-  Database,
 } from "lucide-react";
 
 export default function AdminSettingsPage() {
@@ -80,11 +78,7 @@ export default function AdminSettingsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center text-gray-400 text-sm">
-        加载中…
-      </div>
-    );
+    return <div className="admin-loading">加载中…</div>;
   }
 
   const sections = [
@@ -231,14 +225,13 @@ export default function AdminSettingsPage() {
     if (field.type === "select") {
       return (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">
             {field.label}
           </label>
           <select
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-              text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+            className="admin-select"
           >
             {field.options.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -252,7 +245,7 @@ export default function AdminSettingsPage() {
 
     return (
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+        <label className="mb-1.5 block text-sm font-medium text-gray-700">
           {field.label}
         </label>
         <input
@@ -260,27 +253,23 @@ export default function AdminSettingsPage() {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder={field.placeholder}
-          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm
-            text-gray-700 outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-100
-            placeholder:text-gray-400"
+          className="admin-input placeholder:text-gray-400"
         />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="admin-page">
+      <div className="admin-page-heading">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">设置</h1>
-          <p className="text-sm text-gray-400 mt-0.5">
-            管理你的站点配置和偏好设置
-          </p>
+          <p className="admin-kicker">Settings</p>
+          <h1>站点设置</h1>
+          <p>这里处理站点元信息、评论策略和通知偏好。布局改成控制台分区，减少长表单的阅读负担。</p>
         </div>
         {message.text && (
           <div
-            className={`text-sm px-4 py-2 rounded-lg ${
+            className={`admin-badge min-h-10 px-4 text-sm ${
               message.type === "success"
                 ? "bg-emerald-50 text-emerald-700"
                 : "bg-red-50 text-red-700"
@@ -295,11 +284,8 @@ export default function AdminSettingsPage() {
         {sections.map((section) => {
           const Icon = section.icon;
           return (
-            <div
-              key={section.title}
-              className="rounded-xl border border-gray-200 bg-white"
-            >
-              <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100">
+            <div key={section.title} className="admin-panel is-strong">
+              <div className="flex items-center gap-2 border-b border-[rgba(76,58,50,0.08)] px-5 py-4">
                 <Icon size={16} className="text-gray-400" />
                 <h2 className="text-sm font-semibold text-gray-700">
                   {section.title}
@@ -316,13 +302,7 @@ export default function AdminSettingsPage() {
 
         {/* Submit button */}
         <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700
-              disabled:bg-gray-300 text-white text-sm font-medium rounded-lg
-              transition-colors"
-          >
+          <button type="submit" disabled={saving} className="admin-button-primary">
             <Save size={16} />
             {saving ? "保存中…" : "保存设置"}
           </button>

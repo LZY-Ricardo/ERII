@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { adminNav } from "./adminNav";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, ChevronRight, PenSquare, Sparkles } from "lucide-react";
 
-export default function AdminSidebar() {
+export default function AdminSidebar({
+  collapsed,
+  mobileOpen,
+  onToggleCollapsed,
+  onCloseMobile,
+}) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
 
   function isActive(href) {
     if (href === "/admin") return pathname === "/admin";
@@ -17,75 +20,83 @@ export default function AdminSidebar() {
 
   return (
     <aside
-      className={`
-        flex flex-col border-r border-gray-200 bg-white
-        transition-[width] duration-200 ease-in-out
-        ${collapsed ? "w-16" : "w-56"}
-      `}
+      className={`admin-sidebar ${collapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-mobile-open" : ""}`}
     >
-      {/* Logo / Brand */}
-      <div className="flex h-14 items-center border-b border-gray-200 px-4">
-        {!collapsed && (
-          <Link href="/admin" className="text-base font-semibold text-gray-800 truncate">
-            Erii Admin
+      <div className="admin-sidebar__inner">
+        <div className="admin-sidebar__brand">
+          <Link href="/admin" className="admin-sidebar__logo" onClick={onCloseMobile}>
+            <span className="admin-sidebar__logo-mark">ER</span>
+            {!collapsed ? (
+              <span className="admin-sidebar__logo-copy">
+                <strong>Erii Console</strong>
+                <small>内容与站点管理</small>
+              </span>
+            ) : null}
           </Link>
-        )}
-        <button
-          onClick={() => setCollapsed((c) => !c)}
-          className={`
-            ml-auto flex h-7 w-7 items-center justify-center rounded
-            text-gray-400 hover:bg-gray-100 hover:text-gray-600
-            transition-colors
-            ${collapsed ? "mx-auto" : ""}
-          `}
-          title={collapsed ? "展开侧边栏" : "收起侧边栏"}
-        >
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            className="admin-sidebar__collapse"
+            title={collapsed ? "展开侧边栏" : "收起侧边栏"}
+          >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
-      </div>
+          </button>
+        </div>
 
-      {/* Nav Items */}
-      <nav className="flex-1 overflow-y-auto py-2 px-2">
-        {adminNav.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
-          return (
-            <Link
-              key={item.key}
-              href={item.href}
-              title={collapsed ? item.label : undefined}
-              className={`
-                flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium
-                transition-colors mb-0.5
-                ${
-                  active
-                    ? "bg-rose-50 text-rose-700"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }
-                ${collapsed ? "justify-center px-0" : ""}
-              `}
-            >
-              <Icon size={18} className="shrink-0" />
-              {!collapsed && <span className="truncate">{item.label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
+        {!collapsed ? (
+          <div className="admin-sidebar__spotlight">
+            <div className="admin-sidebar__spotlight-icon">
+              <Sparkles size={16} />
+            </div>
+            <div>
+              <p>当前重点</p>
+              <strong>先处理待审核评论，再继续文章草稿</strong>
+            </div>
+          </div>
+        ) : null}
 
-      {/* Footer / Back to site */}
-      <div className="border-t border-gray-200 p-2">
+        <div className="admin-sidebar__section-label">{collapsed ? "导" : "导航"}</div>
+        <nav className="admin-sidebar__nav">
+          {adminNav.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.key}
+                href={item.href}
+                title={collapsed ? item.label : undefined}
+                className={`admin-nav-link ${active ? "is-active" : ""}`}
+                onClick={onCloseMobile}
+              >
+                <span className="admin-nav-link__icon">
+                  <Icon size={18} className="shrink-0" />
+                </span>
+                {!collapsed ? (
+                  <span className="admin-nav-link__copy">
+                    <strong>{item.label}</strong>
+                    {item.description ? <small>{item.description}</small> : null}
+                  </span>
+                ) : null}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="admin-sidebar__footer">
+          <Link href="/write" className="admin-sidebar__quick-link" onClick={onCloseMobile}>
+            <PenSquare size={16} />
+            {!collapsed ? <span>继续写作</span> : null}
+          </Link>
         <Link
           href="/"
-          className={`
-            flex items-center gap-2 rounded-md px-3 py-2 text-xs text-gray-400
-            hover:text-gray-600 transition-colors
-            ${collapsed ? "justify-center px-0" : ""}
-          `}
+          className="admin-sidebar__back-link"
           title="返回站点"
+          onClick={onCloseMobile}
         >
-          {!collapsed && <span>← 返回站点</span>}
-          {collapsed && <span className="text-base">←</span>}
+          <span>←</span>
+          {!collapsed ? <span>返回站点</span> : null}
         </Link>
+        </div>
       </div>
     </aside>
   );
