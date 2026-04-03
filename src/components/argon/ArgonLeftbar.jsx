@@ -16,6 +16,13 @@ import {
   inferCategoryFromPost,
   POST_CATEGORY_DISPLAY_ORDER,
 } from "@/src/lib/postTaxonomy";
+import {
+  applyBackgroundTheme,
+  buildCardBackground,
+  CLEAN_BACKGROUND_STORAGE_KEY,
+  DARK_MODE_STORAGE_KEY,
+  normalizeCardTransparency,
+} from "@/src/lib/appearance";
 
 const PANEL_ITEMS = [
   { id: "search", label: "搜索" },
@@ -92,30 +99,6 @@ function hexToRgb(hex) {
   return `${r},${g},${b}`;
 }
 
-function normalizeCardTransparency(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return 25;
-  return Math.min(65, Math.max(0, Math.round(numeric)));
-}
-
-function buildCardBackground(transparency, darkMode) {
-  const safeTransparency = normalizeCardTransparency(transparency);
-  const alpha = Number((1 - safeTransparency / 100).toFixed(3));
-  const solidAlpha = Number((1 - (safeTransparency / 100) * 0.85).toFixed(3));
-
-  if (darkMode) {
-    return {
-      bg: `rgba(38, 28, 31, ${alpha})`,
-      solid: `rgba(44, 30, 34, ${solidAlpha})`,
-    };
-  }
-
-  return {
-    bg: `rgba(255, 249, 242, ${alpha})`,
-    solid: `rgba(255, 250, 245, ${solidAlpha})`,
-  };
-}
-
 function WidgetFrame({ title, children, className = "" }) {
   return (
     <section className={`nh-widget nh-card ${className}`.trim()}>
@@ -184,7 +167,10 @@ export default function ArgonLeftbar({ posts = [], tocItems = [], activeSearchQu
   const [avatarSrc, setAvatarSrc] = useState("/images/avatar-ricardo.jpg");
 
   const [darkMode, setDarkMode] = useState(() =>
-    typeof window !== "undefined" && window.localStorage.getItem("nh:theme:dark-mode") === "dark"
+    typeof window !== "undefined" && window.localStorage.getItem(DARK_MODE_STORAGE_KEY) === "dark"
+  );
+  const [cleanBackground, setCleanBackground] = useState(() =>
+    typeof window !== "undefined" && window.localStorage.getItem(CLEAN_BACKGROUND_STORAGE_KEY) === "true"
   );
   const [serifMode, setSerifMode] = useState(true);
   const [deepShadow, setDeepShadow] = useState(false);
@@ -215,6 +201,7 @@ export default function ArgonLeftbar({ posts = [], tocItems = [], activeSearchQu
     const root = document.documentElement;
     const body = document.body;
 
+    applyBackgroundTheme(root, { darkMode, cleanBackground });
     root.style.setProperty("--nh-theme", themeColor);
     root.style.setProperty("--nh-theme-rgb", hexToRgb(themeColor));
     root.style.setProperty("--nh-radius", `${radius}px`);
@@ -232,32 +219,44 @@ export default function ArgonLeftbar({ posts = [], tocItems = [], activeSearchQu
     );
 
     body.classList.toggle("nh-dark", darkMode);
+    body.classList.toggle("nh-clean-background", cleanBackground);
     body.classList.toggle("nh-font-serif", serifMode);
     body.dataset.nhFilter = filterMode;
 
-    window.localStorage.setItem("nh:theme:dark-mode", darkMode ? "dark" : "light");
+    window.localStorage.setItem(DARK_MODE_STORAGE_KEY, darkMode ? "dark" : "light");
+    window.localStorage.setItem(CLEAN_BACKGROUND_STORAGE_KEY, cleanBackground ? "true" : "false");
     body.classList.toggle("nh-panel-open", panelOpen);
 
     window.dispatchEvent(
       new CustomEvent("nh:appearance-state", {
-        detail: { darkMode, serifMode, deepShadow, filterMode, radius, themeColor, cardTransparency },
+        detail: {
+          darkMode,
+          cleanBackground,
+          serifMode,
+          deepShadow,
+          filterMode,
+          radius,
+          themeColor,
+          cardTransparency,
+        },
       })
     );
 
     return () => {
-      body.classList.remove("nh-dark", "nh-font-serif", "nh-panel-open");
+      body.classList.remove("nh-dark", "nh-clean-background", "nh-font-serif", "nh-panel-open");
       delete body.dataset.nhFilter;
       body.style.removeProperty("--nh-card-bg");
       body.style.removeProperty("--nh-card-bg-solid");
       body.style.removeProperty("--nh-card-transparency");
     };
-  }, [darkMode, serifMode, deepShadow, filterMode, radius, themeColor, cardTransparency, panelOpen]);
+  }, [darkMode, cleanBackground, serifMode, deepShadow, filterMode, radius, themeColor, cardTransparency, panelOpen]);
 
   useEffect(() => {
     const onSetAppearance = (event) => {
       const detail = event?.detail ?? {};
 
       if (Object.hasOwn(detail, "darkMode")) setDarkMode(Boolean(detail.darkMode));
+      if (Object.hasOwn(detail, "cleanBackground")) setCleanBackground(Boolean(detail.cleanBackground));
       if (Object.hasOwn(detail, "serifMode")) setSerifMode(Boolean(detail.serifMode));
       if (Object.hasOwn(detail, "deepShadow")) setDeepShadow(Boolean(detail.deepShadow));
       if (Object.hasOwn(detail, "filterMode")) setFilterMode(String(detail.filterMode ?? "none"));
@@ -541,6 +540,15 @@ export default function ArgonLeftbar({ posts = [], tocItems = [], activeSearchQu
       <label className="nh-control-check">
         <span>深色模式</span>
         <input type="checkbox" checked={darkMode} onChange={(e) => setDarkMode(e.target.checked)} />
+      </label>
+
+      <label className="nh-control-check">
+        <span>纯净背景</span>
+        <input
+          type="checkbox"
+          checked={cleanBackground}
+          onChange={(e) => setCleanBackground(e.target.checked)}
+        />
       </label>
 
       <label className="nh-control-check">

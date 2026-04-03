@@ -10,6 +10,12 @@ import {
   inferCategoryFromPost,
   POST_CATEGORY_DISPLAY_ORDER,
 } from "@/src/lib/postTaxonomy";
+import {
+  buildCardBackground,
+  CLEAN_BACKGROUND_STORAGE_KEY,
+  DARK_MODE_STORAGE_KEY,
+  normalizeCardTransparency,
+} from "@/src/lib/appearance";
 
 function isGitHubAction(action) {
   const href = String(action?.href ?? "").trim().toLowerCase();
@@ -52,23 +58,13 @@ function formatRecentCommentTime(value) {
   });
 }
 
-function normalizeCardTransparency(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return 25;
-  return Math.min(65, Math.max(0, Math.round(numeric)));
-}
-
 function applyCardTransparencyPreview(value) {
   if (typeof document === "undefined") return;
 
   const safeTransparency = normalizeCardTransparency(value);
-  const alpha = Number((1 - safeTransparency / 100).toFixed(3));
-  const solidAlpha = Number((1 - (safeTransparency / 100) * 0.85).toFixed(3));
   const body = document.body;
   const darkMode = body.classList.contains("nh-dark");
-
-  const bg = darkMode ? `rgba(38, 28, 31, ${alpha})` : `rgba(255, 249, 242, ${alpha})`;
-  const solid = darkMode ? `rgba(44, 30, 34, ${solidAlpha})` : `rgba(255, 250, 245, ${solidAlpha})`;
+  const { bg, solid } = buildCardBackground(safeTransparency, darkMode);
 
   body.style.setProperty("--nh-card-transparency", `${safeTransparency}`);
   body.style.setProperty("--nh-card-bg", bg);
@@ -206,7 +202,10 @@ export default function ArgonRightbar({ posts = [], tocItems = [], articleSideba
   const [switcherTab, setSwitcherTab] = useState("overview");
   const [contentTab, setContentTab] = useState("recent");
   const [darkMode, setDarkMode] = useState(() =>
-    typeof window !== "undefined" && window.localStorage.getItem("nh:theme:dark-mode") === "dark"
+    typeof window !== "undefined" && window.localStorage.getItem(DARK_MODE_STORAGE_KEY) === "dark"
+  );
+  const [cleanBackground, setCleanBackground] = useState(() =>
+    typeof window !== "undefined" && window.localStorage.getItem(CLEAN_BACKGROUND_STORAGE_KEY) === "true"
   );
   const [serifMode, setSerifMode] = useState(true);
   const [deepShadow, setDeepShadow] = useState(false);
@@ -223,6 +222,7 @@ export default function ArgonRightbar({ posts = [], tocItems = [], articleSideba
     const onAppearanceState = (event) => {
       const detail = event?.detail ?? {};
       setDarkMode(Boolean(detail.darkMode));
+      setCleanBackground(Boolean(detail.cleanBackground));
       setSerifMode(Boolean(detail.serifMode));
       setDeepShadow(Boolean(detail.deepShadow));
       setFilterMode(String(detail.filterMode ?? "none"));
@@ -308,6 +308,19 @@ export default function ArgonRightbar({ posts = [], tocItems = [], articleSideba
             const checked = e.target.checked;
             setDarkMode(checked);
             emitAppearance({ darkMode: checked });
+          }}
+        />
+      </label>
+
+      <label className="nh-control-check">
+        <span>纯净背景</span>
+        <input
+          type="checkbox"
+          checked={cleanBackground}
+          onChange={(e) => {
+            const checked = e.target.checked;
+            setCleanBackground(checked);
+            emitAppearance({ cleanBackground: checked });
           }}
         />
       </label>

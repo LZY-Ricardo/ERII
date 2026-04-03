@@ -2,6 +2,10 @@ import "./globals.css";
 import { ToastProvider } from "@/src/components/Toast";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import {
+  CLEAN_BACKGROUND_STORAGE_KEY,
+  DARK_MODE_STORAGE_KEY,
+} from "@/src/lib/appearance";
 
 const SITE_URL = "https://blog.sunandyu.top";
 
@@ -62,7 +66,7 @@ export default function RootLayout({ children }) {
       <body className="nh-body antialiased" suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(localStorage.getItem("nh:theme:dark-mode")==="dark")document.body.classList.add("nh-dark")}catch(e){}`,
+            __html: `try{if(localStorage.getItem("${DARK_MODE_STORAGE_KEY}")==="dark")document.body.classList.add("nh-dark");if(localStorage.getItem("${CLEAN_BACKGROUND_STORAGE_KEY}")==="true")document.body.classList.add("nh-clean-background")}catch(e){}`,
           }}
         />
         <ToastProvider>{children}</ToastProvider>
@@ -72,4 +76,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-

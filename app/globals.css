@@ -4425,6 +4425,20 @@ body {
   color-scheme: dark;
 }
 
+.nh-body.nh-clean-background {
+  --nh-bg: #ffffff;
+  --nh-bg-image: none;
+  --nh-bg-overlay-top: rgba(255, 255, 255, 0);
+  --nh-bg-overlay-bottom: rgba(255, 255, 255, 0);
+}
+
+.nh-body.nh-dark.nh-clean-background {
+  --nh-bg: #000000;
+  --nh-bg-image: none;
+  --nh-bg-overlay-top: rgba(0, 0, 0, 0);
+  --nh-bg-overlay-bottom: rgba(0, 0, 0, 0);
+}
+
 .nh-body.nh-dark .nh-post-title a {
   color: #f0e4d5;
 }
