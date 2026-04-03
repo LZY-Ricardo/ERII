@@ -47,10 +47,21 @@ export default function SpotifyEmbedPlayer({ playlist, playSignal = 0 }) {
   const controllerRef = useRef(null);
   const lastLoadedUriRef = useRef("");
   const lastPlaySignalRef = useRef(0);
-  const [status, setStatus] = useState("loading");
+  const playlistId = playlist?.id ?? "";
+  const [playerState, setPlayerState] = useState(() => ({
+    playlistId,
+    status: "loading",
+  }));
+  const status = playerState.playlistId === playlistId ? playerState.status : "loading";
 
   useEffect(() => {
     let cancelled = false;
+
+    const fallbackTimer = window.setTimeout(() => {
+      if (!cancelled && !controllerRef.current) {
+        setPlayerState({ playlistId, status: "fallback" });
+      }
+    }, 4500);
 
     async function setupPlayer() {
       try {
@@ -67,7 +78,7 @@ export default function SpotifyEmbedPlayer({ playlist, playSignal = 0 }) {
             controllerRef.current.loadUri(uri);
             lastLoadedUriRef.current = uri;
           }
-          setStatus("ready");
+          setPlayerState({ playlistId, status: "ready" });
           return;
         }
 
@@ -84,14 +95,16 @@ export default function SpotifyEmbedPlayer({ playlist, playSignal = 0 }) {
               return;
             }
 
+            window.clearTimeout(fallbackTimer);
             controllerRef.current = controller;
             lastLoadedUriRef.current = uri;
-            setStatus("ready");
+            setPlayerState({ playlistId, status: "ready" });
           }
         );
       } catch {
         if (!cancelled) {
-          setStatus("fallback");
+          window.clearTimeout(fallbackTimer);
+          setPlayerState({ playlistId, status: "fallback" });
         }
       }
     }
@@ -100,8 +113,9 @@ export default function SpotifyEmbedPlayer({ playlist, playSignal = 0 }) {
 
     return () => {
       cancelled = true;
+      window.clearTimeout(fallbackTimer);
     };
-  }, [playlist]);
+  }, [playlist, playlistId]);
 
   useEffect(() => {
     if (!controllerRef.current || playSignal === 0 || playSignal === lastPlaySignalRef.current) {
