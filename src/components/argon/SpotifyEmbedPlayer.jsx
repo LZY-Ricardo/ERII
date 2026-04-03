@@ -139,7 +139,26 @@ export default function SpotifyEmbedPlayer({ playlist, playSignal = 0 }) {
 
   return (
     <div className="nh-music-dock-spotify-player">
-      {status === "loading" ? <p className="nh-music-dock-player-tip">Spotify 播放器加载中...</p> : null}
+      {status === "loading" ? (
+        <div className="nh-spotify-player-skeleton" aria-hidden="true">
+          <div className="nh-spotify-player-skeleton__badge">
+            <span className="nh-spotify-player-skeleton__badge-dot" />
+            <span className="nh-spotify-player-skeleton__badge-text">Spotify</span>
+          </div>
+          <div className="nh-spotify-player-skeleton__disc" />
+          <div className="nh-spotify-player-skeleton__lines">
+            <span className="is-title" />
+            <span />
+            <span className="is-short" />
+          </div>
+          <div className="nh-spotify-player-skeleton__wave">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
+      ) : null}
       <div ref={containerRef} />
     </div>
   );
