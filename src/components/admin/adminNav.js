@@ -7,6 +7,7 @@ import {
   MessageSquare,
   FileText,
   Folder,
+  Music4,
   Settings,
 } from "lucide-react";
 
@@ -38,6 +39,13 @@ export const adminNav = [
     href: "/admin/projects",
     icon: Folder,
     description: "项目展示与精选排序",
+  },
+  {
+    key: "music",
+    label: "音乐管理",
+    href: "/admin/music",
+    icon: Music4,
+    description: "多平台歌单与播放器开关",
   },
   {
     key: "settings",

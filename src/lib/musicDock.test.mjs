@@ -28,7 +28,7 @@ test("getEmbeddablePlaylists filters out platforms without embed support", () =>
 
   assert.deepEqual(
     getEmbeddablePlaylists(playlists).map((item) => item.id),
-    ["netease-1", "spotify-1"]
+    ["spotify-1"]
   );
 });
 
@@ -77,7 +77,7 @@ test("getMusicDockPlaylists rotates recommendation by date", () => {
 
 test("getMusicPlaybackMode returns provider specific playback strategies", () => {
   assert.equal(getMusicPlaybackMode({ id: "spotify-1", platform: "spotify" }), "spotify-sdk");
-  assert.equal(getMusicPlaybackMode({ id: "netease-1", platform: "netease" }), "iframe");
+  assert.equal(getMusicPlaybackMode({ id: "netease-1", platform: "netease" }), "external");
   assert.equal(getMusicPlaybackMode({ id: "qq-1", platform: "qq" }), "external");
 });
 
@@ -115,12 +115,12 @@ test("getSpotifyPlayablePlaylists filters to spotify entries only", () => {
   const playlists = [
     { id: "spotify-1", platform: "spotify" },
     { id: "netease-1", platform: "netease" },
-    { id: "spotify-2", platform: "spotify" },
+    { id: "spotify-2", platform: "spotify", allowEmbeddedPlayer: false },
   ];
 
   assert.deepEqual(
     getSpotifyPlayablePlaylists(playlists).map((item) => item.id),
-    ["spotify-1", "spotify-2"]
+    ["spotify-1"]
   );
 });
 

@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS = {
   emailNotifications: false,
   notificationEmail: "",
   maintenanceMode: false,
+  musicPlayerEnabled: true,
 };
 
 async function getSettings(db) {

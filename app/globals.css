@@ -5338,6 +5338,28 @@ body {
   box-shadow: 0 8px 28px rgba(var(--nh-theme-rgb), 0.08);
 }
 
+.nh-music-player-note,
+.nh-music-empty {
+  display: grid;
+  gap: 8px;
+  padding: 20px 22px;
+}
+
+.nh-music-player-note h2,
+.nh-music-empty h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #45363c;
+}
+
+.nh-music-player-note p,
+.nh-music-empty p {
+  margin: 0;
+  color: rgba(54, 72, 99, 0.78);
+  line-height: 1.7;
+  font-size: 14px;
+}
+
 .nh-music-player-header {
   padding: 16px 20px;
   display: flex;
@@ -5424,6 +5446,9 @@ body {
 .nh-music-cover-wrap {
   position: relative;
   overflow: hidden;
+}
+
+.nh-music-cover-wrap.is-clickable {
   cursor: pointer;
 }
 
@@ -5540,12 +5565,31 @@ body {
   padding: 16px 16px 18px;
 }
 
+.nh-music-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .nh-music-title {
   margin: 0;
   font-size: 18px;
   line-height: 1.3;
   color: #45363c;
   font-family: var(--nh-font-heading);
+}
+
+.nh-music-platform-pill {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(var(--nh-theme-rgb), 0.08);
+  color: rgba(var(--nh-theme-rgb), 0.72);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .nh-music-description {
@@ -5579,6 +5623,12 @@ body {
   background: rgba(var(--nh-theme-rgb), 0.85);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(var(--nh-theme-rgb), 0.25);
+}
+
+.nh-music-action-note {
+  color: rgba(54, 72, 99, 0.65);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .nh-music-external-link {
@@ -5615,14 +5665,20 @@ body {
   color: rgba(244, 228, 214, 0.6);
 }
 
+.nh-body.nh-dark .nh-music-player-note h2,
+.nh-body.nh-dark .nh-music-empty h2,
 .nh-body.nh-dark .nh-music-player-name {
   color: rgba(244, 228, 214, 0.95);
 }
 
+.nh-body.nh-dark .nh-music-player-note p,
+.nh-body.nh-dark .nh-music-empty p,
 .nh-body.nh-dark .nh-music-title {
   color: rgba(244, 228, 214, 0.95);
 }
 
+.nh-body.nh-dark .nh-music-platform-pill,
+.nh-body.nh-dark .nh-music-action-note,
 .nh-body.nh-dark .nh-music-description {
   color: rgba(244, 228, 214, 0.65);
 }

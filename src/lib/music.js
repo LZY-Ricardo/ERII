@@ -40,10 +40,6 @@ export function getMusicPlaybackMode(playlist) {
     return "spotify-sdk";
   }
 
-  if (platform === "netease") {
-    return "iframe";
-  }
-
   return "external";
 }
 
@@ -107,7 +103,11 @@ export function getMusicEmbedUrl(playlist, { autoplay = false } = {}) {
  * 获取歌单详情页URL
  */
 export function getPlaylistUrl(playlist) {
-  const { id, platform } = playlist;
+  const { id, platform, playlistUrl } = playlist;
+
+  if (playlistUrl) {
+    return playlistUrl;
+  }
 
   if (platform === "local") {
     return playlist.sourceUrl || "#";
@@ -206,13 +206,17 @@ function getDayOffset(date = new Date()) {
 
 export function getEmbeddablePlaylists(playlists = MUSIC_PLAYLISTS) {
   return normalizePlaylistList(playlists).filter(
-    (playlist) => getMusicPlaybackMode(playlist) !== "external"
+    (playlist) =>
+      getMusicPlaybackMode(playlist) !== "external" &&
+      playlist.allowEmbeddedPlayer !== false
   );
 }
 
 export function getSpotifyPlayablePlaylists(playlists = MUSIC_PLAYLISTS) {
   return normalizePlaylistList(playlists).filter(
-    (playlist) => getMusicPlaybackMode(playlist) === "spotify-sdk"
+    (playlist) =>
+      getMusicPlaybackMode(playlist) === "spotify-sdk" &&
+      playlist.allowEmbeddedPlayer !== false
   );
 }
 

@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import SpotifyEmbedPlayer from "@/src/components/argon/SpotifyEmbedPlayer";
 import {
   formatPlaybackTime,
-  getAllPlaylists,
   getPlaybackProgress,
   getMusicDockPlaylists,
   getPlaylistCover,
@@ -33,10 +32,14 @@ function shouldHideDock(pathname) {
 
 export default function MusicDock() {
   const pathname = usePathname();
-  const allPlaylists = useMemo(() => getAllPlaylists(), []);
+  const [catalog, setCatalog] = useState({
+    loading: true,
+    musicPlayerEnabled: true,
+    playlists: [],
+  });
   const playlists = useMemo(
-    () => getMusicDockPlaylists({ playlists: allPlaylists, limit: 3 }),
-    [allPlaylists]
+    () => getMusicDockPlaylists({ playlists: catalog.playlists, limit: 3 }),
+    [catalog.playlists]
   );
   const [expanded, setExpanded] = useState(false);
   const [hasMountedPlayer, setHasMountedPlayer] = useState(false);
@@ -66,6 +69,74 @@ export default function MusicDock() {
   const shouldShowSwitcher = playlists.length > 1;
   const coverUrl = activePlaylist ? getPlaylistCover(activePlaylist) : "";
   const playlistUrl = activePlaylist ? getPlaylistUrl(activePlaylist) : "#";
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCatalog() {
+      try {
+        const response = await fetch("/api/music", { cache: "no-store" });
+        const data = await response.json();
+
+        if (cancelled) {
+          return;
+        }
+
+        if (!response.ok || !data?.ok) {
+          throw new Error(data?.error || "加载音乐播放器失败");
+        }
+
+        setCatalog({
+          loading: false,
+          musicPlayerEnabled: Boolean(data.musicPlayerEnabled),
+          playlists: Array.isArray(data.playlists) ? data.playlists : [],
+        });
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        console.error("[MusicDock] failed to load public music catalog:", error);
+        setCatalog({
+          loading: false,
+          musicPlayerEnabled: false,
+          playlists: [],
+        });
+      }
+    }
+
+    loadCatalog();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!playlists.length) {
+      setSelectedPlaylist(null);
+      setExpanded(false);
+      return;
+    }
+
+    setSelectedPlaylist((current) => {
+      if (current && playlists.some((playlist) => playlist.entryId === current.entryId)) {
+        return current;
+      }
+      return playlists[0];
+    });
+  }, [playlists]);
+
+  useEffect(() => {
+    if (catalog.musicPlayerEnabled) {
+      return;
+    }
+
+    setExpanded(false);
+    setHasMountedPlayer(false);
+    setPlayerReady(false);
+    setPlaybackState(INITIAL_PLAYBACK_STATE);
+  }, [catalog.musicPlayerEnabled]);
 
   const requestPlayback = () => {
     setPlaySignal((current) => current + 1);
@@ -209,7 +280,7 @@ export default function MusicDock() {
   const displayCoverUrl = metaState.coverUrl || coverUrl;
   const progressLabel = `${formatPlaybackTime(livePosition)} / ${formatPlaybackTime(playbackState.duration)}`;
 
-  if (shouldHideDock(pathname) || !activePlaylist) {
+  if (shouldHideDock(pathname) || catalog.loading || !catalog.musicPlayerEnabled || !activePlaylist) {
     return null;
   }
 
@@ -334,11 +405,11 @@ export default function MusicDock() {
           {shouldShowSwitcher ? (
             <div className="nh-music-dock-switcher" role="list" aria-label="切换歌单">
               {playlists.map((playlist) => {
-                const isActive = playlist.id === activePlaylist.id;
+                const isActive = playlist.entryId === activePlaylist.entryId;
 
                 return (
                   <button
-                    key={playlist.id}
+                    key={playlist.entryId ?? playlist.id}
                     type="button"
                     className={`nh-music-dock-chip ${isActive ? "is-active" : ""}`}
                     onClick={() => handleSelectPlaylist(playlist)}
