@@ -51,6 +51,43 @@ export function getSpotifyEmbedUri(playlist) {
   return `spotify:playlist:${playlist.id}`;
 }
 
+export function parseSpotifyUri(uri) {
+  if (typeof uri !== "string" || !uri.startsWith("spotify:")) {
+    return null;
+  }
+
+  const [, type, id] = uri.split(":");
+  if (!type || !id) {
+    return null;
+  }
+
+  return { type, id };
+}
+
+export function getSpotifyPublicUrl(uri) {
+  const parsed = parseSpotifyUri(uri);
+  if (!parsed) return null;
+
+  return `https://open.spotify.com/${parsed.type}/${parsed.id}`;
+}
+
+export function getPlaybackProgress(position = 0, duration = 0) {
+  if (!duration || duration <= 0) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(1, position / duration));
+}
+
+export function formatPlaybackTime(milliseconds = 0) {
+  const safeMilliseconds = Number.isFinite(milliseconds) ? Math.max(0, milliseconds) : 0;
+  const totalSeconds = Math.floor(safeMilliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
 export function getMusicEmbedUrl(playlist, { autoplay = false } = {}) {
   const { id, platform } = playlist;
 

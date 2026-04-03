@@ -42,11 +42,19 @@ function loadSpotifyIframeApi() {
   return spotifyIframeApiPromise;
 }
 
-export default function SpotifyEmbedPlayer({ playlist, playSignal = 0 }) {
+export default function SpotifyEmbedPlayer({
+  playlist,
+  playSignal = 0,
+  controlSignal = null,
+  onReadyChange,
+  onPlaybackChange,
+}) {
   const containerRef = useRef(null);
   const controllerRef = useRef(null);
   const lastLoadedUriRef = useRef("");
   const lastPlaySignalRef = useRef(0);
+  const lastControlSignalRef = useRef(0);
+  const pendingPlaySignalRef = useRef(0);
   const playlistId = playlist?.id ?? "";
   const [playerState, setPlayerState] = useState(() => ({
     playlistId,
@@ -54,12 +62,22 @@ export default function SpotifyEmbedPlayer({ playlist, playSignal = 0 }) {
   }));
   const status = playerState.playlistId === playlistId ? playerState.status : "loading";
 
+  const flushPendingPlay = () => {
+    if (!controllerRef.current || pendingPlaySignalRef.current === 0) {
+      return;
+    }
+
+    pendingPlaySignalRef.current = 0;
+    controllerRef.current.play?.();
+  };
+
   useEffect(() => {
     let cancelled = false;
 
     const fallbackTimer = window.setTimeout(() => {
       if (!cancelled && !controllerRef.current) {
         setPlayerState({ playlistId, status: "fallback" });
+        onReadyChange?.(false);
       }
     }, 4500);
 
@@ -79,6 +97,7 @@ export default function SpotifyEmbedPlayer({ playlist, playSignal = 0 }) {
             lastLoadedUriRef.current = uri;
           }
           setPlayerState({ playlistId, status: "ready" });
+          onReadyChange?.(true);
           return;
         }
 
@@ -98,13 +117,47 @@ export default function SpotifyEmbedPlayer({ playlist, playSignal = 0 }) {
             window.clearTimeout(fallbackTimer);
             controllerRef.current = controller;
             lastLoadedUriRef.current = uri;
+            controller.addListener?.("ready", () => {
+              onReadyChange?.(true);
+            });
+            controller.addListener?.("playback_started", (event) => {
+              const data = event?.data ?? {};
+              onPlaybackChange?.({
+                hasPlayback: true,
+                playingURI: data.playingURI ?? "",
+                isPaused: false,
+                isPlaying: true,
+                isBuffering: false,
+                position: Number(data.position ?? 0),
+                duration: Number(data.duration ?? 0),
+                updatedAt: Date.now(),
+              });
+            });
+            controller.addListener?.("playback_update", (event) => {
+              const data = event?.data ?? {};
+              onPlaybackChange?.({
+                hasPlayback: Boolean(data.playingURI),
+                playingURI: data.playingURI ?? "",
+                isPaused: Boolean(data.isPaused),
+                isPlaying: !data.isPaused,
+                isBuffering: Boolean(data.isBuffering),
+                position: Number(data.position ?? 0),
+                duration: Number(data.duration ?? 0),
+                updatedAt: Date.now(),
+              });
+            });
             setPlayerState({ playlistId, status: "ready" });
+            onReadyChange?.(true);
+            window.setTimeout(() => {
+              flushPendingPlay();
+            }, 0);
           }
         );
       } catch {
         if (!cancelled) {
           window.clearTimeout(fallbackTimer);
           setPlayerState({ playlistId, status: "fallback" });
+          onReadyChange?.(false);
         }
       }
     }
@@ -115,10 +168,17 @@ export default function SpotifyEmbedPlayer({ playlist, playSignal = 0 }) {
       cancelled = true;
       window.clearTimeout(fallbackTimer);
     };
-  }, [playlist, playlistId]);
+  }, [onPlaybackChange, onReadyChange, playlist, playlistId]);
 
   useEffect(() => {
-    if (!controllerRef.current || playSignal === 0 || playSignal === lastPlaySignalRef.current) {
+    if (playSignal === 0 || playSignal === lastPlaySignalRef.current) {
+      return;
+    }
+
+    pendingPlaySignalRef.current = playSignal;
+    lastPlaySignalRef.current = playSignal;
+
+    if (!controllerRef.current) {
       return;
     }
 
@@ -128,17 +188,44 @@ export default function SpotifyEmbedPlayer({ playlist, playSignal = 0 }) {
       lastLoadedUriRef.current = uri;
     }
 
-    lastPlaySignalRef.current = playSignal;
-    controllerRef.current.play();
+    flushPendingPlay();
   }, [playSignal, playlist, status]);
 
   useEffect(() => {
+    if (!controllerRef.current || !controlSignal?.type || !controlSignal?.nonce) {
+      return;
+    }
+
+    if (lastControlSignalRef.current === controlSignal.nonce) {
+      return;
+    }
+
+    lastControlSignalRef.current = controlSignal.nonce;
+
+    if (controlSignal.type === "pause") {
+      controllerRef.current.pause?.();
+      return;
+    }
+
+    if (controlSignal.type === "resume") {
+      controllerRef.current.resume?.();
+      return;
+    }
+
+    if (controlSignal.type === "toggle") {
+      controllerRef.current.togglePlay?.();
+    }
+  }, [controlSignal]);
+
+  useEffect(() => {
     return () => {
+      onReadyChange?.(false);
       controllerRef.current?.destroy?.();
       controllerRef.current = null;
       lastLoadedUriRef.current = "";
+      pendingPlaySignalRef.current = 0;
     };
-  }, []);
+  }, [onReadyChange]);
 
   if (status === "fallback") {
     return (

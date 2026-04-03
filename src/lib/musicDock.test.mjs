@@ -2,13 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  formatPlaybackTime,
   getAllPlaylists,
   getEmbeddablePlaylists,
+  getPlaybackProgress,
   getMusicDockPlaylists,
   getMusicEmbedUrl,
   getMusicPlaybackMode,
   getPreferredPlaylist,
+  getSpotifyPublicUrl,
   getSpotifyPlayablePlaylists,
+  parseSpotifyUri,
 } from "./music.js";
 
 test("default music playlists only expose spotify entries for the current player surface", () => {
@@ -130,4 +134,26 @@ test("getPreferredPlaylist picks spotify first when requested", () => {
     getPreferredPlaylist(playlists, { preferPlatform: "spotify" })?.id,
     "spotify-1"
   );
+});
+
+test("parseSpotifyUri extracts type and id", () => {
+  assert.deepEqual(parseSpotifyUri("spotify:track:123abc"), {
+    type: "track",
+    id: "123abc",
+  });
+  assert.equal(parseSpotifyUri("invalid"), null);
+});
+
+test("getSpotifyPublicUrl converts uri to public URL", () => {
+  assert.equal(
+    getSpotifyPublicUrl("spotify:episode:xyz987"),
+    "https://open.spotify.com/episode/xyz987"
+  );
+});
+
+test("playback helpers format progress and time safely", () => {
+  assert.equal(getPlaybackProgress(45000, 180000), 0.25);
+  assert.equal(getPlaybackProgress(1000, 0), 0);
+  assert.equal(formatPlaybackTime(65000), "1:05");
+  assert.equal(formatPlaybackTime(-1), "0:00");
 });
