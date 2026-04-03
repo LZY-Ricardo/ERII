@@ -5,21 +5,19 @@ targetLanguages:
   - en
 include:
   - README.md
-  - docs/Comment-System-Replica-Implementation-Plan.md
-  - docs/ContentPlatform-Implementation-Plan.md
-  - docs/ContentPlatform-Runbook.md
-  - docs/ERIIEditorFeatureDevelopmentGuide.md
-  - docs/EditingPublishedPosts.md
-  - docs/Nighthaven-Replica-Plan.md
-  - docs/Project-Feature-and-Progress-Report.md
-  - docs/README.md
-  - docs/Toast-Component-Usage.md
-  - docs/WafuEditor.md
+  - AGENTS.md
+  - CLAUDE.md
+  - findings.md
+  - DEVELOPMENT.md
+  - progress.md
+  - VERCEL_PUBLISHING_TBD.md
+  - teamspeak-optimized.md
+  - task_plan.md
 ignoreFile: .github-global-ignore
 outputRoot: translations
 model:
   provider: openrouter
-  id: openai/gpt-5.2
+  id: openrouter/auto
 readmeNavigation:
   enabled: true
 pullRequest:
