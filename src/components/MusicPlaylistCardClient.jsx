@@ -1,20 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import SpotifyEmbedPlayer from "@/src/components/argon/SpotifyEmbedPlayer";
 import MusicPlaylistCard from "./MusicPlaylistCard";
-import { getPlaylistUrl, getMusicEmbedUrl, PLATFORM_CONFIG } from "@/src/lib/music";
+import {
+  getPlaylistUrl,
+  getSpotifyPlayablePlaylists,
+} from "@/src/lib/music";
 
 export default function MusicPlaylistCardClient({ playlists }) {
-  const [activePlaylist, setActivePlaylist] = useState(playlists[0] ?? null);
+  const spotifyPlaylists = useMemo(() => getSpotifyPlayablePlaylists(playlists), [playlists]);
+  const [selectedPlaylist, setSelectedPlaylist] = useState(() => spotifyPlaylists[0] ?? null);
+  const [playSignal, setPlaySignal] = useState(0);
+  const activePlaylist = selectedPlaylist ?? spotifyPlaylists[0] ?? null;
 
   const handlePlaylistClick = (playlist) => {
-    setActivePlaylist(playlist);
-    const platform = playlist.platform || "qq";
-    const platformConfig = PLATFORM_CONFIG[platform];
-
-    // 网易云和Spotify支持嵌入，可以在这里实现iframe播放器
-    // QQ音乐不支持嵌入，直接跳转
-    window.open(getPlaylistUrl(playlist), "_blank");
+    setSelectedPlaylist(playlist);
+    setPlaySignal((current) => current + 1);
   };
 
   return (
@@ -23,29 +25,31 @@ export default function MusicPlaylistCardClient({ playlists }) {
       {activePlaylist && (
         <div className="nh-music-player-wrap">
           <div className="nh-music-player-header">
-            <h2 className="nh-music-player-title">精选歌单</h2>
+            <h2 className="nh-music-player-title">Spotify 歌单</h2>
             <span className="nh-music-player-name">{activePlaylist.name}</span>
-            <span
-              className="nh-music-platform-tag"
-              style={{ "--platform-color": PLATFORM_CONFIG[activePlaylist.platform || "qq"].color }}
-            >
-              {PLATFORM_CONFIG[activePlaylist.platform || "qq"].name}
-            </span>
-            <a
-              href={getPlaylistUrl(activePlaylist)}
-              target="_blank"
-              rel="noreferrer"
-              className="nh-music-external-mini"
-            >
-              在{PLATFORM_CONFIG[activePlaylist.platform || "qq"].name}打开 →
-            </a>
+            {getPlaylistUrl(activePlaylist) !== "#" ? (
+              <a
+                href={getPlaylistUrl(activePlaylist)}
+                target="_blank"
+                rel="noreferrer"
+                className="nh-music-external-mini"
+              >
+                在 Spotify 中打开
+              </a>
+            ) : null}
           </div>
+
+          {activePlaylist ? (
+            <div className="nh-music-page-embed">
+              <SpotifyEmbedPlayer playlist={activePlaylist} playSignal={playSignal} />
+            </div>
+          ) : null}
         </div>
       )}
 
       {/* 歌单网格 */}
       <div className="nh-music-grid">
-        {playlists.map((playlist) => (
+        {spotifyPlaylists.map((playlist) => (
           <MusicPlaylistCard
             key={playlist.id}
             playlist={playlist}

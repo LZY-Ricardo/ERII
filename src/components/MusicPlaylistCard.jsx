@@ -1,24 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { getPlaylistUrl, PLATFORM_CONFIG } from "@/src/lib/music";
+import { getPlaylistUrl } from "@/src/lib/music";
 
 export default function MusicPlaylistCard({ playlist, isActive, onPlay }) {
   const [imageError, setImageError] = useState(false);
-  const platform = playlist.platform || "qq";
-  const platformConfig = PLATFORM_CONFIG[platform] || PLATFORM_CONFIG.qq;
 
   // 优先使用服务端获取的coverUrl，否则使用占位图
-  const getPlaceholder = (name, platform) => {
-    const colors = {
-      qq: "#31C27C",
-      netease: "#C20C0C",
-      spotify: "#1DB954",
-    };
-    const color = colors[platform] || "#888";
+  const getPlaceholder = (name) => {
     const svg = `
       <svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
-        <rect width="300" height="300" fill="${color}"/>
+        <rect width="300" height="300" fill="#1DB954"/>
         <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
               font-family="Arial, sans-serif" font-size="24" fill="white">
           ${name}
@@ -28,7 +20,7 @@ export default function MusicPlaylistCard({ playlist, isActive, onPlay }) {
     return `data:image/svg+xml,${encodeURIComponent(svg)}`;
   };
 
-  const coverUrl = playlist.coverUrl || getPlaceholder(playlist.name, platform);
+  const coverUrl = playlist.coverUrl || getPlaceholder(playlist.name);
 
   return (
     <article className={`nh-music-card nh-card ${isActive ? "is-active" : ""}`}>
@@ -44,13 +36,6 @@ export default function MusicPlaylistCard({ playlist, isActive, onPlay }) {
             onError={() => setImageError(true)}
           />
         )}
-
-        {/* 平台标识 */}
-        <span
-          className="nh-music-platform-badge"
-          title={platformConfig.name}
-          dangerouslySetInnerHTML={{ __html: platformConfig.icon }}
-        />
 
         <button
           className="nh-music-play-btn"
@@ -87,7 +72,7 @@ export default function MusicPlaylistCard({ playlist, isActive, onPlay }) {
             target="_blank"
             rel="noreferrer"
             className="nh-music-external-link"
-            aria-label={`在${platformConfig.name}打开 ${playlist.name}`}
+            aria-label={`在 Spotify 打开 ${playlist.name}`}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />

@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
+import SpotifyEmbedPlayer from "@/src/components/argon/SpotifyEmbedPlayer";
 import {
-  PLATFORM_CONFIG,
+  getAllPlaylists,
   getMusicDockPlaylists,
-  getMusicEmbedUrl,
   getPlaylistCover,
   getPlaylistUrl,
 } from "@/src/lib/music";
@@ -21,9 +21,12 @@ function shouldHideDock(pathname) {
 
 export default function MusicDock() {
   const pathname = usePathname();
-  const playlists = useMemo(() => getMusicDockPlaylists({ limit: 3 }), []);
+  const allPlaylists = useMemo(() => getAllPlaylists(), []);
   const [expanded, setExpanded] = useState(false);
-  const [activePlaylist, setActivePlaylist] = useState(playlists[0] ?? null);
+  const [selectedPlaylist, setSelectedPlaylist] = useState(
+    () => getMusicDockPlaylists({ playlists: allPlaylists, limit: 3 })[0] ?? null
+  );
+  const [playSignal, setPlaySignal] = useState(0);
   const [hidden, setHidden] = useState(() => {
     if (typeof window === "undefined") return false;
     try {
@@ -33,18 +36,27 @@ export default function MusicDock() {
     }
   });
 
+  const playlists = useMemo(
+    () => getMusicDockPlaylists({ playlists: allPlaylists, limit: 3 }),
+    [allPlaylists]
+  );
+  const activePlaylist = selectedPlaylist ?? playlists[0] ?? null;
+
   if (shouldHideDock(pathname) || !activePlaylist) {
     return null;
   }
 
-  const platform = PLATFORM_CONFIG[activePlaylist.platform || "qq"] ?? PLATFORM_CONFIG.qq;
   const coverUrl = getPlaylistCover(activePlaylist);
-  const embedUrl = getMusicEmbedUrl(activePlaylist);
   const playlistUrl = getPlaylistUrl(activePlaylist);
 
+  const requestPlayback = () => {
+    setPlaySignal((current) => current + 1);
+  };
+
   const handleSelectPlaylist = (playlist) => {
-    setActivePlaylist(playlist);
+    setSelectedPlaylist(playlist);
     setExpanded(true);
+    requestPlayback();
   };
 
   const setHiddenState = (nextHidden) => {
@@ -56,12 +68,8 @@ export default function MusicDock() {
   };
 
   const handlePrimaryAction = () => {
-    if (embedUrl) {
-      setExpanded(true);
-      return;
-    }
-
-    window.open(playlistUrl, "_blank", "noopener,noreferrer");
+    setExpanded(true);
+    requestPlayback();
   };
 
   if (hidden) {
@@ -99,7 +107,7 @@ export default function MusicDock() {
           <span className="nh-music-dock-copy">
             <span className="nh-music-dock-eyebrow">今日陪伴歌单</span>
             <strong>{activePlaylist.name}</strong>
-            <span>{embedUrl ? "点开后可直接播放" : `在${platform.name}中打开`}</span>
+            <span>点开后可直接播放</span>
           </span>
           <span className="nh-music-dock-play" aria-hidden="true">
             {expanded ? "×" : "▶"}
@@ -124,15 +132,6 @@ export default function MusicDock() {
           <header className="nh-music-dock-head">
             <div>
               <p className="nh-music-dock-title">{activePlaylist.name}</p>
-              <p className="nh-music-dock-meta">
-                <span
-                  className="nh-music-dock-platform"
-                  style={{ "--platform-color": platform.color }}
-                >
-                  {platform.name}
-                </span>
-                <span>{activePlaylist.description}</span>
-              </p>
             </div>
             <button
               type="button"
@@ -144,45 +143,19 @@ export default function MusicDock() {
             </button>
           </header>
 
-          {embedUrl ? (
-            <div className="nh-music-dock-embed">
-              <iframe
-                src={embedUrl}
-                title={`${activePlaylist.name} 播放器`}
-                loading="lazy"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              />
-            </div>
-          ) : (
-            <div className="nh-music-dock-external">
-              <p>这个歌单平台不支持站内嵌入播放。</p>
-              <a href={playlistUrl} target="_blank" rel="noreferrer" className="nh-music-dock-open">
-                去 {platform.name} 播放
-              </a>
-            </div>
-          )}
+          <div className="nh-music-dock-embed">
+            <SpotifyEmbedPlayer playlist={activePlaylist} playSignal={playSignal} />
+          </div>
 
           <div className="nh-music-dock-actions">
-            <button
-              type="button"
-              className="nh-music-dock-link is-secondary"
-              onClick={() => setHiddenState(true)}
-            >
-              隐藏入口
-            </button>
-            <a href={playlistUrl} target="_blank" rel="noreferrer" className="nh-music-dock-link">
-              在 {platform.name} 打开
-            </a>
-            <a href="/music" className="nh-music-dock-link is-secondary">
-              查看全部歌单
+            <a href={playlistUrl} target="_blank" rel="noreferrer" className="nh-music-dock-open">
+              在 Spotify 中打开
             </a>
           </div>
 
           <div className="nh-music-dock-switcher" role="list" aria-label="切换歌单">
             {playlists.map((playlist) => {
               const isActive = playlist.id === activePlaylist.id;
-              const itemPlatform =
-                PLATFORM_CONFIG[playlist.platform || "qq"] ?? PLATFORM_CONFIG.qq;
 
               return (
                 <button
@@ -190,10 +163,9 @@ export default function MusicDock() {
                   type="button"
                   className={`nh-music-dock-chip ${isActive ? "is-active" : ""}`}
                   onClick={() => handleSelectPlaylist(playlist)}
-                  style={{ "--platform-color": itemPlatform.color }}
+                  style={{ "--platform-color": "#1DB954" }}
                 >
                   <span>{playlist.name}</span>
-                  <small>{itemPlatform.name}</small>
                 </button>
               );
             })}
