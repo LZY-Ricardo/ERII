@@ -333,7 +333,6 @@ export default function MusicDock() {
                 <>
                   <span className="nh-music-dock-eyebrow">今日陪伴歌单</span>
                   <strong>{activePlaylist.name}</strong>
-                  <span>收起后会继续播放</span>
                 </>
               )}
             </span>
