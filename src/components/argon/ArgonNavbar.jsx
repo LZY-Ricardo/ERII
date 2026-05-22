@@ -237,7 +237,13 @@ export default function ArgonNavbar({
                       target="_blank"
                       rel="noreferrer"
                     >
-                      <img src="/cassel-crest.png" alt="" className="nh-nav-cassel-icon" />
+                      <Image
+                        src="/cassel-crest.png"
+                        alt=""
+                        width={18}
+                        height={18}
+                        className="nh-nav-cassel-icon"
+                      />
                       {item.label}
                     </a>
                   ) : (

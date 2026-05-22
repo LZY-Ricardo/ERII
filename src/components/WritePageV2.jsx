@@ -885,42 +885,46 @@ export default function WritePageV2() {
 
   return (
     <div className="flex flex-col h-screen">
-      <header className="flex h-14 items-center justify-between border-b border-wafu-sumi/10 bg-wafu-paper/80 px-4 backdrop-blur-md shrink-0">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <Link href="/" className="text-wafu-sumi/55 hover:text-erii-red shrink-0">
+      <header className="write-topbar">
+        <div className="write-topbar-primary">
+          <Link href="/" className="write-icon-link" aria-label="回到首页">
             <Home size={18} />
           </Link>
-          <div className="relative w-[calc(50vw-2rem)] min-w-0">
+          <div className="write-title-field">
             <input
               type="text"
               placeholder="输入文章标题…"
               value={metadata.title}
               onChange={(e) => setMetadata({ ...metadata, title: e.target.value })}
-              className="w-full rounded-lg border border-wafu-sumi/8 bg-white/50 px-3 py-1.5 text-base font-medium text-wafu-sumi outline-none transition-all placeholder:text-wafu-sumi/30 focus:border-wafu-sumi/20 focus:bg-white/80 focus:shadow-sm"
+              className="write-title-input"
             />
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="hidden text-[11px] text-wafu-sumi/45 xl:inline">
-            {autoSaveHint}
-          </span>
+
+        <div className="write-topbar-status">
           {isPublishedPost ? (
-            <span className="rounded-full bg-amber-50 px-2 py-1 text-[11px] text-amber-700">
+            <span className="write-status-pill is-warning">
               {hasWorkingDraft ? "存在未发布修改" : "线上文章保持不变"}
             </span>
           ) : null}
           {autoSaveLabel ? (
-            <span className="text-[11px] text-wafu-sumi/55">{autoSaveLabel}</span>
+            <span className="write-status-text">{autoSaveLabel}</span>
           ) : null}
+          {!autoSaveLabel ? (
+            <span className="write-status-text">{autoSaveHint}</span>
+          ) : null}
+        </div>
+
+        <div className="write-topbar-actions">
           <Link
             href="/admin"
-            className="rounded-full border border-wafu-sumi/10 bg-white/60 px-3 py-1.5 text-[11px] text-wafu-sumi/70 hover:bg-white/80"
+            className="write-action-link"
           >
-            后台工作台
+            后台
           </Link>
           <Link
             href="/admin/posts?tab=draft"
-            className="rounded-full border border-wafu-sumi/10 bg-white/60 px-3 py-1.5 text-[11px] text-wafu-sumi/70 hover:bg-white/80"
+            className="write-action-link"
           >
             草稿箱
           </Link>
@@ -931,7 +935,7 @@ export default function WritePageV2() {
               setIsJuejinImportOpen(true);
             }}
             disabled={isJuejinImporting}
-            className="rounded-full border border-wafu-sumi/10 bg-white/60 px-3 py-1.5 text-[11px] text-wafu-sumi/70 hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-60"
+            className="write-action-link"
           >
             导入掘金
           </button>
@@ -942,14 +946,15 @@ export default function WritePageV2() {
               setIsSettingsOpen(!isSettingsOpen);
             }}
             disabled={isJuejinImporting}
-            className="text-wafu-sumi/55 hover:text-erii-red disabled:cursor-not-allowed disabled:opacity-60"
+            className="write-icon-link"
+            aria-label="文章设置"
           >
             <Settings size={18} />
           </button>
           <button
             onClick={handlePublish}
             disabled={isBusy}
-            className="rounded-full bg-[#e11d48] px-5 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-[#e11d48]/40 transition hover:bg-[#be123c] hover:shadow-md disabled:opacity-60"
+            className="write-publish-button"
           >
             {publishButtonLabel}
           </button>

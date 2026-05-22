@@ -620,7 +620,13 @@ export default function ArgonLeftbar({ posts = [], tocItems = [], activeSearchQu
       rel="noreferrer"
       className="nh-cassel-banner"
     >
-      <img src="/cassel-crest.png" alt="" className="nh-cassel-banner-bg" />
+      <Image
+        src="/cassel-crest.png"
+        alt=""
+        width={60}
+        height={60}
+        className="nh-cassel-banner-bg"
+      />
       <span className="nh-cassel-banner-content">
         <span className="nh-cassel-banner-title">卡塞尔学院</span>
         <span className="nh-cassel-banner-subtitle">守夜人论坛</span>

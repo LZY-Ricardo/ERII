@@ -9,6 +9,8 @@ import {
   ShieldAlert,
   AlertCircle,
   CheckCircle2,
+  Pencil,
+  Settings,
 } from "lucide-react";
 
 function StatCard({ icon: Icon, label, value, color, href }) {
@@ -52,6 +54,23 @@ function PendingItem({ icon: Icon, title, description, href, tone = "neutral" })
         </div>
       </div>
       <span className="text-xs font-medium text-[var(--admin-accent)]">查看</span>
+    </Link>
+  );
+}
+
+function ShortcutLink({ icon: Icon, title, meta, href }) {
+  return (
+    <Link href={href} className="admin-list-item">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-stone-100 text-stone-700">
+          <Icon size={18} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[var(--admin-text)]">{title}</p>
+          <p className="mt-1 text-xs text-[var(--admin-text-soft)]">{meta}</p>
+        </div>
+      </div>
+      <span className="text-xs font-medium text-[var(--admin-accent)]">进入</span>
     </Link>
   );
 }
@@ -122,14 +141,14 @@ export default function AdminDashboardPage() {
         <div>
           <p className="admin-kicker">Overview</p>
           <h1>控制台概览</h1>
-          <p>先处理待审核内容，再继续草稿与项目维护。后台首页现在更偏“工作台”，而不是单纯的数据看板。</p>
+          <p>审核、写作、项目与站点配置。</p>
         </div>
         <div className="admin-panel">
           <div className="admin-panel__body flex items-center gap-3">
             <CheckCircle2 size={18} className="text-emerald-600" />
             <div>
-              <p className="text-sm font-semibold text-[var(--admin-text)]">系统状态正常</p>
-              <p className="text-xs text-[var(--admin-text-soft)]">统计接口已连接，最近评论可直接进入审核流程。</p>
+              <p className="text-sm font-semibold text-[var(--admin-text)]">后台在线</p>
+              <p className="text-xs text-[var(--admin-text-soft)]">统计与评论接口可用</p>
             </div>
           </div>
         </div>
@@ -181,21 +200,21 @@ export default function AdminDashboardPage() {
               <PendingItem
                 icon={Clock}
                 title={`待审核评论 ${stats?.pendingComments ?? 0} 条`}
-                description="优先处理新评论，减少公开区延迟。"
+                description="新评论审核"
                 href="/admin/comments?status=pending"
                 tone="warning"
               />
               <PendingItem
                 icon={AlertCircle}
                 title={`垃圾评论 ${stats?.spamComments ?? 0} 条`}
-                description="清理可疑内容，避免评论区噪声积累。"
+                description="可疑内容清理"
                 href="/admin/comments?status=spam"
                 tone="danger"
               />
               <PendingItem
                 icon={FileText}
                 title="继续处理文章草稿"
-                description="进入文章管理页，继续分类调整或恢复草稿编辑。"
+                description="草稿与修改稿"
                 href="/admin/posts?tab=draft"
               />
             </div>
@@ -208,10 +227,10 @@ export default function AdminDashboardPage() {
               <p className="admin-kicker">Shortcuts</p>
               <h2 className="m-0 text-xl font-semibold text-[var(--admin-text)]">快捷入口</h2>
             </div>
-            <div className="grid gap-3">
-              <Link href="/write" className="admin-button-primary">进入写作台</Link>
-              <Link href="/admin/projects" className="admin-button-subtle">检查项目展示与精选位</Link>
-              <Link href="/admin/settings" className="admin-button-subtle">调整站点配置</Link>
+            <div className="admin-list">
+              <ShortcutLink icon={Pencil} title="写作台" meta="新建、导入、发布" href="/write" />
+              <ShortcutLink icon={FileText} title="项目展示" meta="精选位与排序" href="/admin/projects" />
+              <ShortcutLink icon={Settings} title="站点配置" meta="评论、主题、播放器" href="/admin/settings" />
             </div>
           </div>
         </section>

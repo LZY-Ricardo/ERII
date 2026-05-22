@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getTrendingDescription } from "@/src/lib/trendingDescriptions.mjs";
 
@@ -37,6 +37,11 @@ function getLangColor(lang) {
 export function TrendingSidebar({ limit = 3, onDataLoaded }) {
   const [repos, setRepos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const onDataLoadedRef = useRef(onDataLoaded);
+
+  useEffect(() => {
+    onDataLoadedRef.current = onDataLoaded;
+  }, [onDataLoaded]);
 
   useEffect(() => {
     fetch("/api/trending?period=weekly")
@@ -44,8 +49,8 @@ export function TrendingSidebar({ limit = 3, onDataLoaded }) {
       .then((data) => {
         setRepos((data.repos || []).slice(0, limit));
         setLoading(false);
-        if (onDataLoaded && data.fetchedAt) {
-          onDataLoaded(data.fetchedAt);
+        if (onDataLoadedRef.current && data.fetchedAt) {
+          onDataLoadedRef.current(data.fetchedAt);
         }
       })
       .catch(() => {

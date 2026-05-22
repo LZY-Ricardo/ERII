@@ -45,6 +45,7 @@ next-env.d.ts
 
 # local codex environment metadata
 .codex/environments/
+.playwright-cli/
 .superpowers/
 
 # local one-off publish scripts
