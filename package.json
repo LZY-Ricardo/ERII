@@ -6,7 +6,8 @@
     "dev": "next dev -p 3239",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --test \"src/**/*.test.mjs\""
   },
   "dependencies": {
     "@bytemd/plugin-frontmatter": "^1.22.0",
@@ -22,6 +23,7 @@
     "cheerio": "^1.2.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dumogu-scrollbar": "^1.0.3",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",

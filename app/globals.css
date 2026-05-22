@@ -19,6 +19,54 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+html.nh-site-scrollbar-enabled,
+body.nh-site-scrollbar-enabled {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html.nh-site-scrollbar-enabled::-webkit-scrollbar,
+body.nh-site-scrollbar-enabled::-webkit-scrollbar {
+  display: none;
+}
+
+.nh-site-scrollbar {
+  z-index: 980;
+}
+
+.nh-site-scrollbar .dumogu-scrollbar-rail {
+  box-sizing: border-box;
+}
+
+.nh-site-scrollbar .dumogu-scrollbar-rail_y {
+  top: 10px;
+  right: 5px;
+  width: 9px;
+  height: calc(100% - 20px);
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(var(--nh-theme-rgb, 137, 35, 46), 0.1);
+}
+
+.nh-site-scrollbar .dumogu-scrollbar-rail_x {
+  bottom: 5px;
+  left: 10px;
+  width: calc(100% - 20px);
+  height: 9px;
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(var(--nh-theme-rgb, 137, 35, 46), 0.1);
+}
+
+.nh-site-scrollbar .dumogu-scrollbar-rail_thumb {
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(var(--nh-accent-rgb, 208, 171, 107), 0.96), rgba(var(--nh-theme-rgb, 137, 35, 46), 0.86));
+  box-shadow:
+    0 2px 8px rgba(30, 14, 18, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+}
+
 ::selection {
   color: #fff;
   background: rgba(var(--nh-theme-rgb, 137, 35, 46), 0.72);

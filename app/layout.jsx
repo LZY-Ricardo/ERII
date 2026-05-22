@@ -1,5 +1,7 @@
 import "./globals.css";
+import "dumogu-scrollbar/dist/dumogu-scrollbar.css";
 import { ToastProvider } from "@/src/components/Toast";
+import SiteScrollbar from "@/src/components/SiteScrollbar";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import {
@@ -66,10 +68,11 @@ export default function RootLayout({ children }) {
       <body className="nh-body antialiased" suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(localStorage.getItem("${DARK_MODE_STORAGE_KEY}")==="dark")document.body.classList.add("nh-dark");if(localStorage.getItem("${CLEAN_BACKGROUND_STORAGE_KEY}")==="true")document.body.classList.add("nh-clean-background")}catch(e){}`,
+            __html: `try{var p=location.pathname;var s=!(p==="/admin"||p.startsWith("/admin/")||p==="/admin-login"||p.startsWith("/admin-login/")||p==="/write"||p.startsWith("/write/"));if(s){document.documentElement.classList.add("nh-site-scrollbar-enabled");document.body.classList.add("nh-site-scrollbar-enabled")}if(localStorage.getItem("${DARK_MODE_STORAGE_KEY}")==="dark")document.body.classList.add("nh-dark");if(localStorage.getItem("${CLEAN_BACKGROUND_STORAGE_KEY}")==="true")document.body.classList.add("nh-clean-background")}catch(e){}`,
           }}
         />
         <ToastProvider>{children}</ToastProvider>
+        <SiteScrollbar />
         <Analytics />
         <SpeedInsights />
       </body>
