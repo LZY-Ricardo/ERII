@@ -873,7 +873,7 @@ export default function WritePageV2() {
           </form>
 
           <Link
-            href="/admin/login?from=/write"
+            href="/admin-login?from=/write"
             className="mt-4 block text-center text-xs text-wafu-sumi/45 transition hover:text-erii-red"
           >
             或前往后台登录页

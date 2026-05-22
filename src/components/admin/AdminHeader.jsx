@@ -22,7 +22,7 @@ export default function AdminHeader({ onOpenSidebar }) {
         method: "DELETE",
       });
     } catch {}
-    router.push("/admin/login");
+    router.push("/admin-login");
     router.refresh();
   }
 

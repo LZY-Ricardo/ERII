@@ -42,8 +42,9 @@ export function proxy(request) {
     }
     // Page routes → redirect to login
     const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/admin/login";
-    loginUrl.searchParams.set("from", pathname);
+    loginUrl.pathname = "/admin-login";
+    loginUrl.search = "";
+    loginUrl.searchParams.set("from", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
   }
 
