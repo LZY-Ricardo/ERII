@@ -33,7 +33,8 @@ function shouldHideDock(pathname) {
 export default function MusicDock() {
   const pathname = usePathname();
   const [catalog, setCatalog] = useState({
-    loading: true,
+    loading: false,
+    requested: false,
     musicPlayerEnabled: true,
     playlists: [],
   });
@@ -70,7 +71,16 @@ export default function MusicDock() {
   const coverUrl = activePlaylist ? getPlaylistCover(activePlaylist) : "";
   const playlistUrl = activePlaylist ? getPlaylistUrl(activePlaylist) : "#";
 
+  const requestCatalog = () => {
+    setCatalog((current) => {
+      if (current.requested || current.loading) return current;
+      return { ...current, loading: true, requested: true };
+    });
+  };
+
   useEffect(() => {
+    if (!catalog.requested) return undefined;
+
     let cancelled = false;
 
     async function loadCatalog() {
@@ -88,6 +98,7 @@ export default function MusicDock() {
 
         setCatalog({
           loading: false,
+          requested: true,
           musicPlayerEnabled: Boolean(data.musicPlayerEnabled),
           playlists: Array.isArray(data.playlists) ? data.playlists : [],
         });
@@ -99,6 +110,7 @@ export default function MusicDock() {
         console.error("[MusicDock] failed to load public music catalog:", error);
         setCatalog({
           loading: false,
+          requested: true,
           musicPlayerEnabled: false,
           playlists: [],
         });
@@ -110,7 +122,7 @@ export default function MusicDock() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [catalog.requested]);
 
   useEffect(() => {
     if (!playlists.length) {
@@ -169,11 +181,13 @@ export default function MusicDock() {
   };
 
   const handlePrimaryAction = () => {
+    requestCatalog();
     ensurePlayerMounted();
     setExpanded(true);
   };
 
   const handleMiniPlay = () => {
+    requestCatalog();
     ensurePlayerMounted();
     setExpanded(true);
     requestPlayback();
@@ -280,8 +294,77 @@ export default function MusicDock() {
   const displayCoverUrl = metaState.coverUrl || coverUrl;
   const progressLabel = `${formatPlaybackTime(livePosition)} / ${formatPlaybackTime(playbackState.duration)}`;
 
-  if (shouldHideDock(pathname) || catalog.loading || !catalog.musicPlayerEnabled || !activePlaylist) {
+  if (shouldHideDock(pathname)) {
     return null;
+  }
+
+  if (!catalog.requested) {
+    return (
+      <section
+        className={`nh-music-dock is-collapsed ${hidden ? "is-hidden" : ""}`}
+        aria-label="音乐播放器入口"
+      >
+        {hidden ? (
+          <button
+            type="button"
+            className="nh-music-dock-reveal"
+            onClick={() => setHiddenState(false)}
+            aria-label="展开音乐入口"
+          >
+            <span aria-hidden="true">♪</span>
+            <small>音乐</small>
+          </button>
+        ) : (
+          <div className="nh-music-dock-collapsed-shell">
+            <button
+              type="button"
+              className="nh-music-dock-trigger"
+              onClick={handlePrimaryAction}
+              aria-expanded={false}
+            >
+              <span className="nh-music-dock-cover" aria-hidden="true">
+                ♪
+              </span>
+              <span className="nh-music-dock-copy">
+                <span className="nh-music-dock-eyebrow">音乐</span>
+                <strong>打开播放器</strong>
+              </span>
+            </button>
+            <button
+              type="button"
+              className="nh-music-dock-hide"
+              onClick={() => setHiddenState(true)}
+              aria-label="隐藏音乐入口"
+              title="隐藏音乐入口"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  if (!catalog.musicPlayerEnabled) {
+    return null;
+  }
+
+  if (catalog.loading || !activePlaylist) {
+    return (
+      <section className="nh-music-dock is-collapsed" aria-label="音乐播放器入口" aria-live="polite">
+        <div className="nh-music-dock-collapsed-shell">
+          <button type="button" className="nh-music-dock-trigger" disabled aria-expanded={false}>
+            <span className="nh-music-dock-cover" aria-hidden="true">
+              ♪
+            </span>
+            <span className="nh-music-dock-copy">
+              <span className="nh-music-dock-eyebrow">音乐</span>
+              <strong>{catalog.loading ? "加载中..." : "暂无播放器"}</strong>
+            </span>
+          </button>
+        </div>
+      </section>
+    );
   }
 
   return (

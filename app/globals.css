@@ -311,7 +311,6 @@ body.nh-site-scrollbar-enabled::-webkit-scrollbar {
       transparent 84px
     );
   transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  will-change: transform;
   box-shadow: 0 0 0 1px rgba(26, 26, 26, 0.08) inset;
 }
 
@@ -337,19 +336,34 @@ body.nh-site-scrollbar-enabled::-webkit-scrollbar {
   .erii-scribble::after {
     animation: none;
   }
+  .erii-scribble-vertical::before,
+  .nh-loading-skeleton,
+  .nh-post-card,
+  .nh-post-card::after,
+  .nh-card::after,
+  .toast,
+  .nh-music-playing-badge span,
+  .nh-music-dock,
+  .nh-spotify-player-skeleton::after,
+  .nh-spotify-player-skeleton__disc,
+  .nh-spotify-player-skeleton__wave span {
+    animation: none !important;
+  }
   .shoji-panel {
     transition: none;
   }
   .erii-pop {
     animation: none;
   }
-  .nh-post-card,
-  .nh-post-card::after {
-    animation: none;
-  }
   .nh-post-cover,
-  .nh-navbar-progress span {
-    transition: none;
+  .nh-navbar-progress span,
+  .nh-music-dock-trigger,
+  .nh-music-dock-play,
+  .nh-music-dock-hide,
+  .nh-music-dock-reveal,
+  .nh-music-dock-panel-shell,
+  .nh-music-dock-progress-bar > span {
+    transition: none !important;
   }
 }
 
@@ -426,8 +440,7 @@ body.nh-site-scrollbar-enabled::-webkit-scrollbar {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  transform: translateZ(0);
-  will-change: transform;
+  contain: paint;
   background-image: var(--nh-bg-image);
   background-position: center top;
   background-size: var(--nh-bg-image-fill-size);
@@ -442,6 +455,7 @@ body.nh-site-scrollbar-enabled::-webkit-scrollbar {
   inset: 0;
   pointer-events: none;
   z-index: 0;
+  contain: paint;
   opacity: 1;
   background: linear-gradient(
     180deg,

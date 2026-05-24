@@ -37,6 +37,9 @@ function getLangColor(lang) {
 export function TrendingSidebar({ limit = 3, onDataLoaded }) {
   const [repos, setRepos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [shouldFetch, setShouldFetch] = useState(false);
+  const containerRef = useRef(null);
+  const idleScheduleRef = useRef(null);
   const onDataLoadedRef = useRef(onDataLoaded);
 
   useEffect(() => {
@@ -44,9 +47,51 @@ export function TrendingSidebar({ limit = 3, onDataLoaded }) {
   }, [onDataLoaded]);
 
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+
+    if (typeof window.IntersectionObserver !== "function") {
+      setShouldFetch(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          idleScheduleRef.current =
+            typeof window.requestIdleCallback === "function"
+              ? window.requestIdleCallback(() => setShouldFetch(true), { timeout: 1800 })
+              : window.setTimeout(() => setShouldFetch(true), 800);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "240px 0px" }
+    );
+
+    observer.observe(container);
+    return () => {
+      observer.disconnect();
+
+      const schedule = idleScheduleRef.current;
+      if (schedule === null) return;
+
+      if (typeof window.cancelIdleCallback === "function" && typeof schedule === "number") {
+        window.cancelIdleCallback(schedule);
+      } else {
+        window.clearTimeout(schedule);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!shouldFetch) return undefined;
+
+    let cancelled = false;
+
     fetch("/api/trending?period=weekly")
       .then((r) => r.json())
       .then((data) => {
+        if (cancelled) return;
         setRepos((data.repos || []).slice(0, limit));
         setLoading(false);
         if (onDataLoadedRef.current && data.fetchedAt) {
@@ -54,13 +99,18 @@ export function TrendingSidebar({ limit = 3, onDataLoaded }) {
         }
       })
       .catch(() => {
+        if (cancelled) return;
         setLoading(false);
       });
-  }, [limit]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [limit, shouldFetch]);
 
   if (loading) {
     return (
-      <div className="nh-trending-sidebar-loading">
+      <div ref={containerRef} className="nh-trending-sidebar-loading">
         <span className="nh-loading-skeleton" />
         <span className="nh-loading-skeleton" />
         <span className="nh-loading-skeleton" />
@@ -69,11 +119,15 @@ export function TrendingSidebar({ limit = 3, onDataLoaded }) {
   }
 
   if (!repos.length) {
-    return <p className="nh-muted">暂无热点数据</p>;
+    return (
+      <div ref={containerRef}>
+        <p className="nh-muted">暂无热点数据</p>
+      </div>
+    );
   }
 
   return (
-    <div className="nh-trending-sidebar">
+    <div ref={containerRef} className="nh-trending-sidebar">
       <ul className="nh-trending-sidebar-list">
         {repos.map((repo, index) => {
           const description = getTrendingDescription(repo);

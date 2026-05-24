@@ -10,7 +10,7 @@ export default function SecretTrigger() {
   const [code, setCode] = useState("");
   const [gifLoaded, setGifLoaded] = useState(true);
 
-  const triggerGifSrc = "/images/secret-trigger.gif";
+  const triggerGifSrc = "/images/secret-trigger.webp";
 
   const triggerSakura = () => {
     const duration = 3000;

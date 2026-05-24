@@ -3,6 +3,7 @@ import ArgonShell from "@/src/components/argon/ArgonShell";
 import ProjectCard from "@/src/components/ProjectCard";
 import { getSortedPostsData } from "@/src/lib/posts";
 import { PROJECT_FOCUS, getProjects } from "@/src/lib/projects";
+import { filterProjectCollectionByFocus } from "@/src/lib/projectFilters";
 
 const SITE_URL = "https://blog.sunandyu.top";
 
@@ -29,8 +30,8 @@ export default async function ProjectsPage({ searchParams }) {
   const focus = isValidFocus ? focusRaw : "all";
   const focusLabel = PROJECT_FOCUS.find((item) => item.value === focus)?.label ?? "全部项目";
 
-  const projects = await getProjects({ focus });
-  const allProjects = await getProjects(); // 用于总数
+  const allProjects = await getProjects();
+  const projects = filterProjectCollectionByFocus(allProjects, focus);
 
   const title = focus === "all" ? "项目仓库" : `${focusLabel} 项目`;
   const subtitle =
@@ -39,7 +40,13 @@ export default async function ProjectsPage({ searchParams }) {
       : `当前筛选：${focusLabel}，共 ${projects.length} 个项目。`;
 
   return (
-    <ArgonShell posts={posts} title={title} subtitle={subtitle}>
+    <ArgonShell
+      currentPath="/projects"
+      posts={posts}
+      title={title}
+      subtitle={subtitle}
+      deployedProjects={allProjects}
+    >
       <section className="nh-project-hub" aria-label="项目列表">
         <div className="nh-project-filter">
           {PROJECT_FOCUS.map((item) => (
@@ -68,4 +75,3 @@ export default async function ProjectsPage({ searchParams }) {
     </ArgonShell>
   );
 }
-

@@ -52,9 +52,11 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <ArgonShell
+        currentPath="/"
         posts={posts}
         title="每只象龟心中都有一处温暖的水坑"
         titleMode="hero"
+        deployedProjects={featuredProjects}
       >
       <section className="nh-project-showcase" aria-label="项目精选">
         <header className="nh-section-head">

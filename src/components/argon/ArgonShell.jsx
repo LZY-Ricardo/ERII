@@ -1,12 +1,11 @@
 import ArgonFooter from "@/src/components/argon/ArgonFooter";
 import ArgonLeftbar from "@/src/components/argon/ArgonLeftbar";
-import MusicDock from "@/src/components/argon/MusicDock";
 import ArgonNavbar from "@/src/components/argon/ArgonNavbar";
 import ArgonRightbar from "@/src/components/argon/ArgonRightbar";
-import UnmarkFloatingPrompt from "@/src/components/argon/UnmarkFloatingPrompt";
-import TimeThemePrompt from "@/src/components/argon/TimeThemePrompt";
+import PublicChromeWidgets from "@/src/components/argon/PublicChromeWidgets";
 
 export default function ArgonShell({
+  currentPath = "/",
   posts = [],
   tocItems = [],
   articleSidebar = null,
@@ -17,6 +16,7 @@ export default function ArgonShell({
   activeTag = "",
   activeTopic = "",
   activeSearchQuery = "",
+  deployedProjects = [],
   children,
 }) {
   const isHeroTitle = titleMode === "hero";
@@ -28,6 +28,7 @@ export default function ArgonShell({
       </a>
 
       <ArgonNavbar
+        currentPath={currentPath}
         activeCategory={activeCategory}
         activeTag={activeTag}
         activeTopic={activeTopic}
@@ -58,13 +59,16 @@ export default function ArgonShell({
             <ArgonFooter />
           </main>
 
-          <ArgonRightbar posts={posts} tocItems={tocItems} articleSidebar={articleSidebar} />
+          <ArgonRightbar
+            posts={posts}
+            tocItems={tocItems}
+            articleSidebar={articleSidebar}
+            deployedProjects={deployedProjects}
+          />
         </div>
       </div>
 
-      <UnmarkFloatingPrompt />
-      <TimeThemePrompt />
-      <MusicDock />
+      <PublicChromeWidgets />
     </div>
   );
 }

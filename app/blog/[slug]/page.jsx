@@ -113,6 +113,7 @@ export default async function BlogPostPage({ params }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <ArgonShell
+        currentPath={`/blog/${slug}`}
         posts={posts}
         tocItems={tocItems}
         articleSidebar={{ recentComments }}

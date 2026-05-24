@@ -1,12 +1,7 @@
 import { cache } from "react";
 import { requireDb } from "./db";
-
-export const PROJECT_FOCUS = [
-  { value: "all", label: "全部项目" },
-  { value: "frontend", label: "前端" },
-  { value: "ai", label: "AI" },
-  { value: "tooling", label: "工具链" },
-];
+import { optimizeProjectCoverUrl } from "./projectCoverOptimization";
+export { PROJECT_FOCUS } from "./projectConstants";
 
 /**
  * 服务器端：直接从数据库获取项目
@@ -76,7 +71,7 @@ async function fetchProjectsFromDb(params = {}) {
     state: p.state,
     focus: p.focus,
     tech: p.tech,
-    cover: p.cover,
+    cover: optimizeProjectCoverUrl(p.cover),
     featured: p.featured,
     links: p.links,
   }));
