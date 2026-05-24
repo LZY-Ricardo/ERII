@@ -29,6 +29,7 @@ export default async function ResourcesPage() {
 
   return (
     <ArgonShell
+      currentPath="/resources"
       posts={posts}
       title={RESOURCE_LIBRARY_INTRO.title}
       subtitle={`共收录 ${total} 项资源，按场景整理，只保留我愿意公开推荐的那部分。`}

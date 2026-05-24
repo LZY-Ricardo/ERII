@@ -9,7 +9,7 @@ const article = {
   date: "2026-03-12",
   description: "详细介绍 TeamSpeak3 和 TeamSpeak6 的下载、安装、配置和使用方法",
   tags: ["teamspeak", "软件教程", "语音通讯"],
-  cover: "/images/projects/cassell-college-teamspeak.png",
+  cover: "/images/projects/cassell-college-teamspeak.webp",
   content: `# TeamSpeak 安装使用教程
 
 ## TeamSpeak3

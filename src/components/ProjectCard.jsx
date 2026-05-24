@@ -1,22 +1,6 @@
-"use client";
-
-import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-
-function isGitHubAction(action) {
-  const href = String(action?.href ?? "").trim().toLowerCase();
-  const label = String(action?.label ?? "").trim().toLowerCase();
-  return href.includes("github.com") || label.includes("github");
-}
-
-function isLiveAction(action) {
-  const href = String(action?.href ?? "").trim().toLowerCase();
-  if (/^https?:\/\//.test(href) && !isGitHubAction(action)) return true;
-
-  const label = String(action?.label ?? "").trim().toLowerCase();
-  return /live|preview|demo|在线|预览|体验/.test(label);
-}
+import ProjectCoverImage from "@/src/components/ProjectCoverImage";
+import { groupProjectActions } from "@/src/lib/projectCardGroups";
 
 function ProjectAction({ action, className = "" }) {
   const href = String(action?.href ?? "").trim();
@@ -40,28 +24,12 @@ function ProjectAction({ action, className = "" }) {
 }
 
 export default function ProjectCard({ project }) {
-  const [coverFailed, setCoverFailed] = useState(false);
-  const links = Array.isArray(project?.links) ? project.links.slice(0, 3) : [];
-  const liveAction = links.find((item) => isLiveAction(item)) ?? null;
-  const githubAction = links.find((item) => isGitHubAction(item)) ?? null;
-  const otherActions = links.filter((item) => item !== liveAction && item !== githubAction);
-  const hasCover = Boolean(project?.cover) && !coverFailed;
+  const { liveAction, githubAction, otherActions } = groupProjectActions(project?.links);
 
   return (
     <article className="nh-project-card nh-card">
       <div className="nh-project-cover-wrap">
-        {hasCover ? (
-          <Image
-            src={project.cover}
-            alt={`${project.name} cover`}
-            width={960}
-            height={540}
-            className="nh-project-cover"
-            onError={() => setCoverFailed(true)}
-          />
-        ) : (
-          <span className="nh-project-cover nh-project-cover-fallback" aria-hidden="true" />
-        )}
+        <ProjectCoverImage src={project?.cover} alt={`${project?.name ?? "Project"} cover`} />
 
         <span className="nh-project-status" data-state={project?.state ?? "active"}>
           {project?.status ?? "更新中"}

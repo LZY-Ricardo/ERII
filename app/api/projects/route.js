@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireDb } from "@/src/lib/db";
+import { optimizeProjectCoverUrl } from "@/src/lib/projectCoverOptimization";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -83,7 +84,7 @@ export async function GET(request) {
         state: p.state,
         focus: p.focus,
         tech: p.tech,
-        cover: p.cover,
+        cover: optimizeProjectCoverUrl(p.cover),
         featured: p.featured,
         links: p.links,
       })),

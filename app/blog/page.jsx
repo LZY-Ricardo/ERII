@@ -104,6 +104,7 @@ export default async function BlogIndexPage({ searchParams }) {
 
   return (
     <ArgonShell
+      currentPath="/blog"
       posts={posts}
       title={title}
       subtitle={subtitle}

@@ -1,5 +1,6 @@
 import { requireDb } from "@/src/lib/db";
 import { requireAdmin } from "@/src/lib/adminGuard";
+import { optimizeProjectCoverUrl } from "@/src/lib/projectCoverOptimization";
 import { toPgJsonbLiteral, toPgTextArrayLiteral } from "@/src/lib/projectMutation";
 import { getFeaturedProjectLimitError } from "@/src/lib/projectFeaturedLimit";
 
@@ -73,7 +74,7 @@ export async function GET(request) {
       state: r.state ?? "active",
       focus: r.focus ?? [],
       tech: r.tech ?? [],
-      cover: r.cover ?? "",
+      cover: optimizeProjectCoverUrl(r.cover),
       featured: r.featured ?? false,
       links: r.links ?? [],
       sortOrder: r.sort_order,
@@ -148,7 +149,7 @@ export async function POST(request) {
         ${id}, ${name}, ${tagline}, ${summary}, ${status}, ${state},
         ${toPgTextArrayLiteral(focus)}::text[],
         ${toPgTextArrayLiteral(tech)}::text[],
-        ${cover},
+        ${optimizeProjectCoverUrl(cover)},
         ${featured},
         ${toPgJsonbLiteral(links)}::jsonb,
         ${sortOrder}
@@ -220,7 +221,7 @@ export async function PUT(request) {
         state = ${state},
         focus = ${toPgTextArrayLiteral(focus)}::text[],
         tech = ${toPgTextArrayLiteral(tech)}::text[],
-        cover = ${cover},
+        cover = ${optimizeProjectCoverUrl(cover)},
         featured = ${featured},
         links = ${toPgJsonbLiteral(links)}::jsonb,
         sort_order = ${sortOrder},

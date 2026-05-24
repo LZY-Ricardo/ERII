@@ -13,7 +13,12 @@ export default async function TeamSpeakRedirectPage({ searchParams }) {
   const resolvedSearchParams = await searchParams;
 
   return (
-    <ArgonShell posts={posts} title="TeamSpeak" subtitle="正在尝试拉起本地客户端...">
+    <ArgonShell
+      currentPath="/teamspeak"
+      posts={posts}
+      title="TeamSpeak"
+      subtitle="正在尝试拉起本地客户端..."
+    >
       <TeamSpeakRedirectClient searchParams={resolvedSearchParams} />
     </ArgonShell>
   );

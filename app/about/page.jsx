@@ -73,7 +73,12 @@ export default async function AboutPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-      <ArgonShell posts={posts} title="关于本站" subtitle="一个持续更新的前端、AI 与开发学习记录站点。">
+      <ArgonShell
+        currentPath="/about"
+        posts={posts}
+        title="关于本站"
+        subtitle="一个持续更新的前端、AI 与开发学习记录站点。"
+      >
         <article className="nh-article nh-card">
           <div className="nh-article-content prose max-w-none prose-slate prose-headings:font-serif prose-strong:text-slate-800">
             <p>
