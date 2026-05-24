@@ -1249,6 +1249,35 @@ body.nh-site-scrollbar-enabled::-webkit-scrollbar {
   color: rgba(244, 228, 214, 0.4);
 }
 
+.nh-trending-lang-toggle {
+  border: none;
+  background: rgba(var(--nh-theme-rgb), 0.08);
+  color: rgba(var(--nh-theme-rgb), 0.7);
+  font-size: 11px;
+  font-family: var(--nh-font-ui);
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.nh-trending-lang-toggle:hover {
+  background: rgba(var(--nh-theme-rgb), 0.16);
+  color: var(--nh-theme);
+}
+
+.nh-body.nh-dark .nh-trending-lang-toggle {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(244, 228, 214, 0.55);
+}
+
+.nh-body.nh-dark .nh-trending-lang-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(244, 228, 214, 0.85);
+}
+
 .nh-recent-comments-block,
 .nh-recent-comments-empty {
   display: grid;

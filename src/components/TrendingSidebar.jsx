@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { getTrendingDescription } from "@/src/lib/trendingDescriptions.mjs";
+import { getTrendingDescriptionByLang } from "@/src/lib/trendingDescriptions.mjs";
 
 const formatNumber = (num) => {
   if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -34,13 +34,20 @@ function getLangColor(lang) {
   return LANGUAGE_COLORS[lang] || "#888";
 }
 
-export function TrendingSidebar({ limit = 3, onDataLoaded }) {
+const UI_TEXT = {
+  zh: { empty: "暂无热点数据", starsTitle: "总 stars", periodTitle: "本周新增", more: "查看更多 →" },
+  en: { empty: "No trending data", starsTitle: "Total stars", periodTitle: "This week", more: "View More →" },
+};
+
+export function TrendingSidebar({ limit = 3, onDataLoaded, lang = "zh" }) {
   const [repos, setRepos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [shouldFetch, setShouldFetch] = useState(false);
   const containerRef = useRef(null);
   const idleScheduleRef = useRef(null);
   const onDataLoadedRef = useRef(onDataLoaded);
+
+  const t = UI_TEXT[lang] || UI_TEXT.zh;
 
   useEffect(() => {
     onDataLoadedRef.current = onDataLoaded;
@@ -121,7 +128,7 @@ export function TrendingSidebar({ limit = 3, onDataLoaded }) {
   if (!repos.length) {
     return (
       <div ref={containerRef}>
-        <p className="nh-muted">暂无热点数据</p>
+        <p className="nh-muted">{t.empty}</p>
       </div>
     );
   }
@@ -130,7 +137,7 @@ export function TrendingSidebar({ limit = 3, onDataLoaded }) {
     <div ref={containerRef} className="nh-trending-sidebar">
       <ul className="nh-trending-sidebar-list">
         {repos.map((repo, index) => {
-          const description = getTrendingDescription(repo);
+          const description = getTrendingDescriptionByLang(repo, lang);
 
           return (
             <li key={repo.id} className="nh-trending-sidebar-item">
@@ -161,7 +168,7 @@ export function TrendingSidebar({ limit = 3, onDataLoaded }) {
                 </div>
                 {description && <p className="nh-trending-sidebar-desc">{description}</p>}
                 <div className="nh-trending-sidebar-stats">
-                  <span className="nh-trending-sidebar-stat" title="总 stars">
+                  <span className="nh-trending-sidebar-stat" title={t.starsTitle}>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="12"
@@ -174,7 +181,7 @@ export function TrendingSidebar({ limit = 3, onDataLoaded }) {
                     {formatNumber(repo.stars)}
                   </span>
                   {repo.periodStars > 0 && (
-                    <span className="nh-trending-sidebar-period" title="本周新增">
+                    <span className="nh-trending-sidebar-period" title={t.periodTitle}>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="12"
@@ -199,7 +206,7 @@ export function TrendingSidebar({ limit = 3, onDataLoaded }) {
         rel="noreferrer"
         className="nh-trending-sidebar-more"
       >
-        查看更多 →
+        {t.more}
       </a>
     </div>
   );
