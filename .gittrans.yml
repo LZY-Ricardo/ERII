@@ -1,0 +1,25 @@
+repo: LZY-Ricardo/ERII
+baseBranch: main
+baseLanguage: zh-CN
+targetLanguages:
+  - en
+include:
+  - README.md
+  - AGENTS.md
+  - CLAUDE.md
+  - findings.md
+  - DEVELOPMENT.md
+  - progress.md
+  - VERCEL_PUBLISHING_TBD.md
+  - teamspeak-optimized.md
+  - task_plan.md
+ignoreFile: .github-global-ignore
+outputRoot: translations
+model:
+  provider: openrouter
+  id: openrouter/auto
+readmeNavigation:
+  enabled: true
+pullRequest:
+  branch: gittrans/main
+  titleTemplate: "docs: update translations"
